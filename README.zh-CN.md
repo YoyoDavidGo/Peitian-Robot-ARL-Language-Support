@@ -1,6 +1,6 @@
 # 配天机器人 ARL 语言支持
 
-[English](./README.md) | **简体中文**
+[English](https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md) | **简体中文**
 
 面向 **配天（PEITIAN）工业机器人 ARL** 程序的轻量级 Visual Studio Code 语言支持插件。
 
@@ -58,7 +58,7 @@ ptp p:p
 | `t:` | `tool` |
 | `w:` | `wobj` |
 
-工作区全局变量使用内存索引缓存，不会在每次按键时重新扫描整个工程。
+类型感知补全只读取当前 ARL 文件，以及同目录下与其配套的 `<程序名>_data.arl` 文件；配套数据文件会缓存在内存中，因此其他程序的变量不会混入当前程序的联想列表。
 
 ## 常用快捷键
 
