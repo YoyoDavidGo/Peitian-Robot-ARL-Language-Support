@@ -6,6 +6,28 @@ Lightweight Visual Studio Code language support for **PEITIAN industrial robot A
 
 The extension focuses on editing ARL source files well inside native VS Code. It does not add a Language Server, AI runtime, cloud service, robot connection layer, or external dependencies.
 
+## Screenshots
+
+### Dark theme · Hover, syntax highlighting, and Outline
+
+![Dark theme ARL hover and Outline](./docs/images/01-dark-hover-and-outline.jpg)
+
+### Dark theme · Program overview
+
+![Dark theme ARL program overview](./docs/images/02-dark-program-overview.jpg)
+
+### Light theme · Syntax highlighting and Outline
+
+![Light theme ARL syntax highlighting and Outline](./docs/images/03-light-syntax-and-outline.jpg)
+
+### IntelliSense completion
+
+![ARL IntelliSense completion](./docs/images/04-intellisense-completion.jpg)
+
+### Extension details
+
+![Peitian Robot ARL Language Support extension details](./docs/images/05-extension-details.jpg)
+
 ## Features
 
 - `.arl` file recognition and dedicated file icon
