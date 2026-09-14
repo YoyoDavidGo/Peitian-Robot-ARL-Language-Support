@@ -1,0 +1,9 @@
+.git/**
+.github/**
+tests/**
+scripts/**
+*.vsix
+docs/**
+*.zip
+icons/*.svg
+language-data/*.md

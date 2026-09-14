@@ -1,0 +1,124 @@
+{
+  "name": "peitian-arl-language-support",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
+  "version": "1.0.0",
+  "publisher": "David-Workshop",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Themes"
+  ],
+  "keywords": [
+    "ARL",
+    "PEITIAN",
+    "robot",
+    "robotics",
+    "industrial robot",
+    "robot programming",
+    "automation",
+    "language support",
+    "syntax highlighting",
+    "formatter",
+    "intellisense",
+    "配天机器人"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "arl",
+        "aliases": [
+          "ARL",
+          "Peitian ARL",
+          "Peitian Robot ARL"
+        ],
+        "extensions": [
+          ".arl"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/arl-light.png",
+          "dark": "./icons/arl-dark.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "arl",
+        "scopeName": "source.arl",
+        "path": "./syntaxes/arl.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[arl]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "editor.defaultFormatter": "David-Workshop.peitian-arl-language-support"
+      },
+      "editor.tokenColorCustomizations": {
+        "[Dark 2026][Dark Modern][Dark+][Visual Studio Dark][Default High Contrast]": {
+          "textMateRules": [
+            {"name":"Peitian ARL: plain text","scope":["source.arl","variable.other.definition.arl"],"settings":{"foreground":"#c8d0d4","fontStyle":""}},
+            {"name":"Peitian ARL: S1 datatype / logic / keyword","scope":["storage.type.arl","storage.type.return.arl","keyword.control.arl","keyword.other.arl","keyword.declaration.function.arl"],"settings":{"foreground":"#EEEE00","fontStyle":""}},
+            {"name":"Peitian ARL: instructions","scope":"support.function.instruction.arl","settings":{"foreground":"#00EEEE","fontStyle":""}},
+            {"name":"Peitian ARL: built-in functions","scope":["support.function.builtin.arl","support.function.builtin.paren.arl"],"settings":{"foreground":"#00D407","fontStyle":""}},
+            {"name":"Peitian ARL: user and cross-file functions","scope":["entity.name.function.user.arl","entity.name.namespace.arl","punctuation.accessor.arl"],"settings":{"foreground":"#78a8c8","fontStyle":""}},
+            {"name":"Peitian ARL: main","scope":["entity.name.function.main.arl","support.function.builtin.main.arl"],"settings":{"foreground":"#ff5555","fontStyle":""}},
+            {"name":"Peitian ARL: system variables","scope":"variable.language.system.arl","settings":{"foreground":"#C5947C","fontStyle":""}},
+            {"name":"Peitian ARL: comments","scope":["comment.line.double-slash.arl","punctuation.definition.comment.arl","comment.block.arl","punctuation.definition.comment.begin.arl","punctuation.definition.comment.end.arl"],"settings":{"foreground":"#49a659","fontStyle":""}},
+            {"name":"Peitian ARL: strings","scope":["string.quoted.double.arl","punctuation.definition.string.begin.arl","punctuation.definition.string.end.arl"],"settings":{"foreground":"#9a9a9a","fontStyle":""}},
+            {"name":"Peitian ARL: numbers","scope":"constant.numeric.arl","settings":{"foreground":"#f0f0f0","fontStyle":""}},
+            {"name":"Peitian ARL: brackets","scope":"punctuation.section.brackets.arl","settings":{"foreground":"#c96eb4","fontStyle":""}}
+          ]
+        },
+        "[Light 2026][Light Modern][Light+][Visual Studio Light][Default High Contrast Light]": {
+          "textMateRules": [
+            {"name":"Peitian ARL: plain text","scope":["source.arl","variable.other.definition.arl"],"settings":{"foreground":"#1e1e1e","fontStyle":""}},
+            {"name":"Peitian ARL: S1 datatype / logic / keyword","scope":["storage.type.arl","storage.type.return.arl","keyword.control.arl","keyword.other.arl","keyword.declaration.function.arl"],"settings":{"foreground":"#d4860a","fontStyle":""}},
+            {"name":"Peitian ARL: instructions","scope":"support.function.instruction.arl","settings":{"foreground":"#0000e8","fontStyle":""}},
+            {"name":"Peitian ARL: built-in functions","scope":["support.function.builtin.arl","support.function.builtin.paren.arl"],"settings":{"foreground":"#aa00aa","fontStyle":""}},
+            {"name":"Peitian ARL: user and cross-file functions","scope":["entity.name.function.user.arl","entity.name.namespace.arl","punctuation.accessor.arl"],"settings":{"foreground":"#1a67a8","fontStyle":""}},
+            {"name":"Peitian ARL: main","scope":["entity.name.function.main.arl","support.function.builtin.main.arl"],"settings":{"foreground":"#ff5555","fontStyle":""}},
+            {"name":"Peitian ARL: system variables","scope":"variable.language.system.arl","settings":{"foreground":"#795e26","fontStyle":""}},
+            {"name":"Peitian ARL: comments","scope":["comment.line.double-slash.arl","punctuation.definition.comment.arl","comment.block.arl","punctuation.definition.comment.begin.arl","punctuation.definition.comment.end.arl"],"settings":{"foreground":"#008000","fontStyle":""}},
+            {"name":"Peitian ARL: strings","scope":["string.quoted.double.arl","punctuation.definition.string.begin.arl","punctuation.definition.string.end.arl"],"settings":{"foreground":"#808080","fontStyle":""}},
+            {"name":"Peitian ARL: numbers","scope":"constant.numeric.arl","settings":{"foreground":"#c0392b","fontStyle":""}},
+            {"name":"Peitian ARL: brackets","scope":"punctuation.section.brackets.arl","settings":{"foreground":"#000080","fontStyle":""}}
+          ]
+        }
+      }
+    },
+    "themes": [
+      {"label":"Peitian ARL Black","uiTheme":"vs-dark","path":"./themes/peitian-arl-black-color-theme.json"},
+      {"label":"Peitian ARL Light","uiTheme":"vs","path":"./themes/peitian-arl-light-color-theme.json"}
+    ],
+    "configuration": {
+      "title": "%configuration.title%",
+      "properties": {
+        "peitianArl.preciseFontWeights.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.preciseFontWeights.description%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node tests/validate.cjs && node tests/structure.cjs && node tests/intelligence.cjs && node tests/workspace-variable-index.cjs && node tests/extension-runtime.cjs",
+    "vscode:prepublish": "npm test"
+  },
+  "devDependencies": {},
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:arl"],
+  "icon": "icon.png",
+  "pricing": "Free",
+  "galleryBanner": {"color":"#121314","theme":"dark"},
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {"type":"git","url":"https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support.git"},
+  "homepage": "https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support#readme",
+  "bugs": {"url":"https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/issues"}
+}

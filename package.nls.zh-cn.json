@@ -1,0 +1,6 @@
+{
+  "extension.displayName": "配天机器人 ARL 语言支持",
+  "extension.description": "面向配天工业机器人 ARL 程序的轻量级 VS Code 语言支持插件。",
+  "configuration.title": "配天机器人 ARL",
+  "configuration.preciseFontWeights.description": "在 .arl 编辑器中为 JetBrains Mono 与 Cascadia Code 使用接近 ARL 编辑器的分级数字字重。"
+}

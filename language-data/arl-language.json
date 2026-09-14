@@ -1,0 +1,61 @@
+{
+  "source": {
+    "repository": "YoyoDavidGo/ARL-IDE-NEW",
+    "branch": "master",
+    "sourceFile": "dist/index.html",
+    "sourceBlobSha": "a7f881fa2287cc624b9f785f54b7fd8328ba6b65",
+    "arlReferenceVersion": "4.5.0",
+    "notes": "Extracted from _wizTypeMap/_PREBUILT_SVS, S_PAREN_FN and fmtCode() in ARL-IDE-NEW."
+  },
+  "caseInsensitive": true,
+  "categories": {
+    "logic": ["if","elseif","else","endif","while","endwhile","for","endfor","repeat","until","loop","endloop","switch","case","default","endswitch","break","continue","goto"],
+    "instructions": ["movej","ptp","lin","cir","ccir","spl","jump","waittime","waituntil","stopmove","startmove","pause","exit","restart","velset","accset","interrupt","timer","trigger","disableint","enableint","delint","toolswitch","startdetect","enddetect","startweave","endweave","startcompen","endcompen","compen","import","print","scan","palletcompen"],
+    "functions": ["setinterpercent","getinterpercent","setdo","syncdo","pulsedo","setao","syncao","setpwm","getdo","getdi","getai","getao","getintdo","getintdi","init","main","savesv","typeof","ctime","cdate","assert","toascii","setip","getip","addslave","setcycle","switcharl","switchbackarl","startbackchannel","pausebackchannel","resetbackchannel","curmpfile","curmpline","curppfile","curppline","abs","sqrt","sin","cos","tan","asin","acos","atan","atan2","sinh","cosh","tanh","exp","pow","pow10","log","log10","floor","ceil","fmod","modf","hypot","rand","norm","trunc","frexp","ldexp","cjoint","cpose","getpose","getjoint","poseinv","offset","reltool","cjttq","cjtci","channeltojoint","channeltopose","channeljoint","channelpose","channeljointvel","channeltcpvel","ctcpforce","getposetool","getposewobj","setposetool","setposewobj","getwobj_3p","getwobj_indi","getwobj_flange","gettooltcp_ref","gettoolrot_world","gettoolrot_3p","gettool_3p","getbase_3p","strlen","substr","toint","todouble","tobytes","tostr","ftobytes","tofloat","bitcheck","bitset","bitclear","bitlcs","bitrcs","savearl","savefilepose","savefilejoint","filesize","renamefile","removefile","gettextstr","saveposenow","savejointnow","connect","accept","write","syncwrite","read","readuntil","clearbuff","open","close","dnwrite","dnread","readregisters","writeregisters","readcoils","writecoils","clkstart","clkstop","clkreset","clkread"],
+    "keywords": ["void","const","true","false","endl","return","func","endfunc"],
+    "datatypes": ["int","uint","byte","double","bool","string","pos","frame","pose","joint","tool","wobj","weavedata","speed","slip","jvel","clock","iodev","socket","melsec_dev","modbus_dev","modbus_rtu_master","tcpforce","jttq","jtci","compendata"],
+    "systemVariables": ["$I","$I_NAME","$S","$S_NAME","$B","$B_NAME","$D","$D_NAME","$P","$J","$TOOLS","$TOOLS_NAME","$WOBJS","$WOBJS_NAME","$BASE","$FLANGE","$WORLD","$Config_check","$CCIR_ERROR_THRESHOLD","$DFSPEED","$DFSLIP","$DFTOOL","$DFWOBJ","$IGNORE_ORI","$ORI_REF_PATH","$VEL_PROFILE","$TRAJ_ELAPSE_TIME","$TRAJ_LEFT_TIME","$TRAJ_ELAPSE_DIS","$TRAJ_LEFT_DIS","$CJOINT","$RPP_ENABLE","$AT_HOME","$EXT_CTL_ACT","$PGNO_REQ","$PGNO","$PI","$CTL_MODE","$WOBJ_OFFSET","$TOOL_OFFSET","$RESET_POS_TYPE","$RESET_POS_THESHOLD","$WEAVE_FRAME_TYPE","$EXT_CTL_ACT_DI","$SERVO_ON_DI","$SERVO_OFF_DI","$START_PROG_DI","$PAUSE_PROG_DI","$RESET_PROG_DI","$CLEAR_ALARM_DI","$PGNO_FBIT_DI","$PGNO_PARITY_DI","$PGNO_VALID_DI","$EXT_CTL_CHAN_DI","$EXT_CTL_ACT_CONF_DO","$SERVO_ON_DO","$PGNO_REQ_DO","$AT_HOME_DO","$AT_T1_DO","$AT_T2_DO","$AT_AUT_DO","$PGNO_ACK_FBIT_DO","$CHAN_RUN_STATE_DO","$CHAN_LOAD_STATE_DO","$CHAN_PAUSE_STATE_DO","$CHAN_STOP_STATE_DO","$CHAN_ESTOP_STATE_DO","$CHAN_IDLE_STATE_DO","$AT_PATH_DO"],
+    "parenOnlyFunctions": ["t","p","s","stoend"]
+  },
+  "indentation": {
+    "open": ["func","if","while","for","loop","switch","repeat","interrupt","timer","trigger"],
+    "close": ["endfunc","endif","endwhile","endfor","endloop","endswitch","until"],
+    "sameLevelBranch": ["elseif","else","case","default"],
+    "tabSize": 4,
+    "insertSpaces": true,
+    "compactStatementRule": "Except func, an opener only increases depth when no substantive code remains after the opener/optional parenthesized condition; inline forms such as if(cond) action do not open a block."
+  },
+  "lexical": {
+    "lineComment": "//",
+    "stringDelimiter": "\"",
+    "brackets": [["(",")"],["[","]"],["{","}"]],
+    "crossFileCall": "file::func(...)",
+    "systemVariablePrefix": "$"
+  },
+  "themePalettes": {
+    "source": {
+      "repository": "YoyoDavidGo/ARL-IDE-NEW",
+      "branch": "master",
+      "referenceFile": "dist/index.html",
+      "referenceBlobSha": "a7f881fa2287cc624b9f785f54b7fd8328ba6b65",
+      "note": "Colors verified against current dist/index.html and the ARL-IDE Black/Light screenshots. Black uses current runtime overrides for brackets."
+    },
+    "black": {
+      "sourceTheme": "black",
+      "editorBackground": "#121314",
+      "editorForeground": "#c8d0d4",
+      "syntax": {"s1":"#EEEE00","instruction":"#00EEEE","builtinFunction":"#00D407","systemVariable":"#C5947C","comment":"#49a659","string":"#9a9a9a","number":"#f0f0f0","userFunction":"#78a8c8","bracket":"#c96eb4","main":"#ff5555","plain":"#c8d0d4"}
+    },
+    "light": {
+      "sourceTheme": "light",
+      "editorBackground": "#f6f6f6",
+      "editorForeground": "#1e1e1e",
+      "syntax": {"s1":"#d4860a","instruction":"#0000e8","builtinFunction":"#aa00aa","systemVariable":"#795e26","comment":"#008000","string":"#808080","number":"#c0392b","userFunction":"#1a67a8","bracket":"#000080","main":"#ff5555","plain":"#1e1e1e"}
+    },
+    "vscodeIntegration": {
+      "strategy": "ARL-only TextMate overrides are contributed for VS Code built-in dark/light themes. Optional Peitian ARL Black/Light themes use the same palette. No runtime extension is required.",
+      "darkThemes": ["Dark 2026","Dark Modern","Dark+","Visual Studio Dark","Default High Contrast"],
+      "lightThemes": ["Light 2026","Light Modern","Light+","Visual Studio Light","Default High Contrast Light"]
+    }
+  }
+}
