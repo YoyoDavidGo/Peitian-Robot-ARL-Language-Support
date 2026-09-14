@@ -6,6 +6,28 @@
 
 本插件专注于让 `.arl` 文件在原生 VS Code 中获得良好的编辑体验，不引入 Language Server、AI 运行时、云服务、机器人在线连接层，也没有生产环境 npm 依赖。
 
+## 界面截图
+
+### 深色主题 · Hover、高亮与大纲
+
+![深色主题 ARL Hover 与大纲](./docs/images/01-dark-hover-and-outline.jpg)
+
+### 深色主题 · 程序整体效果
+
+![深色主题 ARL 程序整体效果](./docs/images/02-dark-program-overview.jpg)
+
+### 浅色主题 · 语法高亮与大纲
+
+![浅色主题 ARL 语法高亮与大纲](./docs/images/03-light-syntax-and-outline.jpg)
+
+### IntelliSense 自动补全
+
+![ARL IntelliSense 自动补全](./docs/images/04-intellisense-completion.jpg)
+
+### 插件详情页
+
+![配天机器人 ARL 语言支持插件详情](./docs/images/05-extension-details.jpg)
+
 ## 功能
 
 - `.arl` 文件识别与专属文件图标
@@ -58,7 +80,7 @@ ptp p:p
 | `t:` | `tool` |
 | `w:` | `wobj` |
 
-类型感知补全只读取当前 ARL 文件，以及同目录下与其配套的 `<程序名>_data.arl` 文件；配套数据文件会缓存在内存中，因此其他程序的变量不会混入当前程序的联想列表。
+类型感知补全只读取当前 ARL 文件以及同目录下与其配套的 `<程序名>_data.arl` 文件。配套数据文件会缓存在内存中，其他程序的变量不会混入当前候选列表。
 
 ## 常用快捷键
 
