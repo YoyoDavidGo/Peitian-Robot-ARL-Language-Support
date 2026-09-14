@@ -1,6 +1,6 @@
 # Peitian Robot ARL Language Support
 
-**English** | [简体中文](./README.zh-CN.md)
+**English** | [简体中文](https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.zh-CN.md)
 
 Lightweight Visual Studio Code language support for **PEITIAN industrial robot ARL** programs.
 
@@ -57,7 +57,7 @@ Current typed parameter filters include:
 | `t:` | `tool` |
 | `w:` | `wobj` |
 
-Workspace global variables are indexed in memory and reused by completion instead of rescanning the entire workspace on every keystroke.
+For typed parameter completion, variables come from the current ARL file plus its paired `<program>_data.arl` file in the same directory. The paired data file is cached in memory, so unrelated ARL programs do not pollute the suggestion list.
 
 ## Editing shortcuts
 
