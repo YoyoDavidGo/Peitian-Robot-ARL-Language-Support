@@ -1,6 +1,7 @@
 {
   "extension.displayName": "Peitian Robot ARL Language Support",
-  "extension.description": "Lightweight VS Code language support for PEITIAN industrial robot ARL programs.",
+  "extension.description": "Lightweight Visual Studio Code language support for PEITIAN industrial robot ARL programs.",
   "configuration.title": "Peitian Robot ARL",
-  "configuration.preciseFontWeights.description": "Use ARL-IDE-like numeric font weights for JetBrains Mono and Cascadia Code in .arl editors."
+  "configuration.preciseFontWeights.description": "Apply ARL-specific font-weight mapping for JetBrains Mono and Cascadia Code.",
+  "configuration.smartCompletion.description": "Enable lightweight ARL Smart Completion templates. Parameter candidates appear only after the first typed character."
 }

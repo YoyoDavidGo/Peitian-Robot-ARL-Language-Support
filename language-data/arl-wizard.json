@@ -1,0 +1,36 @@
+{
+  "source": {"repository":"YoyoDavidGo/ARL-IDE-NEW","arlReferenceVersion":"4.5.0","arcsVersion":"2.6.6","note":"Compact VS Code completion metadata derived from the original ARL Wizard. Missing built-ins fall back to arl-reference.json prototypes."},
+  "entries": {
+    "ptp": {"type":"instruction","variants":[
+      {"name":"Variable","params":[{"key":"p","type":"pose","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]},
+      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vp","type":"double","unit":"%","candidates":["10","30","50"]},{"key":"sp","type":"double","unit":"%","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
+    ]},
+    "lin": {"type":"instruction","variants":[
+      {"name":"Variable","params":[{"key":"p","type":"pose","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]},
+      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
+    ]},
+    "movej": {"type":"instruction","variants":[
+      {"name":"Variable","params":[{"key":"j","type":"joint","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]}]},
+      {"name":"Value","params":[{"key":"j","type":"joint","required":true},{"key":"vp","type":"double","unit":"%","candidates":["10","30","50"]},{"key":"sp","type":"double","unit":"%","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]}]}
+    ]},
+    "cir": {"type":"instruction","variants":[
+      {"name":"Value","params":[{"key":"m","type":"pose","required":true},{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
+    ]},
+    "ccir": {"type":"instruction","variants":[
+      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
+    ]},
+    "waittime": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"time","type":"double","required":true,"candidates":["0.5","1","0.2"]}]}]},
+    "waituntil": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"cond","type":"bool","required":true,"candidates":["getdi(1)"]},{"key":"maxtime","type":"double"},{"key":"timeoutflag","type":"bool"}]}]},
+    "velset": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"override","type":"double","candidates":["50","80"]},{"key":"max","type":"double","candidates":["500","1000"]}]}]},
+    "accset": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"acc","type":"double","candidates":["300","200","150"]},{"key":"ramp","type":"double","candidates":["300","200","150"]}]}]},
+    "setdo": {"type":"function","variants":[{"name":"Single CH","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]},{"key":"value","type":"bool","required":true,"candidates":["1","0"]}]}]},
+    "getdi": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
+    "getdo": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
+    "getai": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
+    "getao": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
+    "offset": {"type":"function","variants":[
+      {"name":"Short","params":[{"key":"p","type":"pose","required":true},{"key":"dx","type":"double","required":true},{"key":"dy","type":"double","required":true},{"key":"dz","type":"double","required":true}]},
+      {"name":"Full","params":[{"key":"p","type":"pose","required":true},{"key":"dx","type":"double","required":true},{"key":"dy","type":"double","required":true},{"key":"dz","type":"double","required":true},{"key":"rz","type":"double"},{"key":"ry","type":"double"},{"key":"rx","type":"double"}]}
+    ]}
+  }
+}
