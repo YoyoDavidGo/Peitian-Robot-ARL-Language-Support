@@ -22,6 +22,9 @@ function firstWord(trimmedLine) {
 
 function hasCompactStatementAfterCondition(trimmedLine, keyword) {
   let rest = trimmedLine.slice(keyword.length).trim();
+
+  // ARL-IDE treats (...) after block keywords as the condition/argument list.
+  // Text after the matching top-level ')' means compact single-line syntax.
   if (rest.startsWith('(')) {
     let depth = 0;
     let index = 0;
@@ -29,11 +32,15 @@ function hasCompactStatementAfterCondition(trimmedLine, keyword) {
       if (rest[index] === '(') depth++;
       else if (rest[index] === ')') {
         depth--;
-        if (depth === 0) { index++; break; }
+        if (depth === 0) {
+          index++;
+          break;
+        }
       }
     }
     rest = rest.slice(index).trim();
   }
+
   return rest !== '' && !rest.startsWith('//');
 }
 
@@ -54,24 +61,30 @@ function formatArl(text, options = {}) {
   const unit = indentUnit(options);
   const lines = text.split(/\r?\n/);
   let depth = 0;
+
   const formatted = lines.map(raw => {
     const trimmed = raw.trim();
     if (!trimmed) return '';
+
     const keyword = firstWord(trimmed);
+
     if (CLOSE.has(keyword)) {
       depth = Math.max(0, depth - 1);
       return unit.repeat(depth) + trimmed;
     }
+
     if (SAME.has(keyword)) {
       depth = Math.max(0, depth - 1);
       const out = unit.repeat(depth) + trimmed;
       depth++;
       return out;
     }
+
     const out = unit.repeat(depth) + trimmed;
     if (opensIndentedBlock(trimmed, keyword)) depth++;
     return out;
   });
+
   return formatted.join(eol);
 }
 
@@ -79,28 +92,51 @@ function getFoldingRanges(text) {
   const lines = text.split(/\r?\n/);
   const stack = [];
   const ranges = [];
+
   for (let line = 0; line < lines.length; line++) {
     const trimmed = lines[line].trim();
     if (!trimmed || trimmed.startsWith('//')) continue;
+
     const keyword = firstWord(trimmed);
+
     if (FOLD_PAIRS.has(keyword) && opensIndentedBlock(trimmed, keyword)) {
       stack.push({ type: keyword, line });
       continue;
     }
+
     const expectedOpen = FOLD_CLOSE_TO_OPEN.get(keyword);
     if (!expectedOpen) continue;
+
+    // Match the nearest compatible opener. Discard malformed unmatched inner
+    // entries rather than producing incorrect cross-block folds.
     let matchIndex = -1;
     for (let i = stack.length - 1; i >= 0; i--) {
-      if (stack[i].type === expectedOpen) { matchIndex = i; break; }
+      if (stack[i].type === expectedOpen) {
+        matchIndex = i;
+        break;
+      }
     }
     if (matchIndex < 0) continue;
+
     const opener = stack[matchIndex];
     stack.length = matchIndex;
+
+    // Keep the closing keyword visible. VS Code folds lines start+1..end.
     const end = line - 1;
-    if (end > opener.line) ranges.push({ start: opener.line, end, type: opener.type });
+    if (end > opener.line) {
+      ranges.push({ start: opener.line, end, type: opener.type });
+    }
   }
+
   ranges.sort((a, b) => a.start - b.start || a.end - b.end);
   return ranges;
 }
 
-module.exports = { OPEN, CLOSE, SAME, formatArl, getFoldingRanges, opensIndentedBlock };
+module.exports = {
+  OPEN,
+  CLOSE,
+  SAME,
+  formatArl,
+  getFoldingRanges,
+  opensIndentedBlock
+};

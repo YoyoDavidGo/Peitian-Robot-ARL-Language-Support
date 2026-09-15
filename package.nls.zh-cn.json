@@ -1,7 +1,10 @@
 {
   "extension.displayName": "配天机器人 ARL 语言支持",
-  "extension.description": "面向配天工业机器人 ARL 程序的轻量级 Visual Studio Code 语言支持插件。",
+  "extension.description": "面向配天工业机器人 ARL 程序的轻量级 VS Code 语言支持插件。适配 ARCS 2.6.6（对应编程手册 v4.5.0）。",
   "configuration.title": "配天机器人 ARL",
-  "configuration.preciseFontWeights.description": "为 JetBrains Mono 和 Cascadia Code 应用 ARL 精确字重映射。",
-  "configuration.smartCompletion.description": "启用轻量 ARL 智能结构补全；参数位置仅在用户输入首字符后显示候选。"
+  "configuration.preciseFontWeights.description": "在 .arl 编辑器中为 JetBrains Mono 与 Cascadia Code 使用接近 ARL 编辑器的分级数字字重。",
+  "configuration.smartCompletion.description": "使用 ARL Wizard 元数据为指令、函数和控制结构提供可选结构模板与参数感知补全；参数值仍可自由输入。",
+  "command.smartEnter.title": "配天 ARL：结束智能补全并换行"
+,
+  "command.smartTab.title": "ARL 智能参数：下一占位符"
 }

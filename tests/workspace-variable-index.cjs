@@ -44,6 +44,8 @@ const languageData = require('../language-data/arl-language.json');
   vars=index.getAllGlobalVariables('file:///ws/current.arl');
   assert(!vars.some(v=>v.name==='jB'),'removed files must leave the index');
 
+
+
   // Marketplace release: typed completion must be scoped to the current ARL
   // program and its paired <name>_data.arl file, not every ARL file in the workspace.
   files.set('file:///ws/1_data.arl','pose p1Data\nspeed v1Data');

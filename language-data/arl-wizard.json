@@ -1,36 +1,4681 @@
 {
-  "source": {"repository":"YoyoDavidGo/ARL-IDE-NEW","arlReferenceVersion":"4.5.0","arcsVersion":"2.6.6","note":"Compact VS Code completion metadata derived from the original ARL Wizard. Missing built-ins fall back to arl-reference.json prototypes."},
+  "source": {
+    "repository": "YoyoDavidGo/ARL-IDE-NEW",
+    "branch": "master",
+    "sourceFile": "dist/index.html",
+    "wizard": "ARL_Wizard_bilingual.md",
+    "arlReferenceVersion": "4.5.0",
+    "arcsVersion": "2.6.6",
+    "notes": "Wizard-driven metadata. Common entries preserve original candidates/units; remaining detailed reference entries are generated from their proto so the VS Code engine has broad coverage."
+  },
   "entries": {
-    "ptp": {"type":"instruction","variants":[
-      {"name":"Variable","params":[{"key":"p","type":"pose","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]},
-      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vp","type":"double","unit":"%","candidates":["10","30","50"]},{"key":"sp","type":"double","unit":"%","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
-    ]},
-    "lin": {"type":"instruction","variants":[
-      {"name":"Variable","params":[{"key":"p","type":"pose","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]},
-      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
-    ]},
-    "movej": {"type":"instruction","variants":[
-      {"name":"Variable","params":[{"key":"j","type":"joint","required":true},{"key":"v","type":"speed"},{"key":"s","type":"slip"},{"key":"t","type":"tool","candidates":["$FLANGE"]}]},
-      {"name":"Value","params":[{"key":"j","type":"joint","required":true},{"key":"vp","type":"double","unit":"%","candidates":["10","30","50"]},{"key":"sp","type":"double","unit":"%","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]}]}
-    ]},
-    "cir": {"type":"instruction","variants":[
-      {"name":"Value","params":[{"key":"m","type":"pose","required":true},{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
-    ]},
-    "ccir": {"type":"instruction","variants":[
-      {"name":"Value","params":[{"key":"p","type":"pose","required":true},{"key":"vl","type":"double","unit":"mm/s","candidates":["250","650"]},{"key":"sl","type":"double","unit":"mm","candidates":["0"]},{"key":"t","type":"tool","candidates":["$FLANGE"]},{"key":"w","type":"wobj","candidates":["$WORLD"]}]}
-    ]},
-    "waittime": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"time","type":"double","required":true,"candidates":["0.5","1","0.2"]}]}]},
-    "waituntil": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"cond","type":"bool","required":true,"candidates":["getdi(1)"]},{"key":"maxtime","type":"double"},{"key":"timeoutflag","type":"bool"}]}]},
-    "velset": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"override","type":"double","candidates":["50","80"]},{"key":"max","type":"double","candidates":["500","1000"]}]}]},
-    "accset": {"type":"instruction","variants":[{"name":"Basic","params":[{"key":"acc","type":"double","candidates":["300","200","150"]},{"key":"ramp","type":"double","candidates":["300","200","150"]}]}]},
-    "setdo": {"type":"function","variants":[{"name":"Single CH","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]},{"key":"value","type":"bool","required":true,"candidates":["1","0"]}]}]},
-    "getdi": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
-    "getdo": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
-    "getai": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
-    "getao": {"type":"function","variants":[{"name":"Basic","params":[{"key":"chan","type":"int","required":true,"candidates":["1","2","3"]}]}]},
-    "offset": {"type":"function","variants":[
-      {"name":"Short","params":[{"key":"p","type":"pose","required":true},{"key":"dx","type":"double","required":true},{"key":"dy","type":"double","required":true},{"key":"dz","type":"double","required":true}]},
-      {"name":"Full","params":[{"key":"p","type":"pose","required":true},{"key":"dx","type":"double","required":true},{"key":"dy","type":"double","required":true},{"key":"dz","type":"double","required":true},{"key":"rz","type":"double"},{"key":"ry","type":"double"},{"key":"rx","type":"double"}]}
-    ]}
+    "movej": {
+      "name": "movej",
+      "desc": "关节插补运动",
+      "desc_en": "Joint interpolation move",
+      "type": "instruction",
+      "proto": "movej j:<joint>, [v:|vp:], [s:|sp:|sl:], [t:], [dura:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "j",
+              "type": "joint",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "j1"
+              ],
+              "ph": "j",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "slip",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "s1"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dura",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "dura",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "百分比速度",
+          "name_en": "Speed %",
+          "sep": ",",
+          "params": [
+            {
+              "key": "j",
+              "type": "joint",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "j1"
+              ],
+              "ph": "j",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "10"
+              ],
+              "ph": "vp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "-1"
+              ],
+              "ph": "sp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "ptp": {
+      "name": "ptp",
+      "desc": "点到点运动（自动选关节/直线）",
+      "desc_en": "Point-to-point (auto joint/linear)",
+      "type": "instruction",
+      "proto": "ptp p:<pose>, [v:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "slip",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "s1"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "百分比速度",
+          "name_en": "Speed %",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "10"
+              ],
+              "ph": "vp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "0"
+              ],
+              "ph": "sp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "lin": {
+      "name": "lin",
+      "desc": "直线插补运动",
+      "desc_en": "Linear interpolation move",
+      "type": "instruction",
+      "proto": "lin p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "slip",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "s1"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "数字写法",
+          "name_en": "Numeric",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm/s",
+              "candidates": [
+                "250"
+              ],
+              "ph": "vl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm",
+              "candidates": [
+                "-1"
+              ],
+              "ph": "sl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "cir": {
+      "name": "cir",
+      "desc": "圆弧插补运动",
+      "desc_en": "Circular interpolation move",
+      "type": "instruction",
+      "proto": "cir m:<pose>, p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [CA:], [dura:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "m",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "m",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p2"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "slip",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "s1"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "CA",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "CA",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "数字写法",
+          "name_en": "Numeric",
+          "sep": ",",
+          "params": [
+            {
+              "key": "m",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "m",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p2"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm/s",
+              "candidates": [
+                "250"
+              ],
+              "ph": "vl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm",
+              "candidates": [
+                "0"
+              ],
+              "ph": "sl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "CA",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "CA",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "ccir": {
+      "name": "ccir",
+      "desc": "整圆插补运动",
+      "desc_en": "Full circle interpolation",
+      "type": "instruction",
+      "proto": "ccir p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "slip",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "s1"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "数字写法",
+          "name_en": "Numeric",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm/s",
+              "candidates": [
+                "250"
+              ],
+              "ph": "vl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm",
+              "candidates": [
+                "0"
+              ],
+              "ph": "sl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "spl": {
+      "name": "spl",
+      "desc": "样条插补运动",
+      "desc_en": "Spline interpolation move",
+      "type": "instruction",
+      "proto": "spl p:<pose>, [v:|vp:], [sl:], [t:], [w:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm",
+              "candidates": [
+                "10"
+              ],
+              "ph": "sl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "速度数字写法",
+          "name_en": "Numeric",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "10"
+              ],
+              "ph": "vp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sl",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "mm",
+              "candidates": [
+                "10"
+              ],
+              "ph": "sl",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "waittime": {
+      "name": "waittime",
+      "desc": "等待指定秒数",
+      "desc_en": "Wait for specified seconds",
+      "type": "instruction",
+      "proto": "waittime time:<double>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "time",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0.5",
+                "1",
+                "0.2"
+              ],
+              "ph": "time",
+              "desc": "等待时间",
+              "desc_en": "wait time"
+            }
+          ]
+        }
+      ]
+    },
+    "waituntil": {
+      "name": "waituntil",
+      "desc": "等待条件成立",
+      "desc_en": "Wait until condition is true",
+      "type": "instruction",
+      "proto": "waituntil cond:, [maxtime:], [timeoutflag:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "cond",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "getdi(1)"
+              ],
+              "ph": "cond",
+              "desc": "等待条件表达式",
+              "desc_en": "condition"
+            },
+            {
+              "key": "maxtime",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "maxtime",
+              "desc": "最长等待时间",
+              "desc_en": "max wait"
+            },
+            {
+              "key": "timeoutflag",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "timeoutflag",
+              "desc": "超时标志变量",
+              "desc_en": "timeout flag"
+            }
+          ]
+        }
+      ]
+    },
+    "print": {
+      "name": "print",
+      "desc": "打印输出，支持多参数/文件输出/精度控制",
+      "desc_en": "Print output (multi-arg / file / precision)",
+      "type": "instruction",
+      "proto": "print [to:], [tostr:], [filepath:], [precision:], [numbase:], {argtoprint}",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本输出",
+          "name_en": "Basic print",
+          "sep": ",",
+          "params": [
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "输出到文件",
+          "name_en": "Print to file",
+          "sep": ",",
+          "params": [
+            {
+              "key": "to",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "file",
+                "hmi",
+                "off"
+              ],
+              "ph": "to",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "filepath",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"script/new_folder1/log1\""
+              ],
+              "ph": "filepath",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtoprint",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "argtoprint",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "init": {
+      "name": "init",
+      "desc": "恢复系统变量为默认值",
+      "desc_en": "Reset system variables to defaults",
+      "type": "function",
+      "proto": "init()",
+      "params": "",
+      "variants": []
+    },
+    "setdo": {
+      "name": "setdo",
+      "desc": "设置数字量输出",
+      "desc_en": "Set digital output",
+      "type": "function",
+      "proto": "void setdo(int chan, bool value)",
+      "params": "",
+      "variants": [
+        {
+          "name": "单通道",
+          "name_en": "Single CH",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "多通道",
+          "name_en": "Multi CH",
+          "sep": ",",
+          "params": [
+            {
+              "key": "from",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "from",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "to",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "2"
+              ],
+              "ph": "to",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getdi": {
+      "name": "getdi",
+      "desc": "读取数字量输入",
+      "desc_en": "Read digital input",
+      "type": "function",
+      "proto": "bool getdi(int chan)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "offset": {
+      "name": "offset",
+      "desc": "位姿偏移（世界/工件坐标系下）",
+      "desc_en": "Pose offset (world/wobj frame)",
+      "type": "function",
+      "proto": "pose offset(pose p, double dx, double dy, double dz, double rz, double ry, double rx)",
+      "params": "",
+      "variants": [
+        {
+          "name": "缩短写法",
+          "name_en": "Short form",
+          "sep": ",",
+          "params": [
+            {
+              "key": "pose",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1"
+              ],
+              "ph": "pose",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dx",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dx",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dy",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dy",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dz",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dz",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "全称写法",
+          "name_en": "Full form",
+          "sep": ",",
+          "params": [
+            {
+              "key": "pose",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1"
+              ],
+              "ph": "pose",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dx",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dx",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dy",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dy",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dz",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dz",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "da",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "da",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "db",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "db",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dc",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dc",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "reltool": {
+      "name": "reltool",
+      "desc": "工具坐标系下位姿偏移",
+      "desc_en": "Pose offset in tool frame",
+      "type": "function",
+      "proto": "pose reltool(pose p, double dx, double dy, double dz, double rz, double ry, double rx)",
+      "params": "",
+      "variants": [
+        {
+          "name": "全称写法",
+          "name_en": "Full form",
+          "sep": ",",
+          "params": [
+            {
+              "key": "pose",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1"
+              ],
+              "ph": "pose",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dx",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dx",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dy",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dy",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dz",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dz",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "da",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "da",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "db",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "db",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dc",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dc",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "缩短写法",
+          "name_en": "Short form",
+          "sep": ",",
+          "params": [
+            {
+              "key": "pose",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1"
+              ],
+              "ph": "pose",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dx",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dx",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dy",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dy",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dz",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "dz",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "poseinv": {
+      "name": "poseinv",
+      "desc": "求位姿逆变换",
+      "desc_en": "Pose inverse transform",
+      "type": "function",
+      "proto": "pose poseinv(pose p)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "jump": {
+      "name": "jump",
+      "desc": "跳跃运动（带拾取高度控制）",
+      "desc_en": "Jump motion (pick height control)",
+      "type": "instruction",
+      "proto": "jump p:<pose>, [v:|vp:], [t:], [w:], [a:], [b:], [Z:], [s:], [ctr:], [sig:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "v",
+              "type": "speed",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "v1"
+              ],
+              "ph": "v",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "a",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50"
+              ],
+              "ph": "a",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "b",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50"
+              ],
+              "ph": "b",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "Z",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "-10"
+              ],
+              "ph": "Z",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "ctr",
+              "type": "control",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "ctr",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sig",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "sig",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "数字写法",
+          "name_en": "Numeric",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "vp",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "%",
+              "candidates": [
+                "50"
+              ],
+              "ph": "vp",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "a",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50"
+              ],
+              "ph": "a",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "b",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50"
+              ],
+              "ph": "b",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "Z",
+              "type": "double",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "-10"
+              ],
+              "ph": "Z",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "s",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "s",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "ctr",
+              "type": "control",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "ctr",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "sig",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "sig",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "stopmove": {
+      "name": "stopmove",
+      "desc": "停止运动",
+      "desc_en": "Stop motion",
+      "type": "instruction",
+      "proto": "stopmove [type:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "type",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "general",
+                "fast"
+              ],
+              "ph": "type",
+              "desc": "停止类型",
+              "desc_en": "stop type"
+            }
+          ]
+        }
+      ]
+    },
+    "startmove": {
+      "name": "startmove",
+      "desc": "启动运动",
+      "desc_en": "Start motion",
+      "type": "instruction",
+      "proto": "startmove [skip:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "skip",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "2",
+                "3",
+                "4"
+              ],
+              "ph": "skip",
+              "desc": "是否跳过缓存运动",
+              "desc_en": "skip buffered"
+            }
+          ]
+        }
+      ]
+    },
+    "pause": {
+      "name": "pause",
+      "desc": "暂停程序执行",
+      "desc_en": "Pause program",
+      "type": "instruction",
+      "proto": "pause",
+      "params": "",
+      "variants": []
+    },
+    "exit": {
+      "name": "exit",
+      "desc": "退出当前程序",
+      "desc_en": "Exit program",
+      "type": "instruction",
+      "proto": "exit",
+      "params": "",
+      "variants": []
+    },
+    "restart": {
+      "name": "restart",
+      "desc": "重启程序",
+      "desc_en": "Restart program",
+      "type": "instruction",
+      "proto": "restart",
+      "params": "",
+      "variants": []
+    },
+    "velset": {
+      "name": "velset",
+      "desc": "速度调节，设置速度倍率和最大速度",
+      "desc_en": "Speed adjustment: override & max speed",
+      "type": "instruction",
+      "proto": "velset override:, max:",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "override",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50",
+                "80"
+              ],
+              "ph": "override",
+              "desc": "速度倍率百分比",
+              "desc_en": "override %"
+            },
+            {
+              "key": "max",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "500",
+                "1000"
+              ],
+              "ph": "max",
+              "desc": "最大速度",
+              "desc_en": "max speed"
+            }
+          ]
+        }
+      ]
+    },
+    "accset": {
+      "name": "accset",
+      "desc": "加速度调节",
+      "desc_en": "Acceleration adjustment",
+      "type": "instruction",
+      "proto": "accset acc:, ramp:",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "acc",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "300",
+                "200",
+                "150"
+              ],
+              "ph": "acc",
+              "desc": "加速度百分比",
+              "desc_en": "acc %"
+            },
+            {
+              "key": "ramp",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "300",
+                "200",
+                "150"
+              ],
+              "ph": "ramp",
+              "desc": "加速斜率百分比",
+              "desc_en": "ramp %"
+            }
+          ]
+        }
+      ]
+    },
+    "interrupt": {
+      "name": "interrupt",
+      "desc": "声明中断事件",
+      "desc_en": "Declare interrupt event",
+      "type": "instruction",
+      "proto": "interrupt [name:], [priority:], when:, do:",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "name",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "name",
+              "desc": "中断名称",
+              "desc_en": "int name"
+            },
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "优先级",
+              "desc_en": "priority"
+            },
+            {
+              "key": "when",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "getdi(1)"
+              ],
+              "ph": "when",
+              "desc": "触发条件",
+              "desc_en": "trigger cond"
+            },
+            {
+              "key": "do",
+              "type": "function",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "do",
+              "desc": "响应函数名",
+              "desc_en": "handler"
+            }
+          ]
+        }
+      ]
+    },
+    "timer": {
+      "name": "timer",
+      "desc": "定时器中断",
+      "desc_en": "Timer interrupt",
+      "type": "instruction",
+      "proto": "timer [name:], [priority:], interval:, [rmode:], do:",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "name",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "name",
+              "desc": "定时器名称",
+              "desc_en": "timer name"
+            },
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "interval",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0.1",
+                "0.2",
+                "0.5",
+                "1"
+              ],
+              "ph": "interval",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "rmode",
+              "type": "bool",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "rmode",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "do",
+              "type": "function",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "do",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "trigger": {
+      "name": "trigger",
+      "desc": "轨迹触发事件",
+      "desc_en": "Path trigger event",
+      "type": "instruction",
+      "proto": "trigger [priority:], when:, do:",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "when",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "P(0)",
+                "P(100)",
+                "P(50)"
+              ],
+              "ph": "when",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "do",
+              "type": "function",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "do",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "disableint": {
+      "name": "disableint",
+      "desc": "禁用中断",
+      "desc_en": "Disable interrupt",
+      "type": "instruction",
+      "proto": "disableint [name:], [priority:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "name",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "name",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "enableint": {
+      "name": "enableint",
+      "desc": "启用中断",
+      "desc_en": "Enable interrupt",
+      "type": "instruction",
+      "proto": "enableint [name:], [priority:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "name",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "name",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "delint": {
+      "name": "delint",
+      "desc": "删除中断",
+      "desc_en": "Delete interrupt",
+      "type": "instruction",
+      "proto": "delint [name:], [priority:]",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "name",
+              "type": "string",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "name",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "priority",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2"
+              ],
+              "ph": "priority",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "toolswitch": {
+      "name": "toolswitch",
+      "desc": "工具负载切换",
+      "desc_en": "Tool load switch",
+      "type": "instruction",
+      "proto": "toolswitch toolindex:<int>, mu_name:<string>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "toolindex",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "toolindex",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "mu_name",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"R1\""
+              ],
+              "ph": "mu_name",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "startdetect": {
+      "name": "startdetect",
+      "desc": "开启碰撞检测",
+      "desc_en": "Enable collision detection",
+      "type": "instruction",
+      "proto": "startdetect cid:<int>, mu:<string>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "cid",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0"
+              ],
+              "ph": "cid",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "mu",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"R1\""
+              ],
+              "ph": "mu",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "enddetect": {
+      "name": "enddetect",
+      "desc": "关闭碰撞检测",
+      "desc_en": "Disable collision detection",
+      "type": "instruction",
+      "proto": "enddetect mu:<string>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "mu",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"R1\""
+              ],
+              "ph": "mu",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "startweave": {
+      "name": "startweave",
+      "desc": "开启叠加摆动",
+      "desc_en": "Enable weaving",
+      "type": "instruction",
+      "proto": "startweave weave:weavedata, mu:\"mu_name\"",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "weave",
+              "type": "weavedata",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "weavedatalin1"
+              ],
+              "ph": "weave",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "mu",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"R1\""
+              ],
+              "ph": "mu",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "endweave": {
+      "name": "endweave",
+      "desc": "结束叠加摆动",
+      "desc_en": "End weaving",
+      "type": "instruction",
+      "proto": "endweave mu:\"mu_name\"",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "mu",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"R1\""
+              ],
+              "ph": "mu",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "startcompen": {
+      "name": "startcompen",
+      "desc": "开始轨迹补偿",
+      "desc_en": "Start path compensation",
+      "type": "instruction",
+      "proto": "startcompen id:<int>, type:<int>, data:<compendata>, dataj:<compendata>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "id",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "id",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "type",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"TOOL\"",
+                "\"WOBJTOOL\"",
+                "\"PATH\"",
+                "\"MODIFY_PATH\"",
+                "\"WORLD\""
+              ],
+              "ph": "type",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "data",
+              "type": "compendata",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "data1"
+              ],
+              "ph": "data",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "dataj",
+              "type": "compendata",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "dataj1"
+              ],
+              "ph": "dataj",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "endcompen": {
+      "name": "endcompen",
+      "desc": "结束轨迹补偿",
+      "desc_en": "End path compensation",
+      "type": "instruction",
+      "proto": "endcompen",
+      "params": "",
+      "variants": []
+    },
+    "compen": {
+      "name": "compen",
+      "desc": "设置轨迹补偿参数",
+      "desc_en": "Set path compensation params",
+      "type": "instruction",
+      "proto": "compen [id:], [x:], [y:], [z:], [a:], [b:], [c:], ...",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "id",
+              "type": "int",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "id",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "x",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "x",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "y",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "y",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "z",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "z",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "a",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "a",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "b",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "b",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "c",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "c",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "import": {
+      "name": "import",
+      "desc": "导入ARL模块",
+      "desc_en": "Import ARL module",
+      "type": "instruction",
+      "proto": "import modpath:<string>",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "modpath",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"script/new_folder1/demo.arl\""
+              ],
+              "ph": "modpath",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "scan": {
+      "name": "scan",
+      "desc": "扫描输入字符串，按分隔符解析至变量",
+      "desc_en": "Scan string by delimiter to variables",
+      "type": "instruction",
+      "proto": "scan from:<string>, delimiter:<string>, {argtosave}",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "from",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "recdata"
+              ],
+              "ph": "from",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "delimiter",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\",\"",
+                "\"#\"",
+                "\" \""
+              ],
+              "ph": "delimiter",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtosave",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "px"
+              ],
+              "ph": "argtosave",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtosave",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "py"
+              ],
+              "ph": "argtosave",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtosave",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "pa"
+              ],
+              "ph": "argtosave",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "argtosave",
+              "type": "any",
+              "req": false,
+              "opt": true,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "endcut"
+              ],
+              "ph": "argtosave",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "palletcompen": {
+      "name": "palletcompen",
+      "desc": "计算码垛补偿点位",
+      "desc_en": "Calculate pallet compensation point",
+      "type": "instruction",
+      "proto": "pose palletcompen(pallet, double X_offset, double Y_offset, pose P)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "pallet",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "pallet",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "X_offset",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "X_offset",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "Y_offset",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "Y_offset",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "P",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "p1",
+                "[null]"
+              ],
+              "ph": "P",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "setinterpercent": {
+      "name": "setinterpercent",
+      "desc": "设置机器人运行速度倍率",
+      "desc_en": "Set robot speed override",
+      "type": "function",
+      "proto": "setinterpercent(per)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "per",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "30",
+                "50",
+                "80",
+                "100"
+              ],
+              "ph": "per",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getinterpercent": {
+      "name": "getinterpercent",
+      "desc": "获取机器人当前运行速度倍率",
+      "desc_en": "Get robot speed override",
+      "type": "function",
+      "proto": "getinterpercent()",
+      "params": "",
+      "variants": []
+    },
+    "syncdo": {
+      "name": "syncdo",
+      "desc": "同步设置数字量输出（随运动同步）",
+      "desc_en": "Sync set digital output (motion-sync)",
+      "type": "function",
+      "proto": "void syncdo(int chan, bool value)",
+      "params": "",
+      "variants": [
+        {
+          "name": "单通道",
+          "name_en": "Single CH",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        },
+        {
+          "name": "多通道",
+          "name_en": "Multi CH",
+          "sep": ",",
+          "params": [
+            {
+              "key": "from",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "from",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "to",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "2"
+              ],
+              "ph": "to",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "pulsedo": {
+      "name": "pulsedo",
+      "desc": "输出数字脉冲",
+      "desc_en": "Output digital pulse",
+      "type": "function",
+      "proto": "void pulsedo(int chan, bool value, double width)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "bool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "0"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "width",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "width",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "setao": {
+      "name": "setao",
+      "desc": "设置模拟量输出",
+      "desc_en": "Set analog output",
+      "type": "function",
+      "proto": "void setao(int chan, double value)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1.1"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "syncao": {
+      "name": "syncao",
+      "desc": "同步设置模拟量输出",
+      "desc_en": "Sync set analog output",
+      "type": "function",
+      "proto": "void syncao(int chan, double value)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "val",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1.1"
+              ],
+              "ph": "val",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "setpwm": {
+      "name": "setpwm",
+      "desc": "设置PWM输出",
+      "desc_en": "Set PWM output",
+      "type": "function",
+      "proto": "bool setpwm(int channel, int freq, int ratio)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "channel",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1"
+              ],
+              "ph": "channel",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "freq",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1000"
+              ],
+              "ph": "freq",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "ratio",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "50"
+              ],
+              "ph": "ratio",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getdo": {
+      "name": "getdo",
+      "desc": "读取数字量输出",
+      "desc_en": "Read digital output",
+      "type": "function",
+      "proto": "bool getdo(int chan)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getai": {
+      "name": "getai",
+      "desc": "读取模拟量输入",
+      "desc_en": "Read analog input",
+      "type": "function",
+      "proto": "double getai(int chan)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getao": {
+      "name": "getao",
+      "desc": "读取模拟量输出",
+      "desc_en": "Read analog output",
+      "type": "function",
+      "proto": "double getao(int chan)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "chan",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "ph": "chan",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "if": {
+      "name": "if",
+      "desc": "条件判断，满足时执行块内代码",
+      "desc_en": "Conditional: execute block when true",
+      "type": "logic",
+      "proto": "if(bool 表达式)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "bool",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "bool",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "elseif": {
+      "name": "elseif",
+      "desc": "前一条件不满足时检查此条件",
+      "desc_en": "Check this condition when previous is false",
+      "type": "logic",
+      "proto": "elseif(bool 表达式)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "bool",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "bool",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "else": {
+      "name": "else",
+      "desc": "所有 if/elseif 条件均不满足时的默认分支",
+      "desc_en": "Default branch when all conditions false",
+      "type": "logic",
+      "proto": "else",
+      "params": "",
+      "variants": []
+    },
+    "endif": {
+      "name": "endif",
+      "desc": "结束 if/elseif/else 条件块",
+      "desc_en": "End if/elseif/else block",
+      "type": "logic",
+      "proto": "endif",
+      "params": "",
+      "variants": []
+    },
+    "while": {
+      "name": "while",
+      "desc": "当条件成立时循环，先判断后执行",
+      "desc_en": "While loop (check-first)",
+      "type": "logic",
+      "proto": "while(bool 表达式)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "bool",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "bool",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "endwhile": {
+      "name": "endwhile",
+      "desc": "结束 while 循环块",
+      "desc_en": "End while block",
+      "type": "logic",
+      "proto": "endwhile",
+      "params": "",
+      "variants": []
+    },
+    "for": {
+      "name": "for",
+      "desc": "步进循环",
+      "desc_en": "For loop",
+      "type": "logic",
+      "proto": "for(初始化; bool表达式; 迭代)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ";",
+          "params": [
+            {
+              "key": "arg",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "arg",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "endfor": {
+      "name": "endfor",
+      "desc": "结束 for 循环块",
+      "desc_en": "End for block",
+      "type": "logic",
+      "proto": "endfor",
+      "params": "",
+      "variants": []
+    },
+    "repeat": {
+      "name": "repeat",
+      "desc": "直到型循环起始，先执行后判断",
+      "desc_en": "Repeat-until loop (execute-first)",
+      "type": "logic",
+      "proto": "repeat",
+      "params": "",
+      "variants": []
+    },
+    "until": {
+      "name": "until",
+      "desc": "直到型循环结束条件，表达式为真时退出",
+      "desc_en": "Until condition (exit when true)",
+      "type": "logic",
+      "proto": "until(bool 表达式)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "bool",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "bool",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "loop": {
+      "name": "loop",
+      "desc": "无限循环起始，需配合 break 退出",
+      "desc_en": "Infinite loop (use break to exit)",
+      "type": "logic",
+      "proto": "loop",
+      "params": "",
+      "variants": []
+    },
+    "endloop": {
+      "name": "endloop",
+      "desc": "结束 loop 无限循环块",
+      "desc_en": "End loop block",
+      "type": "logic",
+      "proto": "endloop",
+      "params": "",
+      "variants": []
+    },
+    "switch": {
+      "name": "switch",
+      "desc": "多分支判断，根据表达式值匹配 case",
+      "desc_en": "Switch: multi-branch by expression value",
+      "type": "logic",
+      "proto": "switch(表达式)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "arg",
+              "type": "any",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "arg",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "case": {
+      "name": "case",
+      "desc": "switch 的分支匹配项",
+      "desc_en": "Switch case branch",
+      "type": "logic",
+      "proto": "case 常量值:",
+      "params": "",
+      "variants": []
+    },
+    "default": {
+      "name": "default",
+      "desc": "switch 无匹配 case 时的默认分支",
+      "desc_en": "Default branch when no case matches",
+      "type": "logic",
+      "proto": "default:",
+      "params": "",
+      "variants": []
+    },
+    "endswitch": {
+      "name": "endswitch",
+      "desc": "结束 switch 多分支块",
+      "desc_en": "End switch block",
+      "type": "logic",
+      "proto": "endswitch",
+      "params": "",
+      "variants": []
+    },
+    "break": {
+      "name": "break",
+      "desc": "跳出最近一层循环（for/while/loop/switch）",
+      "desc_en": "Break out of nearest loop",
+      "type": "logic",
+      "proto": "break",
+      "params": "",
+      "variants": []
+    },
+    "continue": {
+      "name": "continue",
+      "desc": "跳过本次循环剩余代码，直接进入下一次循环",
+      "desc_en": "Skip to next iteration",
+      "type": "logic",
+      "proto": "continue",
+      "params": "",
+      "variants": []
+    },
+    "goto": {
+      "name": "goto",
+      "desc": "无条件跳转到指定标签处执行",
+      "desc_en": "Unconditional jump to label",
+      "type": "logic",
+      "proto": "goto label",
+      "params": "",
+      "variants": []
+    },
+    "cjoint": {
+      "name": "cjoint",
+      "desc": "获取机器人当前各轴位置",
+      "desc_en": "Get current joint positions",
+      "type": "function",
+      "proto": "joint cjoint()",
+      "params": "",
+      "variants": []
+    },
+    "cpose": {
+      "name": "cpose",
+      "desc": "获取机器人当前TCP位姿",
+      "desc_en": "Get current TCP pose",
+      "type": "function",
+      "proto": "pose cpose(tool t, wobj w)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "t",
+              "type": "tool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getpose": {
+      "name": "getpose",
+      "desc": "运动学正解：由轴位置求TCP位姿",
+      "desc_en": "Forward kinematics",
+      "type": "function",
+      "proto": "pose getpose(joint j, tool t, wobj w)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "j",
+              "type": "joint",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "j1"
+              ],
+              "ph": "j",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "getjoint": {
+      "name": "getjoint",
+      "desc": "运动学逆解：由TCP位姿求轴位置",
+      "desc_en": "Inverse kinematics",
+      "type": "function",
+      "proto": "joint getjoint(pose p, tool t, wobj w)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "p",
+              "type": "pose",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "p",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "t",
+              "type": "tool",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$FLANGE",
+                "$tool0",
+                "$tool1",
+                "$tool2"
+              ],
+              "ph": "t",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "w",
+              "type": "wobj",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "$WORLD",
+                "$wobj0",
+                "$wobj1",
+                "$wobj2"
+              ],
+              "ph": "w",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "abs": {
+      "name": "abs",
+      "desc": "绝对值",
+      "desc_en": "Absolute value",
+      "type": "function",
+      "proto": "double abs(double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "x",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "x",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "sqrt": {
+      "name": "sqrt",
+      "desc": "平方根",
+      "desc_en": "Square root",
+      "type": "function",
+      "proto": "double sqrt(double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "x",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "x",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "sin": {
+      "name": "sin",
+      "desc": "正弦（弧度）",
+      "desc_en": "Sine (radians)",
+      "type": "function",
+      "proto": "double sin(double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "angle",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "angle",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "cos": {
+      "name": "cos",
+      "desc": "余弦（弧度）",
+      "desc_en": "Cosine (radians)",
+      "type": "function",
+      "proto": "double cos(double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "angle",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "angle",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "tan": {
+      "name": "tan",
+      "desc": "正切（弧度）",
+      "desc_en": "Tangent (radians)",
+      "type": "function",
+      "proto": "double tan(double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "angle",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "angle",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "atan2": {
+      "name": "atan2",
+      "desc": "四象限反正切",
+      "desc_en": "Four-quadrant arc tangent",
+      "type": "function",
+      "proto": "double atan2(double y, double x)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "y",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "y",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "x",
+              "type": "double",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "x",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "strlen": {
+      "name": "strlen",
+      "desc": "字符串长度",
+      "desc_en": "String length",
+      "type": "function",
+      "proto": "int strlen(string s)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "str",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "str",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "substr": {
+      "name": "substr",
+      "desc": "截取子字符串",
+      "desc_en": "Extract substring",
+      "type": "function",
+      "proto": "string substr(string s, int startpos, int len)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "str",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "str1",
+                "$S[1]"
+              ],
+              "ph": "str",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "start",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "start",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "len",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "len",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "bitcheck": {
+      "name": "bitcheck",
+      "desc": "检查指定位是否为1",
+      "desc_en": "Check if bit is 1",
+      "type": "function",
+      "proto": "bool bitcheck(int &data, int pos)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "data",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "data",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "pos",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "pos",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "bitset": {
+      "name": "bitset",
+      "desc": "将整数的指定位置1",
+      "desc_en": "Set bit to 1",
+      "type": "function",
+      "proto": "void bitset(int &data, int pos)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "data",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "data",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "pos",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "pos",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "bitclear": {
+      "name": "bitclear",
+      "desc": "将整数的指定位清0",
+      "desc_en": "Clear bit to 0",
+      "type": "function",
+      "proto": "void bitclear(int &data, int pos)",
+      "params": "",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "data",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [],
+              "ph": "data",
+              "desc": "",
+              "desc_en": ""
+            },
+            {
+              "key": "pos",
+              "type": "int",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "0",
+                "1",
+                "2",
+                "3"
+              ],
+              "ph": "pos",
+              "desc": "",
+              "desc_en": ""
+            }
+          ]
+        }
+      ]
+    },
+    "savesv": {
+      "name": "savesv",
+      "desc": "存储系统变量至配置文件",
+      "desc_en": "Save system variable to config file",
+      "type": "function",
+      "proto": "void savesv(string svname)",
+      "params": "1",
+      "variants": [
+        {
+          "name": "基本写法",
+          "name_en": "Basic",
+          "sep": ",",
+          "params": [
+            {
+              "key": "svname",
+              "type": "string",
+              "req": true,
+              "opt": false,
+              "options": "",
+              "unit": "",
+              "candidates": [
+                "\"I\"",
+                "\"D\"",
+                "\"B\"",
+                "\"P\"",
+                "\"J\"",
+                "\"S\""
+              ],
+              "ph": "svname",
+              "desc": "系统变量名",
+              "desc_en": "sv name"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

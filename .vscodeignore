@@ -3,7 +3,8 @@
 tests/**
 scripts/**
 *.vsix
-docs/**
 *.zip
+docs/MARKETPLACE-PUBLISHING.md
 icons/*.svg
 language-data/*.md
+user

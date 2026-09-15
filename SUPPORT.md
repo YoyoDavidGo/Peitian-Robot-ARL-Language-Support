@@ -1,17 +1,15 @@
 # Support
 
-For bugs, compatibility problems, or ARL language-rule issues, please use the project's GitHub Issues page after the public repository is available.
+For usage questions, first verify that the file is recognized as **ARL** in the VS Code status bar and that the latest extension version is installed.
 
-When reporting an issue, include:
+When reporting a problem, include:
 
-- Visual Studio Code version;
-- Peitian Robot ARL Language Support version;
-- operating system;
-- a minimal ARL snippet that reproduces the behavior;
-- screenshots for highlighting, formatting, or UI issues.
+- Visual Studio Code version
+- extension version
+- operating system
+- a minimal ARL snippet that reproduces the issue
+- a screenshot when the issue is visual (highlighting, completion, icon, Hover, etc.)
 
-Do not include confidential customer robot programs, credentials, network addresses, or other sensitive project data in public issue reports.
+For the initial Marketplace release, support can be handled through the Marketplace Q&A / review channel. Once the standalone public GitHub repository is created, the extension manifest should be updated with the repository and GitHub Issues URL so bug reports can be tracked there.
 
-## Scope
-
-This extension provides lightweight local ARL language support. It does not provide robot control, online execution, debugging, or guarantees that generated/edited programs are safe to run on physical equipment. Always validate robot programs using the appropriate PEITIAN engineering workflow before execution.
+Do not include confidential customer robot programs, credentials, or proprietary production data in public reports.

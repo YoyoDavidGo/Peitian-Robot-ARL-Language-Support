@@ -2,6 +2,44 @@
 
 ## 1.0.0
 
+- Stabilized Smart parameter completion before marketplace release: empty placeholders no longer auto-open suggestions; candidates appear only after the first typed character.
+- Applied strict prefix filtering to numeric parameters as well as identifiers/system variables, preventing values such as `250` from stealing Tab after the user types `22`.
+- Smart Tab now advances to the next empty placeholder without opening suggestions; typing the first matching character triggers the native Suggest Widget.
+- Refined Smart numeric placeholders before marketplace release: motion value forms now open with blank editable values while keeping fixed units outside the placeholder; manually typing a number dismisses suggestions so Tab/Enter cannot replace it with a highlighted candidate.
+- Scoped the third candidate source to values that still exist in nearby source for the same instruction parameter, eliminating stale/deleted type-wide history; primitive Wizard parameters no longer receive unrelated builtin scalar system variables such as `$D` / `$PI`.
+- Extended Wizard-driven Smart Completion beyond motion instructions: all 131 built-in ARL functions now receive source-driven Smart structure from exact Wizard metadata or the original editor TIPS prototypes.
+- Added safe proto fallback for overloads, optional `[, arg]` syntax, array parameters, references, and shorthand repeated types such as `joint j1, j2, j3`.
+- Unified Wizard candidate priority across parameter types: current type-compatible declared variables first, Wizard-documented candidates second, and recent compatible values third; identifier prefixes remain strict, while numeric literals keep the full type-compatible candidate set visible.
+- Restored the original `savesv` documented candidate set (`"I"`, `"D"`, `"B"`, `"P"`, `"J"`, `"S"`) without unrelated variable injection.
+- Reworked Smart Completion into a **Wizard-driven completion engine** based on the ARL Wizard rules from the original PEITIAN ARL editor.
+- Added generic Smart templates for documented ARL instructions and functions, including Wizard variants, required/optional parameters, documented candidates, units, and parameter descriptions.
+- Added Wizard-aware positional function-argument completion and named instruction-parameter completion.
+- Added generic Smart parameter navigation: Tab advances to the next snippet placeholder and immediately opens type-compatible candidates; Enter exits the Smart snippet so the previous placeholder no longer remains highlighted. Complete manually typed values can now use Tab/Enter even while the suggestion widget is still visible.
+- Added type-aware recent-value memory, reused as the third candidate source across compatible Wizard parameters.
+- Added strict Wizard parameter type matching (`double` does not bleed into `int`, `bool` stays `bool`, `pose`/`frame` compatibility is preserved).
+- Added special function-handler completion for Wizard `function` parameters and carried fixed units into manually accepted parameter candidates.
+- Optional-parameter instructions now offer both a concise required-only template and a full editable template.
+- Type-aware parameter completion may now show all compatible candidates before the first character is typed, then switches to strict namespace/prefix filtering after input begins.
+- Indexed system-variable arrays such as `$P` now insert as `$P[]` with the caret inside the brackets; Tab can continue to the next surrounding Smart Completion placeholder.
+- Previously used indexed system variables such as `$P[21]` are detected from actual ARL code and reused as direct completion candidates; occurrences inside comments and strings are ignored.
+- Refined motion Smart Completion: unit-bearing value parameters accept either numeric literals or declared `double` variables, and Enter exits the completed single-line motion snippet.
+- ARL system variables now use a strict `$` completion namespace: typing `p` / `p1` in a pose slot no longer leaves `$P` as a Tab-accept candidate; `$P` appears only for a `$` prefix or explicit empty-prefix invocation.
+- Disabled VS Code Unicode-confusable highlighting inside ARL strings and comments, while keeping it active in actual code.
+
+- Added **Unit-aware direct-value Smart Completion**: `%`, `mm/s`, and `mm` are inserted as fixed syntax while only the numeric value is editable.
+- Literal and variable Smart Completion variants now use different IntelliSense icons (Value vs Variable).
+- Declared current language reference: **ARCS 2.6.6 (Programming Manual v4.5.0)**.
+
+- Added optional **Smart Completion** (`Peitian Robot ARL › Smart Completion`).
+- Added structured templates for common robot motion instructions: `ptp`, `lin`, `movej`, `cir`, and `ccir`.
+- Added editable argument placeholders for built-in ARL functions such as `offset(...)`.
+- Added block templates for `if`, `while`, `for`, `loop`, `repeat`, `switch`, and `func`.
+- Smart templates insert only fixed ARL syntax; variable names and parameter values remain fully editable.
+- Smart motion templates insert the fixed parameter structure first; variable suggestions begin after the user types the first character (or invokes `Ctrl+Space`), avoiding stale empty-prefix candidates.
+- Updated the `.arl` file icon with a taller and longer red crossbar.
+
+
+
 - First Marketplace release of **Peitian Robot ARL Language Support**.
 - Finalized the lightweight ARL feature set: syntax highlighting, formatting, folding, Outline, navigation, Hover, IntelliSense, typed parameter completion, Signature Help, precise font weights, themes, and ARL file icons.
 - Added a lazy in-memory workspace index for global ARL variables so type-aware completion reuses cached project data instead of rescanning all `.arl` files on every keystroke.

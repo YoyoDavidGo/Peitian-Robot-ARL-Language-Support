@@ -6,6 +6,8 @@ Lightweight Visual Studio Code language support for **PEITIAN industrial robot A
 
 The extension focuses on editing ARL source files well inside native VS Code. It does not add a Language Server, AI runtime, cloud service, robot connection layer, or external dependencies.
 
+**Current ARL reference:** ARCS 2.6.6 (Programming Manual v4.5.0).
+
 ## Screenshots
 
 ### Dark theme · Hover, syntax highlighting, and Outline
@@ -41,6 +43,7 @@ The extension focuses on editing ARL source files well inside native VS Code. It
 - Hover documentation for ARL instructions, logic keywords, data types, functions, and system variables
 - IntelliSense for ARL keywords, instructions, functions, variables, and system variables
 - Type-aware completion for named robot-motion parameters
+- Optional Smart Completion templates for motion instructions, functions, and control blocks
 - Signature Help for built-in ARL calls and user functions
 
 ## Type-aware completion
@@ -68,6 +71,19 @@ ptp p:p
 
 The `p:` context accepts `pose`, so the list contains matching declared `pose` variables such as `pHome` and `pPick`, not unrelated instructions or `joint` / `speed` variables.
 
+For motion parameters with engineering units, Smart Completion keeps the unit outside the editable placeholder. A value parameter can be either a numeric literal or a declared `double` variable. For example, both forms are valid:
+
+```arl
+lin p:p1,vl:650mm/s,sl:11mm,t:$FLANGE,w:$WORLD
+lin p:p1,vl:vLinearmm/s,sl:sBlendmm,t:$FLANGE,w:$WORLD
+```
+
+For Wizard-driven single-line Smart Completion, **Tab** moves to the next parameter. The parameter stays quiet until you type its first character; then VS Code shows strictly prefix-matched, type-compatible candidates. **Enter** inserts the new line and exits the Smart snippet session, so the previous parameter no longer remains highlighted.
+
+In a typed parameter slot, an empty prefix shows no candidates. After the first character is typed, identifier, system-variable, and numeric input all use strict prefix filtering: typing `p` keeps only `p...` pose variables, typing `$` keeps only system-variable candidates, and typing `22` cannot leave an unrelated numeric candidate such as `250` selected. Indexed system-variable arrays such as `$P` insert as `$P[]` with the cursor inside the brackets. Previously used indexed values such as `$P[21]` can be reused when their typed prefix matches.
+
+Chinese/full-width punctuation inside ARL strings and comments is treated as normal text; VS Code Unicode-confusable highlighting remains available for actual code tokens.
+
 Current typed parameter filters include:
 
 | Context | Expected type |
@@ -80,6 +96,43 @@ Current typed parameter filters include:
 | `w:` | `wobj` |
 
 For typed parameter completion, variables come from the current ARL file plus its paired `<program>_data.arl` file in the same directory. The paired data file is cached in memory, so unrelated ARL programs do not pollute the suggestion list.
+
+## Smart Completion
+
+`Peitian Robot ARL › Smart Completion` is enabled by default and can be turned off independently from normal IntelliSense.
+
+When enabled, common ARL structures can be inserted as editable snippets. For example, `ptp` provides two templates:
+
+```arl
+ptp p:,vp:,sp:,t:,w:
+ptp p:,v:,s:,t:,w:
+```
+
+The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically, but every value is an editable tab stop. Empty parameters do not open suggestions. Type the first character to start type-aware, strict-prefix completion; or simply continue typing your own variable name/value. Smart Completion never restricts input to the suggestion list.
+
+For direct-value motion templates, fixed units such as `%`, `mm/s`, and `mm` are inserted automatically outside the editable numeric tab stop. For example, changing `30` to `50` yields `vp:50%` without retyping `%`. Literal templates use a Value icon, while variable templates use a Variable icon in IntelliSense.
+
+Smart Completion is now **Wizard-driven**. The extension maps the ARL Wizard metadata used by the PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. For built-in functions that do not have a packaged detailed Wizard table, the extension falls back to the exact function prototypes from the original editor's TIPS table, so all 131 built-in ARL functions have source-driven Smart structure without inventing undocumented signatures.
+
+For example:
+
+```arl
+waituntil cond:getdi(1)
+setdo(1, 1)
+offset(p1, dx, dy, dz, rz, ry, rx)
+```
+
+Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
+
+The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments such as `connect(host, port [, timeout])`, array parameters, and shorthand repeated types used by the original ARL references.
+
+Parameter candidates use one common source priority across Wizard-driven completion: **(1)** current type-compatible declared variables, **(2)** Wizard-documented candidates, and **(3)** recent values that still exist in nearby source code for the same instruction parameter. The list is shown only after the first character is typed, and all three sources are then filtered by that strict prefix. Deleted/transient inputs are not kept as persistent type-wide history, and unrelated builtin scalar system variables are not injected into primitive parameters.
+
+Wizard units also apply to manual parameter completion: accepting `250` or a declared `double` variable in `vl:` inserts the fixed `mm/s` suffix automatically; the same rule applies to `%` and `mm` parameters.
+
+Control structures such as `if`, `while`, `for`, `loop`, `repeat`, `switch`, and `func` continue to provide complete block templates.
+
+Turning Smart Completion off keeps normal ARL IntelliSense, type-aware variable filtering, Hover, Signature Help, formatting, and navigation unchanged.
 
 ## Editing shortcuts
 

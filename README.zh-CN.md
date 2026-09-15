@@ -6,7 +6,9 @@
 
 本插件专注于让 `.arl` 文件在原生 VS Code 中获得良好的编辑体验，不引入 Language Server、AI 运行时、云服务、机器人在线连接层，也没有生产环境 npm 依赖。
 
-## 界面截图
+**当前 ARL 参考版本：** ARCS 2.6.6（对应编程手册 v4.5.0）。
+
+## 截图
 
 ### 深色主题 · Hover、高亮与大纲
 
@@ -16,13 +18,13 @@
 
 ![深色主题 ARL 程序整体效果](./docs/images/02-dark-program-overview.jpg)
 
-### 浅色主题 · 语法高亮与大纲
+### 浅色主题 · 高亮与大纲
 
-![浅色主题 ARL 语法高亮与大纲](./docs/images/03-light-syntax-and-outline.jpg)
+![浅色主题 ARL 高亮与大纲](./docs/images/03-light-syntax-and-outline.jpg)
 
-### IntelliSense 自动补全
+### IntelliSense 代码补全
 
-![ARL IntelliSense 自动补全](./docs/images/04-intellisense-completion.jpg)
+![ARL IntelliSense 代码补全](./docs/images/04-intellisense-completion.jpg)
 
 ### 插件详情页
 
@@ -41,6 +43,7 @@
 - ARL 指令、逻辑关键字、数据类型、函数、系统变量 Hover 说明
 - ARL 关键字、指令、函数、变量、系统变量 IntelliSense
 - 运动指令命名参数的类型感知补全
+- 可开关的 Smart Completion 结构化补全（运动指令、函数、控制结构）
 - 内置 ARL 调用与用户函数 Signature Help 参数提示
 - `//` 行注释与 `/* ... */` 块注释高亮
 
@@ -69,6 +72,8 @@ ptp p:p
 
 因为 `p:` 要求 `pose`，所以候选会包含 `pHome`、`pPick` 等 `pose` 变量，而不会混入无关指令、`joint` 或 `speed` 变量。
 
+在已经明确类型的参数位置，**未输入首字符时不显示候选**。输入第一个字符后才开始类型感知 + 严格前缀筛选：输入 `p` 只保留 `p...` 普通变量；输入 `$` 只保留系统变量；输入数值前缀同样严格匹配，因此手工输入 `22` 时不会再让 `250` 之类不匹配的候选抢走 Tab / Enter。对于 `$P`、`$D` 等数组型系统变量，输入 `$` 后可选择基础变量并自动插入 `$P[]` / `$D[]`，光标进入方括号；已实际使用过的 `$P[21]` 也会在前缀匹配时作为完整候选复用。
+
 当前支持的类型筛选：
 
 | 参数上下文 | 期望类型 |
@@ -80,7 +85,42 @@ ptp p:p
 | `t:` | `tool` |
 | `w:` | `wobj` |
 
-类型感知补全只读取当前 ARL 文件以及同目录下与其配套的 `<程序名>_data.arl` 文件。配套数据文件会缓存在内存中，其他程序的变量不会混入当前候选列表。
+类型感知补全只读取当前 ARL 文件，以及同目录下与其配套的 `<程序名>_data.arl` 文件；配套数据文件会缓存在内存中，因此其他程序的变量不会混入当前程序的联想列表。
+
+## Smart Completion 智能结构补全
+
+`Peitian Robot ARL › Smart Completion` 默认开启，并且可以单独关闭；关闭后不会影响普通 IntelliSense。
+
+开启后，常用 ARL 结构可以作为可编辑模板插入。例如选择 `ptp` 时会提供两种常用结构：
+
+```arl
+ptp p:,vp:,sp:,t:,w:
+ptp p:,v:,s:,t:,w:
+```
+
+插件只负责自动写入固定语法结构（例如 `p:`、`v:`、`s:`、`t:`、`w:`），所有参数值仍然是可编辑的 Tab Stop。空参数位置保持安静；输入第一个字符后才启动类型感知、严格前缀补全。你可以从匹配候选中选择，也可以继续手工输入自定义变量名或数值。**Tab** 负责进入下一个占位符，**Enter** 可以正常结束 Smart Snippet 并换行，上一行参数不会继续保持占位符高亮。
+
+Smart Completion 现在改为 **Wizard 数据驱动**。插件直接把原 ARL 编辑器 Wizard 中的参数类型、必填/可选、Variant、候选项、单位和中英文说明映射成 VS Code 原生 Snippet 与 IntelliSense；运动指令继续保留经过实际使用优化的模板。对于当前打包数据里没有详细 Wizard 参数表的内置函数，则回退读取原编辑器 TIPS 中的真实函数原型，因此 131 个 ARL 内置函数都可以从原始资料生成结构化补全，不会凭空猜测函数签名。
+
+例如：
+
+```arl
+waituntil cond:getdi(1)
+setdo(1, 1)
+offset(p1, dx, dy, dz, rz, ry, rx)
+```
+
+有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；像 `setdo` 这种原 Wizard 中存在“单通道 / 多通道” Variant 的函数，会在 VS Code 中分别给出对应模板。
+
+通用原型解析同时支持原资料中的多重签名、可选参数（例如 `connect(host, port [, timeout])`）、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。
+
+所有 Wizard 参数统一使用同一套候选来源优先级：**① 当前代码中类型匹配的已声明变量 → ② Wizard 文档中写好的候选项 → ③ 当前源码中仍然存在的、同一指令参数最近使用值**。但候选只在输入首字符后出现，并且三类来源都要继续通过严格前缀筛选。已经删除的临时输入不会作为持久历史污染候选，不相关的内置标量系统变量也不会混进普通 `double` / `int` 参数。
+
+单位规则同样用于手工参数补全：例如在 `vl:` 中选择 `250` 或一个 `double` 变量时，插件会自动补上固定的 `mm/s`；`%`、`mm` 参数同理。
+
+`if`、`while`、`for`、`loop`、`repeat`、`switch`、`func` 等控制结构继续提供完整代码块模板。
+
+关闭 Smart Completion 后，普通 ARL 联想、类型筛选、Hover、参数提示、格式化和跳转功能仍然保持正常。
 
 ## 常用快捷键
 

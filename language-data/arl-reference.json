@@ -4,180 +4,1551 @@
     "branch": "master",
     "sourceFile": "dist/index.html",
     "arlReferenceVersion": "4.5.0",
-    "notes": "Hover entries extracted from the embedded ARL_Wizard_bilingual.md, including detailed logic, keyword, datatype, instruction, and common function documentation."
+    "notes": "Hover/reference data extracted from the embedded ARL_Wizard_bilingual.md and the original editor TIPS table. TIPS prototypes provide safe Smart Completion fallback when a detailed Wizard variant is not packaged."
   },
   "entries": {
-    "movej": {"type":"instruction","desc":"关节插补运动","desc_en":"Joint interpolation move","proto":"movej j:<joint>, [v:|vp:], [s:|sp:|sl:], [t:], [dura:]"},
-    "ptp": {"type":"instruction","desc":"点到点运动（自动选关节/直线）","desc_en":"Point-to-point (auto joint/linear)","proto":"ptp p:<pose>, [v:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]"},
-    "lin": {"type":"instruction","desc":"直线插补运动","desc_en":"Linear interpolation move","proto":"lin p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]"},
-    "cir": {"type":"instruction","desc":"圆弧插补运动","desc_en":"Circular interpolation move","proto":"cir m:<pose>, p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [CA:], [dura:]"},
-    "ccir": {"type":"instruction","desc":"整圆插补运动","desc_en":"Full circle interpolation","proto":"ccir p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:]"},
-    "spl": {"type":"instruction","desc":"样条插补运动","desc_en":"Spline interpolation move","proto":"spl p:<pose>, [v:|vp:], [sl:], [t:], [w:]"},
-    "waittime": {"type":"instruction","desc":"等待指定秒数","desc_en":"Wait for specified seconds","proto":"waittime time:<double>"},
-    "waituntil": {"type":"instruction","desc":"等待条件成立","desc_en":"Wait until condition is true","proto":"waituntil cond:, [maxtime:], [timeoutflag:]"},
-    "print": {"type":"instruction","desc":"打印输出，支持多参数/文件输出/精度控制","desc_en":"Print output (multi-arg / file / precision)","proto":"print [to:], [tostr:], [filepath:], [precision:], [numbase:], {argtoprint}"},
-    "init": {"type":"function","desc":"恢复系统变量为默认值","desc_en":"Reset system variables to defaults","proto":"init()"},
-    "setdo": {"type":"function","desc":"设置数字量输出","desc_en":"Set digital output","proto":"void setdo(int chan, bool value)"},
-    "getdi": {"type":"function","desc":"读取数字量输入","desc_en":"Read digital input","proto":"bool getdi(int chan)"},
-    "offset": {"type":"function","desc":"位姿偏移（世界/工件坐标系下）","desc_en":"Pose offset (world/wobj frame)","proto":"pose offset(pose p, double dx, double dy, double dz, double rz, double ry, double rx)"},
-    "reltool": {"type":"function","desc":"工具坐标系下位姿偏移","desc_en":"Pose offset in tool frame","proto":"pose reltool(pose p, double dx, double dy, double dz, double rz, double ry, double rx)"},
-    "poseinv": {"type":"function","desc":"求位姿逆变换","desc_en":"Pose inverse transform","proto":"pose poseinv(pose p)"},
-    "jump": {"type":"instruction","desc":"跳跃运动（带拾取高度控制）","desc_en":"Jump motion (pick height control)","proto":"jump p:<pose>, [v:|vp:], [t:], [w:], [a:], [b:], [Z:], [s:], [ctr:], [sig:]"},
-    "stopmove": {"type":"instruction","desc":"停止运动","desc_en":"Stop motion","proto":"stopmove [type:]"},
-    "startmove": {"type":"instruction","desc":"启动运动","desc_en":"Start motion","proto":"startmove [skip:]"},
-    "pause": {"type":"instruction","desc":"暂停程序执行","desc_en":"Pause program","proto":"pause"},
-    "exit": {"type":"instruction","desc":"退出当前程序","desc_en":"Exit program","proto":"exit"},
-    "restart": {"type":"instruction","desc":"重启程序","desc_en":"Restart program","proto":"restart"},
-    "velset": {"type":"instruction","desc":"速度调节，设置速度倍率和最大速度","desc_en":"Speed adjustment: override & max speed","proto":"velset override:, max:"},
-    "accset": {"type":"instruction","desc":"加速度调节","desc_en":"Acceleration adjustment","proto":"accset acc:, ramp:"},
-    "interrupt": {"type":"instruction","desc":"声明中断事件","desc_en":"Declare interrupt event","proto":"interrupt [name:], [priority:], when:, do:"},
-    "timer": {"type":"instruction","desc":"定时器中断","desc_en":"Timer interrupt","proto":"timer [name:], [priority:], interval:, [rmode:], do:"},
-    "trigger": {"type":"instruction","desc":"轨迹触发事件","desc_en":"Path trigger event","proto":"trigger [priority:], when:, do:"},
-    "disableint": {"type":"instruction","desc":"禁用中断","desc_en":"Disable interrupt","proto":"disableint [name:], [priority:]"},
-    "enableint": {"type":"instruction","desc":"启用中断","desc_en":"Enable interrupt","proto":"enableint [name:], [priority:]"},
-    "delint": {"type":"instruction","desc":"删除中断","desc_en":"Delete interrupt","proto":"delint [name:], [priority:]"},
-    "toolswitch": {"type":"instruction","desc":"工具负载切换","desc_en":"Tool load switch","proto":"toolswitch toolindex:<int>, mu_name:<string>"},
-    "startdetect": {"type":"instruction","desc":"开启碰撞检测","desc_en":"Enable collision detection","proto":"startdetect cid:<int>, mu:<string>"},
-    "enddetect": {"type":"instruction","desc":"关闭碰撞检测","desc_en":"Disable collision detection","proto":"enddetect mu:<string>"},
-    "startweave": {"type":"instruction","desc":"开启叠加摆动","desc_en":"Enable weaving","proto":"startweave weave:weavedata, mu:\"mu_name\""},
-    "endweave": {"type":"instruction","desc":"结束叠加摆动","desc_en":"End weaving","proto":"endweave mu:\"mu_name\""},
-    "startcompen": {"type":"instruction","desc":"开始轨迹补偿","desc_en":"Start path compensation","proto":"startcompen id:<int>, type:<int>, data:<compendata>, dataj:<compendata>"},
-    "endcompen": {"type":"instruction","desc":"结束轨迹补偿","desc_en":"End path compensation","proto":"endcompen"},
-    "compen": {"type":"instruction","desc":"设置轨迹补偿参数","desc_en":"Set path compensation params","proto":"compen [id:], [x:], [y:], [z:], [a:], [b:], [c:], ..."},
-    "import": {"type":"instruction","desc":"导入ARL模块","desc_en":"Import ARL module","proto":"import modpath:<string>"},
-    "scan": {"type":"instruction","desc":"扫描输入字符串，按分隔符解析至变量","desc_en":"Scan string by delimiter to variables","proto":"scan from:<string>, delimiter:<string>, {argtosave}"},
-    "palletcompen": {"type":"instruction","desc":"计算码垛补偿点位","desc_en":"Calculate pallet compensation point","proto":"pose palletcompen(pallet, double X_offset, double Y_offset, pose P)"},
-    "setinterpercent": {"type":"function","desc":"设置机器人运行速度倍率","desc_en":"Set robot speed override","proto":"setinterpercent(per)"},
-    "getinterpercent": {"type":"function","desc":"获取机器人当前运行速度倍率","desc_en":"Get robot speed override","proto":"getinterpercent()"},
-    "syncdo": {"type":"function","desc":"同步设置数字量输出（随运动同步）","desc_en":"Sync set digital output (motion-sync)","proto":"void syncdo(int chan, bool value)"},
-    "pulsedo": {"type":"function","desc":"输出数字脉冲","desc_en":"Output digital pulse","proto":"void pulsedo(int chan, bool value, double width)"},
-    "setao": {"type":"function","desc":"设置模拟量输出","desc_en":"Set analog output","proto":"void setao(int chan, double value)"},
-    "syncao": {"type":"function","desc":"同步设置模拟量输出","desc_en":"Sync set analog output","proto":"void syncao(int chan, double value)"},
-    "setpwm": {"type":"function","desc":"设置PWM输出","desc_en":"Set PWM output","proto":"bool setpwm(int channel, int freq, int ratio)"},
-    "getdo": {"type":"function","desc":"读取数字量输出","desc_en":"Read digital output","proto":"bool getdo(int chan)"},
-    "getai": {"type":"function","desc":"读取模拟量输入","desc_en":"Read analog input","proto":"double getai(int chan)"},
-    "getao": {"type":"function","desc":"读取模拟量输出","desc_en":"Read analog output","proto":"double getao(int chan)"},
-    "if": {"type":"logic","desc":"条件判断，满足时执行块内代码","desc_en":"Conditional: execute block when true","proto":"if(bool 表达式)"},
-    "elseif": {"type":"logic","desc":"前一条件不满足时检查此条件","desc_en":"Check this condition when previous is false","proto":"elseif(bool 表达式)"},
-    "else": {"type":"logic","desc":"所有 if/elseif 条件均不满足时的默认分支","desc_en":"Default branch when all conditions false","proto":"else"},
-    "endif": {"type":"logic","desc":"结束 if/elseif/else 条件块","desc_en":"End if/elseif/else block","proto":"endif"},
-    "while": {"type":"logic","desc":"当条件成立时循环，先判断后执行","desc_en":"While loop (check-first)","proto":"while(bool 表达式)"},
-    "endwhile": {"type":"logic","desc":"结束 while 循环块","desc_en":"End while block","proto":"endwhile"},
-    "for": {"type":"logic","desc":"步进循环","desc_en":"For loop","proto":"for(初始化; bool表达式; 迭代)"},
-    "endfor": {"type":"logic","desc":"结束 for 循环块","desc_en":"End for block","proto":"endfor"},
-    "repeat": {"type":"logic","desc":"直到型循环起始，先执行后判断","desc_en":"Repeat-until loop (execute-first)","proto":"repeat"},
-    "until": {"type":"logic","desc":"直到型循环结束条件，表达式为真时退出","desc_en":"Until condition (exit when true)","proto":"until(bool 表达式)"},
-    "loop": {"type":"logic","desc":"无限循环起始，需配合 break 退出","desc_en":"Infinite loop (use break to exit)","proto":"loop"},
-    "endloop": {"type":"logic","desc":"结束 loop 无限循环块","desc_en":"End loop block","proto":"endloop"},
-    "switch": {"type":"logic","desc":"多分支判断，根据表达式值匹配 case","desc_en":"Switch: multi-branch by expression value","proto":"switch(表达式)"},
-    "case": {"type":"logic","desc":"switch 的分支匹配项","desc_en":"Switch case branch","proto":"case 常量值:"},
-    "default": {"type":"logic","desc":"switch 无匹配 case 时的默认分支","desc_en":"Default branch when no case matches","proto":"default:"},
-    "endswitch": {"type":"logic","desc":"结束 switch 多分支块","desc_en":"End switch block","proto":"endswitch"},
-    "break": {"type":"logic","desc":"跳出最近一层循环（for/while/loop/switch）","desc_en":"Break out of nearest loop","proto":"break"},
-    "continue": {"type":"logic","desc":"跳过本次循环剩余代码，直接进入下一次循环","desc_en":"Skip to next iteration","proto":"continue"},
-    "goto": {"type":"logic","desc":"无条件跳转到指定标签处执行","desc_en":"Unconditional jump to label","proto":"goto label"},
-    "void": {"type":"keyword","desc":"表示函数无返回值的类型关键字","desc_en":"Void return type keyword","proto":"void"},
-    "const": {"type":"keyword","desc":"声明常量，值不可修改","desc_en":"Declare constant (immutable)","proto":"const <类型> <名称> = <值>"},
-    "true": {"type":"keyword","desc":"布尔量：真","desc_en":"Boolean literal: true","proto":"true"},
-    "false": {"type":"keyword","desc":"布尔量：假","desc_en":"Boolean literal: false","proto":"false"},
-    "endl": {"type":"keyword","desc":"换行符常量，用于 print 输出换行","desc_en":"Newline constant for print","proto":"endl"},
-    "return": {"type":"keyword","desc":"从函数返回，可携带返回值","desc_en":"Return from function (optional value)","proto":"return [表达式]"},
-    "func": {"type":"keyword","desc":"声明用户自定义函数","desc_en":"Declare user-defined function","proto":"func <返回类型> <函数名>(<参数列表>)"},
-    "endfunc": {"type":"keyword","desc":"结束函数定义块","desc_en":"End function block","proto":"endfunc"},
-    "int": {"type":"datatype","desc":"整数类型","desc_en":"integer type"},
-    "uint": {"type":"datatype","desc":"无符号整数类型","desc_en":"unsigned integer type"},
-    "byte": {"type":"datatype","desc":"字节类型","desc_en":"byte type"},
-    "double": {"type":"datatype","desc":"浮点数类型","desc_en":"Double-precision floating-point type"},
-    "bool": {"type":"datatype","desc":"布尔类型（true/false）","desc_en":"Boolean type (true/false)"},
-    "string": {"type":"datatype","desc":"字符串类型","desc_en":"String type"},
-    "pos": {"type":"datatype","desc":"三维坐标类型","desc_en":"3D position type"},
-    "frame": {"type":"datatype","desc":"坐标系类型","desc_en":"Coordinate frame type"},
-    "pose": {"type":"datatype","desc":"位姿类型（位置+姿态）","desc_en":"pose type (position + orientation)"},
-    "joint": {"type":"datatype","desc":"关节角度类型","desc_en":"Joint angle type"},
-    "tool": {"type":"datatype","desc":"工具坐标系类型","desc_en":"Tool coordinate frame type"},
-    "wobj": {"type":"datatype","desc":"工件坐标系类型","desc_en":"Work object coordinate frame type"},
-    "weavedata": {"type":"datatype","desc":"摆焊数据类型","desc_en":"Weave data type"},
-    "speed": {"type":"datatype","desc":"速度数据类型","desc_en":"Speed data type"},
-    "slip": {"type":"datatype","desc":"平滑过渡数据类型","desc_en":"slip data type"},
-    "jvel": {"type":"datatype","desc":"关节速度数据类型","desc_en":"Joint velocity data type"},
-    "clock": {"type":"datatype","desc":"时钟计时器类型","desc_en":"Clock timer type"},
-    "iodev": {"type":"datatype","desc":"IO设备类型","desc_en":"IO device type"},
-    "socket": {"type":"datatype","desc":"套接字变量","desc_en":"TCP Socket type"},
-    "melsec_dev": {"type":"datatype","desc":"三菱PLC通信设备类型","desc_en":"Mitsubishi PLC communication device type"},
-    "modbus_dev": {"type":"datatype","desc":"Modbus通信设备类型","desc_en":"Modbus communication device type"},
-    "modbus_rtu_master": {"type":"datatype","desc":"Modbus RTU 主站设备类型","desc_en":"Modbus RTU master device type"},
-    "tcpforce": {"type":"datatype","desc":"TCP六维力矢量类型","desc_en":"TCP 6-axis force vector type"},
-    "jttq": {"type":"datatype","desc":"关节力矩数据类型","desc_en":"Joint torque data type"},
-    "jtci": {"type":"datatype","desc":"关节电流数据类型","desc_en":"Joint current data type"},
-    "compendata": {"type":"datatype","desc":"补偿数据类型","desc_en":"Compensation data type"},
-    "$i": {"type":"sysvar","desc":"整数型系统变量数组（$I[index]）","desc_en":"Integer system variable array"},
-    "$i_name": {"type":"sysvar","desc":"整数型系统变量名称数组","desc_en":"Integer system variable name array"},
-    "$s": {"type":"sysvar","desc":"字符串型系统变量数组（$S[index]）","desc_en":"String system variable array"},
-    "$s_name": {"type":"sysvar","desc":"字符串型系统变量名称数组","desc_en":"String system variable name array"},
-    "$b": {"type":"sysvar","desc":"布尔型系统变量数组（$B[index]）","desc_en":"Boolean system variable array"},
-    "$b_name": {"type":"sysvar","desc":"布尔型系统变量名称数组","desc_en":"Boolean system variable name array"},
-    "$d": {"type":"sysvar","desc":"浮点型系统变量数组（$D[index]）","desc_en":"Double system variable array"},
-    "$d_name": {"type":"sysvar","desc":"浮点型系统变量名称数组","desc_en":"Double system variable name array"},
-    "$p": {"type":"sysvar","desc":"位姿型系统变量数组（$P[index]）","desc_en":"Pose system variable array"},
-    "$j": {"type":"sysvar","desc":"关节型系统变量数组（$J[index]）","desc_en":"Joint system variable array"},
-    "$tools": {"type":"sysvar","desc":"工具坐标系数组","desc_en":"Tool frame array"},
-    "$tools_name": {"type":"sysvar","desc":"工具坐标系名称数组","desc_en":"Tool frame name array"},
-    "$wobjs": {"type":"sysvar","desc":"工件坐标系数组","desc_en":"Work object frame array"},
-    "$wobjs_name": {"type":"sysvar","desc":"工件坐标系名称数组","desc_en":"Work object frame name array"},
-    "$base": {"type":"sysvar","desc":"基座坐标系数组","desc_en":"Base coordinate frame array"},
-    "$flange": {"type":"sysvar","desc":"法兰坐标系","desc_en":"Flange coordinate frame"},
-    "$world": {"type":"sysvar","desc":"世界坐标系","desc_en":"World coordinate frame"},
-    "$config_check": {"type":"sysvar","desc":"轴配置检查使能","desc_en":"Axis configuration check enable"},
-    "$ccir_error_threshold": {"type":"sysvar","desc":"ccir示教点不均匀报警阈值","desc_en":"Alarm threshold for uneven ccir teaching points"},
-    "$dfspeed": {"type":"sysvar","desc":"默认速度参数","desc_en":"Default speed parameter"},
-    "$dfslip": {"type":"sysvar","desc":"默认平滑参数","desc_en":"Default blending parameter"},
-    "$dftool": {"type":"sysvar","desc":"默认工具参数","desc_en":"Default tool parameter"},
-    "$dfwobj": {"type":"sysvar","desc":"默认工件坐标系参数","desc_en":"Default work object frame parameter"},
-    "$ignore_ori": {"type":"sysvar","desc":"方向忽略使能","desc_en":"Orientation ignore enable"},
-    "$ori_ref_path": {"type":"sysvar","desc":"圆弧方向参照路径坐标系","desc_en":"Reference path coordinate system for arc orientation"},
-    "$vel_profile": {"type":"sysvar","desc":"速度轮廓类型","desc_en":"Velocity profile type"},
-    "$traj_elapse_time": {"type":"sysvar","desc":"轨迹经过时间","desc_en":"Elapsed trajectory time"},
-    "$traj_left_time": {"type":"sysvar","desc":"轨迹剩余时间","desc_en":"Remaining trajectory time"},
-    "$traj_elapse_dis": {"type":"sysvar","desc":"轨迹经过路程","desc_en":"Elapsed trajectory distance"},
-    "$traj_left_dis": {"type":"sysvar","desc":"轨迹剩余路程","desc_en":"Remaining trajectory distance"},
-    "$cjoint": {"type":"sysvar","desc":"当前轴位置点","desc_en":"Current axis position point"},
-    "$rpp_enable": {"type":"sysvar","desc":"RPP使能","desc_en":"RPP enable"},
-    "$at_home": {"type":"sysvar","desc":"是否处于 HOME位置","desc_en":"Whether at HOME position"},
-    "$ext_ctl_act": {"type":"sysvar","desc":"外部自动控制被激活","desc_en":"External automatic control activated"},
-    "$pgno_req": {"type":"sysvar","desc":"请求程序号状态","desc_en":"Program number request status"},
-    "$pgno": {"type":"sysvar","desc":"从外部获取的程序号","desc_en":"Program number obtained externally"},
-    "$pi": {"type":"sysvar","desc":"圆周率","desc_en":"Pi"},
-    "$ctl_mode": {"type":"sysvar","desc":"当前控制模式","desc_en":"Current control mode"},
-    "$wobj_offset": {"type":"sysvar","desc":"工件坐标系偏移","desc_en":"Work object offset"},
-    "$tool_offset": {"type":"sysvar","desc":"工具坐标系偏移","desc_en":"Tool offset"},
-    "$reset_pos_type": {"type":"sysvar","desc":"上电时位置复位方式","desc_en":"Position reset mode at power-on"},
-    "$reset_pos_theshold": {"type":"sysvar","desc":"上电时位置复位判断门限","desc_en":"Decision threshold for position reset at power-on"},
-    "$weave_frame_type": {"type":"sysvar","desc":"叠加轨迹坐标系类型","desc_en":"Superimposed trajectory coordinate system type"},
-    "$ext_ctl_act_di": {"type":"sysvar","desc":"外部自动控制激活信号 DI 端口号","desc_en":"DI port number for external automatic control activation signal"},
-    "$servo_on_di": {"type":"sysvar","desc":"伺服上电信号 DI 端口号","desc_en":"DI port number for servo-on signal"},
-    "$servo_off_di": {"type":"sysvar","desc":"伺服断电信号 DI 端口号","desc_en":"DI port number for servo-off signal"},
-    "$start_prog_di": {"type":"sysvar","desc":"启动程序信号 DI 端口号","desc_en":"DI port number for start-program signal"},
-    "$pause_prog_di": {"type":"sysvar","desc":"暂停程序信号 DI 端口号","desc_en":"DI port number for pause-program signal"},
-    "$reset_prog_di": {"type":"sysvar","desc":"复位程序信号 DI 端口号","desc_en":"DI port number for reset-program signal"},
-    "$clear_alarm_di": {"type":"sysvar","desc":"清除报警信号 DI 端口号","desc_en":"DI port number for clear-alarm signal"},
-    "$pgno_fbit_di": {"type":"sysvar","desc":"程序号第一位所在的 DI 端口号","desc_en":"DI port number of the first program-number bit"},
-    "$pgno_parity_di": {"type":"sysvar","desc":"奇偶校验信号 DI 端口号","desc_en":"DI port number for parity signal"},
-    "$pgno_valid_di": {"type":"sysvar","desc":"程序号有效信号 DI 端口号","desc_en":"DI port number for program-number valid signal"},
-    "$ext_ctl_chan_di": {"type":"sysvar","desc":"外部控制通道选择起始位 DI 端口号","desc_en":"DI port number of the start bit for external control channel selection"},
-    "$ext_ctl_act_conf_do": {"type":"sysvar","desc":"外部自动控制功能激活确认信号 DO 端口号","desc_en":"DO port number for external automatic control activation confirmation signal"},
-    "$servo_on_do": {"type":"sysvar","desc":"伺服上电信号 DO 端口号","desc_en":"DO port number for servo-on signal"},
-    "$pgno_req_do": {"type":"sysvar","desc":"请求程序号信号 DO 端口号","desc_en":"DO port number for program-number request signal"},
-    "$at_home_do": {"type":"sysvar","desc":"处于 HOME 点信号 DO 端口号","desc_en":"DO port number for at-HOME signal"},
-    "$at_t1_do": {"type":"sysvar","desc":"系统处于手动低速模式信号 DO 端口号","desc_en":"DO port number for T1 mode signal"},
-    "$at_t2_do": {"type":"sysvar","desc":"系统处于手动高速模式信号 DO 端口号","desc_en":"DO port number for T2 mode signal"},
-    "$at_aut_do": {"type":"sysvar","desc":"系统处于自动模式信号 DO 端口号","desc_en":"DO port number for automatic mode signal"},
-    "$pgno_ack_fbit_do": {"type":"sysvar","desc":"程序号确认信号第一位所在的 DO 端口号","desc_en":"DO port number of the first bit of the program-number acknowledgment signal"},
-    "$chan_run_state_do": {"type":"sysvar","desc":"各个通道处于自动程序运行状态 DO 端口号","desc_en":"DO port number for automatic program running status of each channel"},
-    "$chan_load_state_do": {"type":"sysvar","desc":"各个通道程序加载状态 DO 端口号","desc_en":"DO port number for program loaded status of each channel"},
-    "$chan_pause_state_do": {"type":"sysvar","desc":"各个通道程序暂停状态 DO 端口号","desc_en":"DO port number for program paused status of each channel"},
-    "$chan_stop_state_do": {"type":"sysvar","desc":"各个通道程序停止状态 DO 端口号","desc_en":"DO port number for program stopped status of each channel"},
-    "$chan_estop_state_do": {"type":"sysvar","desc":"各个通道程序急停状态 DO 端口号","desc_en":"DO port number for emergency-stop status of each channel"},
-    "$chan_idle_state_do": {"type":"sysvar","desc":"前台通道处于空闲状态 DO 端口号","desc_en":"DO port number for idle status of the foreground channel"},
-    "$at_path_do": {"type":"sysvar","desc":"前台通道机器人处于轨迹上时 DO 端口号","desc_en":"DO port number when the foreground-channel robot is on path"}
+    "movej": {
+      "type": "instruction",
+      "desc": "关节插补运动",
+      "desc_en": "Joint interpolation move",
+      "proto": "movej j:<joint>, [v:|vp:], [s:|sp:|sl:], [t:], [dura:]"
+    },
+    "ptp": {
+      "type": "instruction",
+      "desc": "点到点运动（自动选关节/直线）",
+      "desc_en": "Point-to-point (auto joint/linear)",
+      "proto": "ptp p:<pose>, [v:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]"
+    },
+    "lin": {
+      "type": "instruction",
+      "desc": "直线插补运动",
+      "desc_en": "Linear interpolation move",
+      "proto": "lin p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]"
+    },
+    "cir": {
+      "type": "instruction",
+      "desc": "圆弧插补运动",
+      "desc_en": "Circular interpolation move",
+      "proto": "cir m:<pose>, p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:], [CA:], [dura:]"
+    },
+    "ccir": {
+      "type": "instruction",
+      "desc": "整圆插补运动",
+      "desc_en": "Full circle interpolation",
+      "proto": "ccir p:<pose>, [v:|vl:|vp:], [s:|sl:|sp:], [t:], [w:]"
+    },
+    "spl": {
+      "type": "instruction",
+      "desc": "样条插补运动",
+      "desc_en": "Spline interpolation move",
+      "proto": "spl p:<pose>, [v:|vp:], [sl:], [t:], [w:]"
+    },
+    "waittime": {
+      "type": "instruction",
+      "desc": "等待指定秒数",
+      "desc_en": "Wait for specified seconds",
+      "proto": "waittime time:<double>"
+    },
+    "waituntil": {
+      "type": "instruction",
+      "desc": "等待条件成立",
+      "desc_en": "Wait until condition is true",
+      "proto": "waituntil cond:, [maxtime:], [timeoutflag:]"
+    },
+    "print": {
+      "type": "instruction",
+      "desc": "打印输出，支持多参数/文件输出/精度控制",
+      "desc_en": "Print output (multi-arg / file / precision)",
+      "proto": "print [to:], [tostr:], [filepath:], [precision:], [numbase:], {argtoprint}"
+    },
+    "init": {
+      "type": "function",
+      "desc": "恢复系统变量为默认值",
+      "desc_en": "Reset system variables to defaults",
+      "proto": "init()"
+    },
+    "setdo": {
+      "type": "function",
+      "desc": "设置数字量输出",
+      "desc_en": "Set digital output",
+      "proto": "void setdo(int chan, bool value)"
+    },
+    "getdi": {
+      "type": "function",
+      "desc": "读取数字量输入",
+      "desc_en": "Read digital input",
+      "proto": "bool getdi(int chan)"
+    },
+    "offset": {
+      "type": "function",
+      "desc": "位姿偏移（世界/工件坐标系下）",
+      "desc_en": "Pose offset (world/wobj frame)",
+      "proto": "pose offset(pose p, double dx, double dy, double dz, double rz, double ry, double rx)"
+    },
+    "reltool": {
+      "type": "function",
+      "desc": "工具坐标系下位姿偏移",
+      "desc_en": "Pose offset in tool frame",
+      "proto": "pose reltool(pose p, double dx, double dy, double dz, double rz, double ry, double rx)"
+    },
+    "poseinv": {
+      "type": "function",
+      "desc": "求位姿逆变换",
+      "desc_en": "Pose inverse transform",
+      "proto": "pose poseinv(pose p)"
+    },
+    "jump": {
+      "type": "instruction",
+      "desc": "跳跃运动（带拾取高度控制）",
+      "desc_en": "Jump motion (pick height control)",
+      "proto": "jump p:<pose>, [v:|vp:], [t:], [w:], [a:], [b:], [Z:], [s:], [ctr:], [sig:]"
+    },
+    "stopmove": {
+      "type": "instruction",
+      "desc": "停止运动",
+      "desc_en": "Stop motion",
+      "proto": "stopmove [type:]"
+    },
+    "startmove": {
+      "type": "instruction",
+      "desc": "启动运动",
+      "desc_en": "Start motion",
+      "proto": "startmove [skip:]"
+    },
+    "pause": {
+      "type": "instruction",
+      "desc": "暂停程序执行",
+      "desc_en": "Pause program",
+      "proto": "pause"
+    },
+    "exit": {
+      "type": "instruction",
+      "desc": "退出当前程序",
+      "desc_en": "Exit program",
+      "proto": "exit"
+    },
+    "restart": {
+      "type": "instruction",
+      "desc": "重启程序",
+      "desc_en": "Restart program",
+      "proto": "restart"
+    },
+    "velset": {
+      "type": "instruction",
+      "desc": "速度调节，设置速度倍率和最大速度",
+      "desc_en": "Speed adjustment: override & max speed",
+      "proto": "velset override:, max:"
+    },
+    "accset": {
+      "type": "instruction",
+      "desc": "加速度调节",
+      "desc_en": "Acceleration adjustment",
+      "proto": "accset acc:, ramp:"
+    },
+    "interrupt": {
+      "type": "instruction",
+      "desc": "声明中断事件",
+      "desc_en": "Declare interrupt event",
+      "proto": "interrupt [name:], [priority:], when:, do:"
+    },
+    "timer": {
+      "type": "instruction",
+      "desc": "定时器中断",
+      "desc_en": "Timer interrupt",
+      "proto": "timer [name:], [priority:], interval:, [rmode:], do:"
+    },
+    "trigger": {
+      "type": "instruction",
+      "desc": "轨迹触发事件",
+      "desc_en": "Path trigger event",
+      "proto": "trigger [priority:], when:, do:"
+    },
+    "disableint": {
+      "type": "instruction",
+      "desc": "禁用中断",
+      "desc_en": "Disable interrupt",
+      "proto": "disableint [name:], [priority:]"
+    },
+    "enableint": {
+      "type": "instruction",
+      "desc": "启用中断",
+      "desc_en": "Enable interrupt",
+      "proto": "enableint [name:], [priority:]"
+    },
+    "delint": {
+      "type": "instruction",
+      "desc": "删除中断",
+      "desc_en": "Delete interrupt",
+      "proto": "delint [name:], [priority:]"
+    },
+    "toolswitch": {
+      "type": "instruction",
+      "desc": "工具负载切换",
+      "desc_en": "Tool load switch",
+      "proto": "toolswitch toolindex:<int>, mu_name:<string>"
+    },
+    "startdetect": {
+      "type": "instruction",
+      "desc": "开启碰撞检测",
+      "desc_en": "Enable collision detection",
+      "proto": "startdetect cid:<int>, mu:<string>"
+    },
+    "enddetect": {
+      "type": "instruction",
+      "desc": "关闭碰撞检测",
+      "desc_en": "Disable collision detection",
+      "proto": "enddetect mu:<string>"
+    },
+    "startweave": {
+      "type": "instruction",
+      "desc": "开启叠加摆动",
+      "desc_en": "Enable weaving",
+      "proto": "startweave weave:weavedata, mu:\"mu_name\""
+    },
+    "endweave": {
+      "type": "instruction",
+      "desc": "结束叠加摆动",
+      "desc_en": "End weaving",
+      "proto": "endweave mu:\"mu_name\""
+    },
+    "startcompen": {
+      "type": "instruction",
+      "desc": "开始轨迹补偿",
+      "desc_en": "Start path compensation",
+      "proto": "startcompen id:<int>, type:<int>, data:<compendata>, dataj:<compendata>"
+    },
+    "endcompen": {
+      "type": "instruction",
+      "desc": "结束轨迹补偿",
+      "desc_en": "End path compensation",
+      "proto": "endcompen"
+    },
+    "compen": {
+      "type": "instruction",
+      "desc": "设置轨迹补偿参数",
+      "desc_en": "Set path compensation params",
+      "proto": "compen [id:], [x:], [y:], [z:], [a:], [b:], [c:], ..."
+    },
+    "import": {
+      "type": "instruction",
+      "desc": "导入ARL模块",
+      "desc_en": "Import ARL module",
+      "proto": "import modpath:<string>"
+    },
+    "scan": {
+      "type": "instruction",
+      "desc": "扫描输入字符串，按分隔符解析至变量",
+      "desc_en": "Scan string by delimiter to variables",
+      "proto": "scan from:<string>, delimiter:<string>, {argtosave}"
+    },
+    "palletcompen": {
+      "type": "instruction",
+      "desc": "计算码垛补偿点位",
+      "desc_en": "Calculate pallet compensation point",
+      "proto": "pose palletcompen(pallet, double X_offset, double Y_offset, pose P)"
+    },
+    "setinterpercent": {
+      "type": "function",
+      "desc": "设置机器人运行速度倍率",
+      "desc_en": "Set robot speed override",
+      "proto": "setinterpercent(per)"
+    },
+    "getinterpercent": {
+      "type": "function",
+      "desc": "获取机器人当前运行速度倍率",
+      "desc_en": "Get robot speed override",
+      "proto": "getinterpercent()"
+    },
+    "syncdo": {
+      "type": "function",
+      "desc": "同步设置数字量输出（随运动同步）",
+      "desc_en": "Sync set digital output (motion-sync)",
+      "proto": "void syncdo(int chan, bool value)"
+    },
+    "pulsedo": {
+      "type": "function",
+      "desc": "输出数字脉冲",
+      "desc_en": "Output digital pulse",
+      "proto": "void pulsedo(int chan, bool value, double width)"
+    },
+    "setao": {
+      "type": "function",
+      "desc": "设置模拟量输出",
+      "desc_en": "Set analog output",
+      "proto": "void setao(int chan, double value)"
+    },
+    "syncao": {
+      "type": "function",
+      "desc": "同步设置模拟量输出",
+      "desc_en": "Sync set analog output",
+      "proto": "void syncao(int chan, double value)"
+    },
+    "setpwm": {
+      "type": "function",
+      "desc": "设置PWM输出",
+      "desc_en": "Set PWM output",
+      "proto": "bool setpwm(int channel, int freq, int ratio)"
+    },
+    "getdo": {
+      "type": "function",
+      "desc": "读取数字量输出",
+      "desc_en": "Read digital output",
+      "proto": "bool getdo(int chan)"
+    },
+    "getai": {
+      "type": "function",
+      "desc": "读取模拟量输入",
+      "desc_en": "Read analog input",
+      "proto": "double getai(int chan)"
+    },
+    "getao": {
+      "type": "function",
+      "desc": "读取模拟量输出",
+      "desc_en": "Read analog output",
+      "proto": "double getao(int chan)"
+    },
+    "if": {
+      "type": "logic",
+      "desc": "条件判断，满足时执行块内代码",
+      "desc_en": "Conditional: execute block when true",
+      "proto": "if(bool 表达式)"
+    },
+    "elseif": {
+      "type": "logic",
+      "desc": "前一条件不满足时检查此条件",
+      "desc_en": "Check this condition when previous is false",
+      "proto": "elseif(bool 表达式)"
+    },
+    "else": {
+      "type": "logic",
+      "desc": "所有 if/elseif 条件均不满足时的默认分支",
+      "desc_en": "Default branch when all conditions false",
+      "proto": "else"
+    },
+    "endif": {
+      "type": "logic",
+      "desc": "结束 if/elseif/else 条件块",
+      "desc_en": "End if/elseif/else block",
+      "proto": "endif"
+    },
+    "while": {
+      "type": "logic",
+      "desc": "当条件成立时循环，先判断后执行",
+      "desc_en": "While loop (check-first)",
+      "proto": "while(bool 表达式)"
+    },
+    "endwhile": {
+      "type": "logic",
+      "desc": "结束 while 循环块",
+      "desc_en": "End while block",
+      "proto": "endwhile"
+    },
+    "for": {
+      "type": "logic",
+      "desc": "步进循环",
+      "desc_en": "For loop",
+      "proto": "for(初始化; bool表达式; 迭代)"
+    },
+    "endfor": {
+      "type": "logic",
+      "desc": "结束 for 循环块",
+      "desc_en": "End for block",
+      "proto": "endfor"
+    },
+    "repeat": {
+      "type": "logic",
+      "desc": "直到型循环起始，先执行后判断",
+      "desc_en": "Repeat-until loop (execute-first)",
+      "proto": "repeat"
+    },
+    "until": {
+      "type": "logic",
+      "desc": "直到型循环结束条件，表达式为真时退出",
+      "desc_en": "Until condition (exit when true)",
+      "proto": "until(bool 表达式)"
+    },
+    "loop": {
+      "type": "logic",
+      "desc": "无限循环起始，需配合 break 退出",
+      "desc_en": "Infinite loop (use break to exit)",
+      "proto": "loop"
+    },
+    "endloop": {
+      "type": "logic",
+      "desc": "结束 loop 无限循环块",
+      "desc_en": "End loop block",
+      "proto": "endloop"
+    },
+    "switch": {
+      "type": "logic",
+      "desc": "多分支判断，根据表达式值匹配 case",
+      "desc_en": "Switch: multi-branch by expression value",
+      "proto": "switch(表达式)"
+    },
+    "case": {
+      "type": "logic",
+      "desc": "switch 的分支匹配项",
+      "desc_en": "Switch case branch",
+      "proto": "case 常量值:"
+    },
+    "default": {
+      "type": "logic",
+      "desc": "switch 无匹配 case 时的默认分支",
+      "desc_en": "Default branch when no case matches",
+      "proto": "default:"
+    },
+    "endswitch": {
+      "type": "logic",
+      "desc": "结束 switch 多分支块",
+      "desc_en": "End switch block",
+      "proto": "endswitch"
+    },
+    "break": {
+      "type": "logic",
+      "desc": "跳出最近一层循环（for/while/loop/switch）",
+      "desc_en": "Break out of nearest loop",
+      "proto": "break"
+    },
+    "continue": {
+      "type": "logic",
+      "desc": "跳过本次循环剩余代码，直接进入下一次循环",
+      "desc_en": "Skip to next iteration",
+      "proto": "continue"
+    },
+    "goto": {
+      "type": "logic",
+      "desc": "无条件跳转到指定标签处执行",
+      "desc_en": "Unconditional jump to label",
+      "proto": "goto label"
+    },
+    "void": {
+      "type": "keyword",
+      "desc": "表示函数无返回值的类型关键字",
+      "desc_en": "Void return type keyword",
+      "proto": "void"
+    },
+    "const": {
+      "type": "keyword",
+      "desc": "声明常量，值不可修改",
+      "desc_en": "Declare constant (immutable)",
+      "proto": "const <类型> <名称> = <值>"
+    },
+    "true": {
+      "type": "keyword",
+      "desc": "布尔量：真",
+      "desc_en": "Boolean literal: true",
+      "proto": "true"
+    },
+    "false": {
+      "type": "keyword",
+      "desc": "布尔量：假",
+      "desc_en": "Boolean literal: false",
+      "proto": "false"
+    },
+    "endl": {
+      "type": "keyword",
+      "desc": "换行符常量，用于 print 输出换行",
+      "desc_en": "Newline constant for print",
+      "proto": "endl"
+    },
+    "return": {
+      "type": "keyword",
+      "desc": "从函数返回，可携带返回值",
+      "desc_en": "Return from function (optional value)",
+      "proto": "return [表达式]"
+    },
+    "func": {
+      "type": "keyword",
+      "desc": "声明用户自定义函数",
+      "desc_en": "Declare user-defined function",
+      "proto": "func <返回类型> <函数名>(<参数列表>)"
+    },
+    "endfunc": {
+      "type": "keyword",
+      "desc": "结束函数定义块",
+      "desc_en": "End function block",
+      "proto": "endfunc"
+    },
+    "int": {
+      "type": "datatype",
+      "desc": "整数类型",
+      "desc_en": "integer type"
+    },
+    "uint": {
+      "type": "datatype",
+      "desc": "无符号整数类型",
+      "desc_en": "unsigned integer type"
+    },
+    "byte": {
+      "type": "datatype",
+      "desc": "字节类型",
+      "desc_en": "byte type"
+    },
+    "double": {
+      "type": "datatype",
+      "desc": "浮点数类型",
+      "desc_en": "Double-precision floating-point type"
+    },
+    "bool": {
+      "type": "datatype",
+      "desc": "布尔类型（true/false）",
+      "desc_en": "Boolean type (true/false)"
+    },
+    "string": {
+      "type": "datatype",
+      "desc": "字符串类型",
+      "desc_en": "String type"
+    },
+    "pos": {
+      "type": "datatype",
+      "desc": "三维坐标类型",
+      "desc_en": "3D position type"
+    },
+    "frame": {
+      "type": "datatype",
+      "desc": "坐标系类型",
+      "desc_en": "Coordinate frame type"
+    },
+    "pose": {
+      "type": "datatype",
+      "desc": "位姿类型（位置+姿态）",
+      "desc_en": "pose type (position + orientation)"
+    },
+    "joint": {
+      "type": "datatype",
+      "desc": "关节角度类型",
+      "desc_en": "Joint angle type"
+    },
+    "tool": {
+      "type": "datatype",
+      "desc": "工具坐标系类型",
+      "desc_en": "Tool coordinate frame type"
+    },
+    "wobj": {
+      "type": "datatype",
+      "desc": "工件坐标系类型",
+      "desc_en": "Work object coordinate frame type"
+    },
+    "weavedata": {
+      "type": "datatype",
+      "desc": "摆焊数据类型",
+      "desc_en": "Weave data type"
+    },
+    "speed": {
+      "type": "datatype",
+      "desc": "速度数据类型",
+      "desc_en": "Speed data type"
+    },
+    "slip": {
+      "type": "datatype",
+      "desc": "平滑过渡数据类型",
+      "desc_en": "slip data type"
+    },
+    "jvel": {
+      "type": "datatype",
+      "desc": "关节速度数据类型",
+      "desc_en": "Joint velocity data type"
+    },
+    "clock": {
+      "type": "datatype",
+      "desc": "时钟计时器类型",
+      "desc_en": "Clock timer type"
+    },
+    "iodev": {
+      "type": "datatype",
+      "desc": "IO设备类型",
+      "desc_en": "IO device type"
+    },
+    "socket": {
+      "type": "datatype",
+      "desc": "套接字变量",
+      "desc_en": "TCP Socket type"
+    },
+    "melsec_dev": {
+      "type": "datatype",
+      "desc": "三菱PLC通信设备类型",
+      "desc_en": "Mitsubishi PLC communication device type"
+    },
+    "modbus_dev": {
+      "type": "datatype",
+      "desc": "Modbus通信设备类型",
+      "desc_en": "Modbus communication device type"
+    },
+    "modbus_rtu_master": {
+      "type": "datatype",
+      "desc": "Modbus RTU 主站设备类型",
+      "desc_en": "Modbus RTU master device type"
+    },
+    "tcpforce": {
+      "type": "datatype",
+      "desc": "TCP六维力矢量类型",
+      "desc_en": "TCP 6-axis force vector type"
+    },
+    "jttq": {
+      "type": "datatype",
+      "desc": "关节力矩数据类型",
+      "desc_en": "Joint torque data type"
+    },
+    "jtci": {
+      "type": "datatype",
+      "desc": "关节电流数据类型",
+      "desc_en": "Joint current data type"
+    },
+    "compendata": {
+      "type": "datatype",
+      "desc": "补偿数据类型",
+      "desc_en": "Compensation data type"
+    },
+    "$i": {
+      "type": "sysvar",
+      "desc": "整数型系统变量数组（$I[index]）",
+      "desc_en": "Integer system variable array"
+    },
+    "$i_name": {
+      "type": "sysvar",
+      "desc": "整数型系统变量名称数组",
+      "desc_en": "Integer system variable name array"
+    },
+    "$s": {
+      "type": "sysvar",
+      "desc": "字符串型系统变量数组（$S[index]）",
+      "desc_en": "String system variable array"
+    },
+    "$s_name": {
+      "type": "sysvar",
+      "desc": "字符串型系统变量名称数组",
+      "desc_en": "String system variable name array"
+    },
+    "$b": {
+      "type": "sysvar",
+      "desc": "布尔型系统变量数组（$B[index]）",
+      "desc_en": "Boolean system variable array"
+    },
+    "$b_name": {
+      "type": "sysvar",
+      "desc": "布尔型系统变量名称数组",
+      "desc_en": "Boolean system variable name array"
+    },
+    "$d": {
+      "type": "sysvar",
+      "desc": "浮点型系统变量数组（$D[index]）",
+      "desc_en": "Double system variable array"
+    },
+    "$d_name": {
+      "type": "sysvar",
+      "desc": "浮点型系统变量名称数组",
+      "desc_en": "Double system variable name array"
+    },
+    "$p": {
+      "type": "sysvar",
+      "desc": "位姿型系统变量数组（$P[index]）",
+      "desc_en": "Pose system variable array"
+    },
+    "$j": {
+      "type": "sysvar",
+      "desc": "关节型系统变量数组（$J[index]）",
+      "desc_en": "Joint system variable array"
+    },
+    "$tools": {
+      "type": "sysvar",
+      "desc": "工具坐标系数组",
+      "desc_en": "Tool frame array"
+    },
+    "$tools_name": {
+      "type": "sysvar",
+      "desc": "工具坐标系名称数组",
+      "desc_en": "Tool frame name array"
+    },
+    "$wobjs": {
+      "type": "sysvar",
+      "desc": "工件坐标系数组",
+      "desc_en": "Work object frame array"
+    },
+    "$wobjs_name": {
+      "type": "sysvar",
+      "desc": "工件坐标系名称数组",
+      "desc_en": "Work object frame name array"
+    },
+    "$base": {
+      "type": "sysvar",
+      "desc": "基座坐标系数组",
+      "desc_en": "Base coordinate frame array"
+    },
+    "$flange": {
+      "type": "sysvar",
+      "desc": "法兰坐标系",
+      "desc_en": "Flange coordinate frame"
+    },
+    "$world": {
+      "type": "sysvar",
+      "desc": "世界坐标系",
+      "desc_en": "World coordinate frame"
+    },
+    "$config_check": {
+      "type": "sysvar",
+      "desc": "轴配置检查使能",
+      "desc_en": "Axis configuration check enable"
+    },
+    "$ccir_error_threshold": {
+      "type": "sysvar",
+      "desc": "ccir示教点不均匀报警阈值",
+      "desc_en": "Alarm threshold for uneven ccir teaching points"
+    },
+    "$dfspeed": {
+      "type": "sysvar",
+      "desc": "默认速度参数",
+      "desc_en": "Default speed parameter"
+    },
+    "$dfslip": {
+      "type": "sysvar",
+      "desc": "默认平滑参数",
+      "desc_en": "Default blending parameter"
+    },
+    "$dftool": {
+      "type": "sysvar",
+      "desc": "默认工具参数",
+      "desc_en": "Default tool parameter"
+    },
+    "$dfwobj": {
+      "type": "sysvar",
+      "desc": "默认工件坐标系参数",
+      "desc_en": "Default work object frame parameter"
+    },
+    "$ignore_ori": {
+      "type": "sysvar",
+      "desc": "方向忽略使能",
+      "desc_en": "Orientation ignore enable"
+    },
+    "$ori_ref_path": {
+      "type": "sysvar",
+      "desc": "圆弧方向参照路径坐标系",
+      "desc_en": "Reference path coordinate system for arc orientation"
+    },
+    "$vel_profile": {
+      "type": "sysvar",
+      "desc": "速度轮廓类型",
+      "desc_en": "Velocity profile type"
+    },
+    "$traj_elapse_time": {
+      "type": "sysvar",
+      "desc": "轨迹经过时间",
+      "desc_en": "Elapsed trajectory time"
+    },
+    "$traj_left_time": {
+      "type": "sysvar",
+      "desc": "轨迹剩余时间",
+      "desc_en": "Remaining trajectory time"
+    },
+    "$traj_elapse_dis": {
+      "type": "sysvar",
+      "desc": "轨迹经过路程",
+      "desc_en": "Elapsed trajectory distance"
+    },
+    "$traj_left_dis": {
+      "type": "sysvar",
+      "desc": "轨迹剩余路程",
+      "desc_en": "Remaining trajectory distance"
+    },
+    "$cjoint": {
+      "type": "sysvar",
+      "desc": "当前轴位置点",
+      "desc_en": "Current axis position point"
+    },
+    "$rpp_enable": {
+      "type": "sysvar",
+      "desc": "RPP使能",
+      "desc_en": "RPP enable"
+    },
+    "$at_home": {
+      "type": "sysvar",
+      "desc": "是否处于 HOME位置",
+      "desc_en": "Whether at HOME position"
+    },
+    "$ext_ctl_act": {
+      "type": "sysvar",
+      "desc": "外部自动控制被激活",
+      "desc_en": "External automatic control activated"
+    },
+    "$pgno_req": {
+      "type": "sysvar",
+      "desc": "请求程序号状态",
+      "desc_en": "Program number request status"
+    },
+    "$pgno": {
+      "type": "sysvar",
+      "desc": "从外部获取的程序号",
+      "desc_en": "Program number obtained externally"
+    },
+    "$pi": {
+      "type": "sysvar",
+      "desc": "圆周率",
+      "desc_en": "Pi"
+    },
+    "$ctl_mode": {
+      "type": "sysvar",
+      "desc": "当前控制模式",
+      "desc_en": "Current control mode"
+    },
+    "$wobj_offset": {
+      "type": "sysvar",
+      "desc": "工件坐标系偏移",
+      "desc_en": "Work object offset"
+    },
+    "$tool_offset": {
+      "type": "sysvar",
+      "desc": "工具坐标系偏移",
+      "desc_en": "Tool offset"
+    },
+    "$reset_pos_type": {
+      "type": "sysvar",
+      "desc": "上电时位置复位方式",
+      "desc_en": "Position reset mode at power-on"
+    },
+    "$reset_pos_theshold": {
+      "type": "sysvar",
+      "desc": "上电时位置复位判断门限",
+      "desc_en": "Decision threshold for position reset at power-on"
+    },
+    "$weave_frame_type": {
+      "type": "sysvar",
+      "desc": "叠加轨迹坐标系类型",
+      "desc_en": "Superimposed trajectory coordinate system type"
+    },
+    "$ext_ctl_act_di": {
+      "type": "sysvar",
+      "desc": "外部自动控制激活信号 DI 端口号",
+      "desc_en": "DI port number for external automatic control activation signal"
+    },
+    "$servo_on_di": {
+      "type": "sysvar",
+      "desc": "伺服上电信号 DI 端口号",
+      "desc_en": "DI port number for servo-on signal"
+    },
+    "$servo_off_di": {
+      "type": "sysvar",
+      "desc": "伺服断电信号 DI 端口号",
+      "desc_en": "DI port number for servo-off signal"
+    },
+    "$start_prog_di": {
+      "type": "sysvar",
+      "desc": "启动程序信号 DI 端口号",
+      "desc_en": "DI port number for start-program signal"
+    },
+    "$pause_prog_di": {
+      "type": "sysvar",
+      "desc": "暂停程序信号 DI 端口号",
+      "desc_en": "DI port number for pause-program signal"
+    },
+    "$reset_prog_di": {
+      "type": "sysvar",
+      "desc": "复位程序信号 DI 端口号",
+      "desc_en": "DI port number for reset-program signal"
+    },
+    "$clear_alarm_di": {
+      "type": "sysvar",
+      "desc": "清除报警信号 DI 端口号",
+      "desc_en": "DI port number for clear-alarm signal"
+    },
+    "$pgno_fbit_di": {
+      "type": "sysvar",
+      "desc": "程序号第一位所在的 DI 端口号",
+      "desc_en": "DI port number of the first program-number bit"
+    },
+    "$pgno_parity_di": {
+      "type": "sysvar",
+      "desc": "奇偶校验信号 DI 端口号",
+      "desc_en": "DI port number for parity signal"
+    },
+    "$pgno_valid_di": {
+      "type": "sysvar",
+      "desc": "程序号有效信号 DI 端口号",
+      "desc_en": "DI port number for program-number valid signal"
+    },
+    "$ext_ctl_chan_di": {
+      "type": "sysvar",
+      "desc": "外部控制通道选择起始位 DI 端口号",
+      "desc_en": "DI port number of the start bit for external control channel selection"
+    },
+    "$ext_ctl_act_conf_do": {
+      "type": "sysvar",
+      "desc": "外部自动控制功能激活确认信号 DO 端口号",
+      "desc_en": "DO port number for external automatic control activation confirmation signal"
+    },
+    "$servo_on_do": {
+      "type": "sysvar",
+      "desc": "伺服上电信号 DO 端口号",
+      "desc_en": "DO port number for servo-on signal"
+    },
+    "$pgno_req_do": {
+      "type": "sysvar",
+      "desc": "请求程序号信号 DO 端口号",
+      "desc_en": "DO port number for program-number request signal"
+    },
+    "$at_home_do": {
+      "type": "sysvar",
+      "desc": "处于 HOME 点信号 DO 端口号",
+      "desc_en": "DO port number for at-HOME signal"
+    },
+    "$at_t1_do": {
+      "type": "sysvar",
+      "desc": "系统处于手动低速模式信号 DO 端口号",
+      "desc_en": "DO port number for T1 mode signal"
+    },
+    "$at_t2_do": {
+      "type": "sysvar",
+      "desc": "系统处于手动高速模式信号 DO 端口号",
+      "desc_en": "DO port number for T2 mode signal"
+    },
+    "$at_aut_do": {
+      "type": "sysvar",
+      "desc": "系统处于自动模式信号 DO 端口号",
+      "desc_en": "DO port number for automatic mode signal"
+    },
+    "$pgno_ack_fbit_do": {
+      "type": "sysvar",
+      "desc": "程序号确认信号第一位所在的 DO 端口号",
+      "desc_en": "DO port number of the first bit of the program-number acknowledgment signal"
+    },
+    "$chan_run_state_do": {
+      "type": "sysvar",
+      "desc": "各个通道处于自动程序运行状态 DO 端口号",
+      "desc_en": "DO port number for automatic program running status of each channel"
+    },
+    "$chan_load_state_do": {
+      "type": "sysvar",
+      "desc": "各个通道程序加载状态 DO 端口号",
+      "desc_en": "DO port number for program loaded status of each channel"
+    },
+    "$chan_pause_state_do": {
+      "type": "sysvar",
+      "desc": "各个通道程序暂停状态 DO 端口号",
+      "desc_en": "DO port number for program paused status of each channel"
+    },
+    "$chan_stop_state_do": {
+      "type": "sysvar",
+      "desc": "各个通道程序停止状态 DO 端口号",
+      "desc_en": "DO port number for program stopped status of each channel"
+    },
+    "$chan_estop_state_do": {
+      "type": "sysvar",
+      "desc": "各个通道程序急停状态 DO 端口号",
+      "desc_en": "DO port number for emergency-stop status of each channel"
+    },
+    "$chan_idle_state_do": {
+      "type": "sysvar",
+      "desc": "前台通道处于空闲状态 DO 端口号",
+      "desc_en": "DO port number for idle status of the foreground channel"
+    },
+    "$at_path_do": {
+      "type": "sysvar",
+      "desc": "前台通道机器人处于轨迹上时 DO 端口号",
+      "desc_en": "DO port number when the foreground-channel robot is on path"
+    },
+    "getintdo": {
+      "type": "function",
+      "desc": "读取INT型数字量输出",
+      "desc_en": "",
+      "proto": "getintdo(chan)"
+    },
+    "getintdi": {
+      "type": "function",
+      "desc": "读取INT型数字量输入",
+      "desc_en": "",
+      "proto": "getintdi(chan)"
+    },
+    "main": {
+      "type": "function",
+      "desc": "入口函数，程序复位后，程序指针将指向 main 函数中的第一行代码",
+      "desc_en": "",
+      "proto": "main()"
+    },
+    "savesv": {
+      "type": "function",
+      "desc": "存储系统变量至配置文件",
+      "desc_en": "",
+      "proto": "void savesv(string svname)"
+    },
+    "typeof": {
+      "type": "function",
+      "desc": "返回变量类型字符串",
+      "desc_en": "",
+      "proto": "typeof(var)"
+    },
+    "ctime": {
+      "type": "function",
+      "desc": "返回当前时间字符串",
+      "desc_en": "",
+      "proto": "ctime()"
+    },
+    "cdate": {
+      "type": "function",
+      "desc": "返回当前日期字符串",
+      "desc_en": "",
+      "proto": "cdate()"
+    },
+    "assert": {
+      "type": "function",
+      "desc": "断言，条件false时终止",
+      "desc_en": "",
+      "proto": "assert(cond)"
+    },
+    "toascii": {
+      "type": "function",
+      "desc": "获取字符串首字符对应的ASCII码值",
+      "desc_en": "",
+      "proto": "int toascii(string s)"
+    },
+    "setip": {
+      "type": "function",
+      "desc": "设置网口IP地址配置",
+      "desc_en": "",
+      "proto": "bool setip(string ip, string gate, string mask [, string if_name])"
+    },
+    "getip": {
+      "type": "function",
+      "desc": "获取网口IP地址配置",
+      "desc_en": "",
+      "proto": "bool getip(string ip [, string if_name])"
+    },
+    "addslave": {
+      "type": "function",
+      "desc": "配置Modbus一主多从从站",
+      "desc_en": "",
+      "proto": "bool addslave(modbus_rtu_master dev, int slave_id)"
+    },
+    "setcycle": {
+      "type": "function",
+      "desc": "设置Modbus通讯周期",
+      "desc_en": "",
+      "proto": "void setcycle(modbus_dev& dev, int cycle)"
+    },
+    "switcharl": {
+      "type": "function",
+      "desc": "切换前台加载的ARL程序",
+      "desc_en": "",
+      "proto": "bool switcharl(uint channel, string file_name)"
+    },
+    "switchbackarl": {
+      "type": "function",
+      "desc": "切换后台加载的ARL程序",
+      "desc_en": "",
+      "proto": "bool switchbackarl(uint channel, string file_name)"
+    },
+    "startbackchannel": {
+      "type": "function",
+      "desc": "启动指定的后台通道",
+      "desc_en": "",
+      "proto": "void startbackchannel(int chan_no)"
+    },
+    "pausebackchannel": {
+      "type": "function",
+      "desc": "暂停指定的后台通道",
+      "desc_en": "",
+      "proto": "void pausebackchannel(int chan_no)"
+    },
+    "resetbackchannel": {
+      "type": "function",
+      "desc": "复位指定的后台通道",
+      "desc_en": "",
+      "proto": "void resetbackchannel(int chan_no)"
+    },
+    "curmpfile": {
+      "type": "function",
+      "desc": "获取运动指针当前所在ARL文件名",
+      "desc_en": "",
+      "proto": "string curmpfile(int channel_index)"
+    },
+    "curmpline": {
+      "type": "function",
+      "desc": "获取运动指针当前所在行号",
+      "desc_en": "",
+      "proto": "int curmpline(int channel_index)"
+    },
+    "curppfile": {
+      "type": "function",
+      "desc": "获取程序指针当前所在ARL文件名",
+      "desc_en": "",
+      "proto": "string curppfile(int channel_index)"
+    },
+    "curppline": {
+      "type": "function",
+      "desc": "获取程序指针当前所在行号",
+      "desc_en": "",
+      "proto": "int curppline(int channel_index)"
+    },
+    "asin": {
+      "type": "function",
+      "desc": "反正弦，返回弧度",
+      "desc_en": "",
+      "proto": "double asin(double x)"
+    },
+    "acos": {
+      "type": "function",
+      "desc": "反余弦，返回弧度",
+      "desc_en": "",
+      "proto": "double acos(double x)"
+    },
+    "atan": {
+      "type": "function",
+      "desc": "反正切，返回弧度",
+      "desc_en": "",
+      "proto": "double atan(double x)"
+    },
+    "sinh": {
+      "type": "function",
+      "desc": "双曲正弦",
+      "desc_en": "",
+      "proto": "double sinh(double x)"
+    },
+    "cosh": {
+      "type": "function",
+      "desc": "双曲余弦",
+      "desc_en": "",
+      "proto": "double cosh(double x)"
+    },
+    "tanh": {
+      "type": "function",
+      "desc": "双曲正切",
+      "desc_en": "",
+      "proto": "double tanh(double x)"
+    },
+    "exp": {
+      "type": "function",
+      "desc": "e^x",
+      "desc_en": "",
+      "proto": "double exp(double x)"
+    },
+    "pow": {
+      "type": "function",
+      "desc": "幂运算",
+      "desc_en": "",
+      "proto": "double pow(double x, double y)"
+    },
+    "pow10": {
+      "type": "function",
+      "desc": "10^n",
+      "desc_en": "",
+      "proto": "double pow10(double x)"
+    },
+    "log": {
+      "type": "function",
+      "desc": "自然对数 ln(x)",
+      "desc_en": "",
+      "proto": "double log(double x)"
+    },
+    "log10": {
+      "type": "function",
+      "desc": "以10为底对数",
+      "desc_en": "",
+      "proto": "double log10(double x)"
+    },
+    "floor": {
+      "type": "function",
+      "desc": "向下取整",
+      "desc_en": "",
+      "proto": "double floor(double x)"
+    },
+    "ceil": {
+      "type": "function",
+      "desc": "向上取整",
+      "desc_en": "",
+      "proto": "double ceil(double x)"
+    },
+    "fmod": {
+      "type": "function",
+      "desc": "浮点取余",
+      "desc_en": "",
+      "proto": "double fmod(double x, double y)"
+    },
+    "modf": {
+      "type": "function",
+      "desc": "分离整数与小数",
+      "desc_en": "",
+      "proto": "double modf(double x, int &y)"
+    },
+    "hypot": {
+      "type": "function",
+      "desc": "√(x²+y²)",
+      "desc_en": "",
+      "proto": "double hypot(double x, double y)"
+    },
+    "rand": {
+      "type": "function",
+      "desc": "产生随机数，无参返回int，有参返回指定范围double",
+      "desc_en": "",
+      "proto": "int rand()  |  double rand(double start, double end)"
+    },
+    "norm": {
+      "type": "function",
+      "desc": "求向量距离原点的长度（模）",
+      "desc_en": "",
+      "proto": "double norm(pos p)"
+    },
+    "trunc": {
+      "type": "function",
+      "desc": "截断浮点数至指定小数位，round控制是否四舍五入",
+      "desc_en": "",
+      "proto": "double trunc(double num, int n, bool round)"
+    },
+    "frexp": {
+      "type": "function",
+      "desc": "分解浮点数为尾数和指数",
+      "desc_en": "",
+      "proto": "double frexp(double val, int &exp)"
+    },
+    "ldexp": {
+      "type": "function",
+      "desc": "装载浮点数（val × 2^exp）",
+      "desc_en": "",
+      "proto": "double ldexp(double val, int exp)"
+    },
+    "cjoint": {
+      "type": "function",
+      "desc": "获取机器人当前各轴位置（关节角）",
+      "desc_en": "",
+      "proto": "joint cjoint()"
+    },
+    "cjttq": {
+      "type": "function",
+      "desc": "获取各轴输出力矩",
+      "desc_en": "",
+      "proto": "jttq cjttq(int chan_no, bool Is_cmd)"
+    },
+    "cjtci": {
+      "type": "function",
+      "desc": "获取各轴电机电流",
+      "desc_en": "",
+      "proto": "jtci cjtci(int chan_no, bool Is_cmd)"
+    },
+    "channeltojoint": {
+      "type": "function",
+      "desc": "获取运行目标点的轴位置",
+      "desc_en": "",
+      "proto": "joint channeltojoint(int chan_no)"
+    },
+    "channeltopose": {
+      "type": "function",
+      "desc": "获取运行目标点的TCP位姿",
+      "desc_en": "",
+      "proto": "pose channeltopose(int chan_no, tool t, wobj w)"
+    },
+    "channeljoint": {
+      "type": "function",
+      "desc": "获取通道当前轴位置",
+      "desc_en": "",
+      "proto": "joint channeljoint(int chan_no, bool Is_cmd)"
+    },
+    "channelpose": {
+      "type": "function",
+      "desc": "获取通道当前TCP位姿",
+      "desc_en": "",
+      "proto": "pose channelpose(int chan_no, tool t, wobj w, bool Is_cmd)"
+    },
+    "channeljointvel": {
+      "type": "function",
+      "desc": "获取各轴当前速度",
+      "desc_en": "",
+      "proto": "jvel channeljointvel(int chan_no, bool Is_cmd)"
+    },
+    "channeltcpvel": {
+      "type": "function",
+      "desc": "获取当前TCP点速度",
+      "desc_en": "",
+      "proto": "double channeltcpvel(int chan_no, tool t, wobj w, bool Is_cmd)"
+    },
+    "ctcpforce": {
+      "type": "function",
+      "desc": "获取TCP点六维力矢量",
+      "desc_en": "",
+      "proto": "tcpforce ctcpforce(int chan_no, tool t, wobj w)"
+    },
+    "getposetool": {
+      "type": "function",
+      "desc": "根据ID获取工具位姿变量",
+      "desc_en": "",
+      "proto": "pose getposetool(uint pose_index)"
+    },
+    "getposewobj": {
+      "type": "function",
+      "desc": "根据ID获取工件位姿变量",
+      "desc_en": "",
+      "proto": "pose getposewobj(uint pose_index)"
+    },
+    "setposetool": {
+      "type": "function",
+      "desc": "设置位姿变量的工具坐标系",
+      "desc_en": "",
+      "proto": "void setposetool(uint pose_index, uint tool_index)"
+    },
+    "setposewobj": {
+      "type": "function",
+      "desc": "设置位姿变量的工件坐标系",
+      "desc_en": "",
+      "proto": "void setposewobj(uint pose_index, uint wobj_index)"
+    },
+    "getwobj_3p": {
+      "type": "function",
+      "desc": "3点法标定工件坐标系",
+      "desc_en": "",
+      "proto": "wobj getwobj_3p(joint j1, joint j2, joint j3, tool t)"
+    },
+    "getwobj_indi": {
+      "type": "function",
+      "desc": "间接法标定工件坐标系",
+      "desc_en": "",
+      "proto": "wobj getwobj_indi(joint j1, j2, j3, pos p1, p2, p3, tool t)"
+    },
+    "getwobj_flange": {
+      "type": "function",
+      "desc": "法兰参照法标定工件坐标系",
+      "desc_en": "",
+      "proto": "wobj getwobj_flange(joint j1, joint j2, tool t, bool xydefault)"
+    },
+    "gettooltcp_ref": {
+      "type": "function",
+      "desc": "标准工具参照法标定TCP",
+      "desc_en": "",
+      "proto": "void gettooltcp_ref(joint j1, joint j2, tool ref, tool& t)"
+    },
+    "gettoolrot_world": {
+      "type": "function",
+      "desc": "世界系参照法测量工具旋转",
+      "desc_en": "",
+      "proto": "void gettoolrot_world(joint j, tool& t)"
+    },
+    "gettoolrot_3p": {
+      "type": "function",
+      "desc": "3点法测量工具旋转",
+      "desc_en": "",
+      "proto": "void gettoolrot_3p(joint j1, j2, j3, tool& t)"
+    },
+    "gettool_3p": {
+      "type": "function",
+      "desc": "3点法标定工具坐标系",
+      "desc_en": "",
+      "proto": "tool gettool_3p(joint j1, joint j2, joint j3, wobj w)"
+    },
+    "getbase_3p": {
+      "type": "function",
+      "desc": "标定基础坐标系",
+      "desc_en": "",
+      "proto": "void getbase_3p(joint j1, j2, j3, tool t, int index)"
+    },
+    "toint": {
+      "type": "function",
+      "desc": "转换成整型，支持指定进制",
+      "desc_en": "",
+      "proto": "int toint(double d)  |  int toint(string s, int base)"
+    },
+    "todouble": {
+      "type": "function",
+      "desc": "将字节数组转换为浮点型",
+      "desc_en": "",
+      "proto": "double todouble(byte[] data, int start)"
+    },
+    "tobytes": {
+      "type": "function",
+      "desc": "将string/int/double转换为字节数组",
+      "desc_en": "",
+      "proto": "void tobytes(src, byte[] dest, int start)"
+    },
+    "tostr": {
+      "type": "function",
+      "desc": "转换成字符串，可指定精度",
+      "desc_en": "",
+      "proto": "string tostr(anytype v)  |  string tostr(double v, int precision)"
+    },
+    "ftobytes": {
+      "type": "function",
+      "desc": "浮点数转换成字节数组",
+      "desc_en": "",
+      "proto": "void ftobytes(double src, byte[] data, int start)"
+    },
+    "tofloat": {
+      "type": "function",
+      "desc": "字节数组转换成浮点数",
+      "desc_en": "",
+      "proto": "double tofloat(byte[] data, int start)"
+    },
+    "bitlcs": {
+      "type": "function",
+      "desc": "整数循环左移n位",
+      "desc_en": "",
+      "proto": "int bitlcs(int data, int n)"
+    },
+    "bitrcs": {
+      "type": "function",
+      "desc": "整数循环右移n位",
+      "desc_en": "",
+      "proto": "int bitrcs(int data, int n)"
+    },
+    "savearl": {
+      "type": "function",
+      "desc": "复制ARL文件",
+      "desc_en": "",
+      "proto": "bool savearl(string file_src, string file_dst, bool mode)"
+    },
+    "savefilepose": {
+      "type": "function",
+      "desc": "保存位姿至数据文件",
+      "desc_en": "",
+      "proto": "bool savefilepose(string file_name, string p_name, pose& p)"
+    },
+    "savefilejoint": {
+      "type": "function",
+      "desc": "保存轴位置至数据文件",
+      "desc_en": "",
+      "proto": "bool savefilejoint(string file_name, string j_name, joint& j)"
+    },
+    "saveposenow": {
+      "type": "function",
+      "desc": "立即保存当前位姿至文件",
+      "desc_en": "",
+      "proto": "bool saveposenow(uint channel, string file_name, ...)"
+    },
+    "savejointnow": {
+      "type": "function",
+      "desc": "立即保存当前轴位置至文件",
+      "desc_en": "",
+      "proto": "bool savejointnow(uint channel, string file_name, ...)"
+    },
+    "filesize": {
+      "type": "function",
+      "desc": "查询文件大小（字节）",
+      "desc_en": "",
+      "proto": "int filesize(string file_name)"
+    },
+    "renamefile": {
+      "type": "function",
+      "desc": "文件重命名",
+      "desc_en": "",
+      "proto": "bool renamefile(string old_name, string new_name)"
+    },
+    "removefile": {
+      "type": "function",
+      "desc": "删除文件",
+      "desc_en": "",
+      "proto": "bool removefile(string file_name)"
+    },
+    "gettextstr": {
+      "type": "function",
+      "desc": "读取文本文件指定行内容",
+      "desc_en": "",
+      "proto": "string gettextstr(string path, int line, bool external)"
+    },
+    "connect": {
+      "type": "function",
+      "desc": "TCP Socket连接",
+      "desc_en": "",
+      "proto": "connect(host, port [, timeout])"
+    },
+    "accept": {
+      "type": "function",
+      "desc": "TCP Socket监听",
+      "desc_en": "",
+      "proto": "accept(port [, timeout])"
+    },
+    "write": {
+      "type": "function",
+      "desc": "Socket写入",
+      "desc_en": "",
+      "proto": "write(sock, data)"
+    },
+    "syncwrite": {
+      "type": "function",
+      "desc": "同步写入",
+      "desc_en": "",
+      "proto": "syncwrite(sock, data)"
+    },
+    "read": {
+      "type": "function",
+      "desc": "Socket读取",
+      "desc_en": "",
+      "proto": "read(sock, len [, timeout])"
+    },
+    "readuntil": {
+      "type": "function",
+      "desc": "读取到分隔符",
+      "desc_en": "",
+      "proto": "readuntil(sock, delim, maxlen [, timeout])"
+    },
+    "clearbuff": {
+      "type": "function",
+      "desc": "清空Socket缓冲区",
+      "desc_en": "",
+      "proto": "clearbuff(sock)"
+    },
+    "open": {
+      "type": "function",
+      "desc": "打开串口设备",
+      "desc_en": "",
+      "proto": "open(dev, baud [, mode])"
+    },
+    "close": {
+      "type": "function",
+      "desc": "关闭Socket或串口",
+      "desc_en": "",
+      "proto": "close(sock_or_dev)"
+    },
+    "dnwrite": {
+      "type": "function",
+      "desc": "向DeviceNet总线写数据",
+      "desc_en": "",
+      "proto": "int dnwrite(int offset, int len, byte[] data)"
+    },
+    "dnread": {
+      "type": "function",
+      "desc": "从DeviceNet总线读数据",
+      "desc_en": "",
+      "proto": "int dnread(int offset, int len, byte[] data)"
+    },
+    "readregisters": {
+      "type": "function",
+      "desc": "读Modbus寄存器",
+      "desc_en": "",
+      "proto": "bool readregisters(data, int start, int len)"
+    },
+    "writeregisters": {
+      "type": "function",
+      "desc": "写Modbus寄存器",
+      "desc_en": "",
+      "proto": "bool writeregisters(data, int start [, int len])"
+    },
+    "readcoils": {
+      "type": "function",
+      "desc": "读Modbus线圈状态",
+      "desc_en": "",
+      "proto": "bool readcoils(byte[], int start, int length)"
+    },
+    "writecoils": {
+      "type": "function",
+      "desc": "写Modbus线圈",
+      "desc_en": "",
+      "proto": "bool writecoils(byte[], int start, int length)"
+    },
+    "clkstart": {
+      "type": "function",
+      "desc": "启动时钟计时",
+      "desc_en": "",
+      "proto": "void clkstart(clock &c)"
+    },
+    "clkstop": {
+      "type": "function",
+      "desc": "停止时钟计时",
+      "desc_en": "",
+      "proto": "void clkstop(clock &c)"
+    },
+    "clkreset": {
+      "type": "function",
+      "desc": "时钟清零，计时值归0",
+      "desc_en": "",
+      "proto": "void clkreset(clock &c)"
+    },
+    "clkread": {
+      "type": "function",
+      "desc": "读取时钟当前数值（单位：秒）",
+      "desc_en": "",
+      "proto": "double clkread(clock &c)"
+    }
   }
 }

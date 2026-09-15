@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="ARL file A">
+  <!-- Standalone stylized A: RGB(36,171,242), transparent background -->
   <path fill="#24ABF2" d="M2.65 20 8.7 5.35C9.08 4.44 9.93 3.9 10.9 3.9h2.2c.97 0 1.82.54 2.2 1.45L21.35 20h-4.05L12.92 9.1c-.18-.44-.5-.68-.92-.68s-.74.24-.92.68L6.7 20H2.65Z"/>
-  <path fill="#E23A3A" d="M8.4 15.35h5.35l-1.02 2.38H7.38l1.02-2.38Z"/>
+  <!-- Taller and longer red crossbar accent -->
+  <path fill="#FF0000" d="M6.85 14.05h8.65l-1.45 3.6H5.4l1.45-3.6Z"/>
 </svg>
