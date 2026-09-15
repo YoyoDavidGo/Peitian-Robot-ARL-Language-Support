@@ -57,6 +57,65 @@ function wordAt(line, character) {
   return null;
 }
 
+function documentOffsetAt(document, position) {
+  if (typeof document.offsetAt === 'function') return document.offsetAt(position);
+  const text = document.getText();
+  let offset = 0;
+  for (let line = 0; line < position.line; line++) {
+    const newline = text.indexOf('\n', offset);
+    if (newline < 0) return text.length;
+    offset = newline + 1;
+  }
+  return Math.min(offset + position.character, text.length);
+}
+
+function isCodePosition(document, position) {
+  const text = document.getText();
+  const end = documentOffsetAt(document, position);
+  let inBlockComment = false;
+  let inLineComment = false;
+  let inString = false;
+
+  for (let index = 0; index < end; index++) {
+    const current = text[index];
+    const next = text[index + 1];
+    if (inLineComment) {
+      if (current === '\n') inLineComment = false;
+      continue;
+    }
+    if (inBlockComment) {
+      if (current === '*' && next === '/') {
+        inBlockComment = false;
+        index++;
+      }
+      continue;
+    }
+    if (inString) {
+      if (current === '\\') {
+        index++;
+      } else if (current === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (current === '/' && next === '/') {
+      inLineComment = true;
+      index++;
+    } else if (current === '/' && next === '*') {
+      inBlockComment = true;
+      index++;
+    } else if (current === '"') {
+      inString = true;
+    }
+  }
+
+  return !inBlockComment && !inLineComment && !inString;
+}
+
+function escapeSnippetLiteralDollars(value) {
+  return String(value).replace(/\\.|\$(?!\d|\{)/g, match => match === '$' ? '\\$' : match);
+}
+
 const staticCompletionLabels = (() => {
   const cats = languageData.categories || {};
   const groups = ['instructions','functions','parenOnlyFunctions','logic','keywords','datatypes','systemVariables'];
@@ -92,18 +151,21 @@ async function openReferencedDocument(sourceDocument, fileStem) {
   if (!normalizedStem) return null;
   const targetNames = [`${normalizedStem}.arl`, `${normalizedStem}.txt`];
 
-  for (const doc of vscode.workspace.textDocuments || []) {
-    const base = path.basename(doc.uri.fsPath || doc.uri.path || '').toLowerCase();
-    if (targetNames.some(name => name.toLowerCase() === base)) return doc;
-  }
-
   if (sourceDocument.uri?.scheme === 'file' && sourceDocument.uri.fsPath) {
     const dir = path.dirname(sourceDocument.uri.fsPath);
     for (const name of targetNames) {
+      const siblingUri = vscode.Uri.file(path.join(dir, name));
+      const openSibling = (vscode.workspace.textDocuments || []).find(doc => uriKey(doc.uri) === uriKey(siblingUri));
+      if (openSibling) return openSibling;
       try {
-        return await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(dir, name)));
+        return await vscode.workspace.openTextDocument(siblingUri);
       } catch (_) {}
     }
+  }
+
+  for (const doc of vscode.workspace.textDocuments || []) {
+    const base = path.basename(doc.uri.fsPath || doc.uri.path || '').toLowerCase();
+    if (targetNames.some(name => name.toLowerCase() === base)) return doc;
   }
 
   if (typeof vscode.workspace.findFiles === 'function') {
@@ -196,14 +258,14 @@ function completionItem(candidate, replaceRange, referenceEntry, options={}) {
     const unit=String(candidate.wizardUnit);
     item.insertText = options.suppressWizardUnit || options.unitAlreadyPresent || label.endsWith(unit) ? label : `${label}${unit}`;
   } else if (candidate.kind === 'function' || candidate.kind === 'user-function') {
-    item.insertText = new vscode.SnippetString(`${candidate.label}($0)`);
+    item.insertText = new vscode.SnippetString(escapeSnippetLiteralDollars(`${candidate.label}($0)`));
   } else if (candidate.kind === 'instruction') {
-    item.insertText = new vscode.SnippetString(`${candidate.label} $0`);
+    item.insertText = new vscode.SnippetString(escapeSnippetLiteralDollars(`${candidate.label} $0`));
   } else if (candidate.kind === 'system-variable' && !candidate.indexedValue && isIndexedSystemVariable(candidate.label, hoverReference)) {
     // Array-like ARL system variables insert their brackets as fixed syntax.
     // The nested snippet keeps the cursor inside [] and lets Tab return to the
     // next placeholder of an enclosing Smart Completion snippet.
-    item.insertText = new vscode.SnippetString(`${candidate.label}[\${1}]`);
+    item.insertText = new vscode.SnippetString(escapeSnippetLiteralDollars(`${candidate.label}[\${1}]`));
   } else {
     item.insertText = candidate.label;
   }
@@ -261,7 +323,22 @@ function applyPreciseFontWeights(editor, weightDecorations) {
 
 
 function uriKey(uri) {
-  return String(uri?.fsPath || uri?.path || uri?.toString?.() || '').toLowerCase();
+  return String(uri?.fsPath || uri?.path || uri?.toString?.() || '').replace(/\\/g, '/').toLowerCase();
+}
+
+function pairedArlUri(document) {
+  if (document?.uri?.scheme !== 'file' || !document.uri.fsPath) return null;
+  const currentPath = document.uri.fsPath;
+  const fileName = path.basename(currentPath);
+  let pairedName;
+  if (/_data\.arl$/i.test(fileName)) {
+    pairedName = fileName.slice(0, -'_data.arl'.length) + '.arl';
+  } else if (/\.arl$/i.test(fileName)) {
+    pairedName = fileName.slice(0, -'.arl'.length) + '_data.arl';
+  } else {
+    return null;
+  }
+  return vscode.Uri.file(path.join(path.dirname(currentPath), pairedName));
 }
 
 function variableCandidate(variable, source='') {
@@ -323,7 +400,7 @@ async function buildContextCompletionCandidates(document, position, projectIndex
 
   if(context.mode!=='typed' && context.mode!=='wizard'){
     return filterTypedCompletionCandidates(
-      buildCompletionCandidates(document.getText(), languageData),
+      buildCompletionCandidates(document.getText(), languageData, position.line),
       context,
       {allowEmptyTypedPrefix}
     );
@@ -378,6 +455,8 @@ async function buildContextCompletionCandidates(document, position, projectIndex
 function wizardManualValueReady(context, candidates=[]) {
   const prefix=String(context?.prefix||'').trim();
   if(!prefix || context?.mode!=='wizard') return false;
+  const normalizedPrefix=prefix.toLowerCase();
+  if((candidates||[]).some(item=>String(item.label||'').toLowerCase()!==normalizedPrefix)) return false;
   const expected=String(context.expectedType||'').toLowerCase().replace(/&/g,'').trim();
   if(['double','int','uint','byte'].includes(expected) && /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(prefix)) return true;
   if(expected==='bool' && /^(?:true|false)$/i.test(prefix)) return true;
@@ -396,7 +475,7 @@ function smartCompletionItem(candidate, template, replaceRange, referenceEntry, 
   const item = new vscode.CompletionItem(candidate.label, completionKind);
   item.detail = template.description || candidate.detail || 'PEITIAN ARL Smart Completion';
   item.filterText = candidate.label;
-  item.insertText = new vscode.SnippetString(template.snippet);
+  item.insertText = new vscode.SnippetString(escapeSnippetLiteralDollars(template.snippet));
   if (replaceRange) item.range = replaceRange;
   item.sortText = `0_${String(candidate.label).toLowerCase()}_${String(index).padStart(2,'0')}`;
   if (referenceEntry?.desc) {
@@ -486,6 +565,30 @@ function activate(context) {
   for (const doc of vscode.workspace.textDocuments || []) {
     if (doc.languageId === 'arl') projectIndex.updateText(doc.uri, doc.getText(), path.basename(doc.uri?.fsPath || doc.uri?.path || ''));
   }
+  const standalonePairRefreshes = new Map();
+  const ensurePairedVariables = async document => {
+    const pairedUri = pairedArlUri(document);
+    if (!pairedUri) return;
+    const open = (vscode.workspace.textDocuments || []).find(doc => uriKey(doc.uri) === uriKey(pairedUri));
+    if (open) {
+      if (!projectIndex.has(open.uri)) {
+        projectIndex.updateText(open.uri, open.getText(), path.basename(open.uri?.fsPath || open.uri?.path || ''));
+      }
+      return;
+    }
+
+    // Workspace files are kept current by the filesystem watcher below. A
+    // standalone ARL file has no workspace watcher, so refresh its one paired
+    // file at most once per second while completion is being requested.
+    const inWorkspace = typeof vscode.workspace.getWorkspaceFolder === 'function'
+      && !!vscode.workspace.getWorkspaceFolder(document.uri);
+    if (inWorkspace && projectIndex.has(pairedUri)) return;
+    const key = uriKey(pairedUri);
+    const now = Date.now();
+    if (now - (standalonePairRefreshes.get(key) || 0) < 1000) return;
+    standalonePairRefreshes.set(key, now);
+    await projectIndex.refresh(pairedUri, path.basename(pairedUri.fsPath || pairedUri.path || ''));
+  };
   const formatter = vscode.languages.registerDocumentFormattingEditProvider('arl', {
     provideDocumentFormattingEdits(document, options) {
       const original = document.getText();
@@ -566,21 +669,27 @@ function activate(context) {
     async provideCompletionItems(document, position, _token, completionContext) {
       const selected=completionSelectionContext(document,position);
       const semanticPosition=selected?.semanticPosition || position;
+      if (!isCodePosition(document, semanticPosition)) return [];
       const line = document.lineAt(semanticPosition.line).text;
       const prefix = getCompletionPrefix(line, semanticPosition.character);
       const invokeKind = vscode.CompletionTriggerKind?.Invoke;
       const triggerCharacterKind = vscode.CompletionTriggerKind?.TriggerCharacter;
       const allowEmptyTypedPrefix = !!selected || completionContext?.triggerKind === invokeKind ||
         (completionContext?.triggerKind === triggerCharacterKind && completionContext?.triggerCharacter === ':');
+      await ensurePairedVariables(document);
       const candidates = await buildContextCompletionCandidates(document, semanticPosition, projectIndex, {
         allowEmptyTypedPrefix,
       });
       const wizardInputContext=getWizardParamContext(line, semanticPosition.character, wizardData, hoverReference, languageData);
       if (smartSnippetActive) await setSmartValueReady(wizardManualValueReady(wizardInputContext,candidates));
       if (!candidates.length) return [];
+      const existingToken = wordAt(line, semanticPosition.character);
+      const replacementEnd = existingToken && existingToken.start === prefix.start && existingToken.end >= semanticPosition.character
+        ? existingToken.end
+        : prefix.end;
       const replaceRange = selected?.replaceRange || new vscode.Range(
         new vscode.Position(semanticPosition.line, prefix.start),
-        new vscode.Position(semanticPosition.line, prefix.end)
+        new vscode.Position(semanticPosition.line, replacementEnd)
       );
       const smartEnabled = vscode.workspace.getConfiguration('peitianArl', document.uri)
         .get('smartCompletion.enabled', true);
@@ -612,7 +721,7 @@ function activate(context) {
         for(let line=0; line<position.line; line++) value += document.lineAt(line).text.length + 1;
         return value + position.character;
       })();
-      return createSignatureHelp(getSignatureContext(document.getText(), offset, hoverReference, languageData));
+      return createSignatureHelp(getSignatureContext(document.getText(), offset, hoverReference, languageData, wizardData));
     }
   }, '(', ',', ' ', ':');
 
@@ -639,7 +748,7 @@ function activate(context) {
   };
 
   const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(editor => {
-    setMotionSmartSnippetActive(false);
+    setSmartSnippetActive(false);
     refreshEditor(editor);
   });
   const visibleEditorsListener = vscode.window.onDidChangeVisibleTextEditors(() => refreshVisible());
@@ -672,6 +781,7 @@ function activate(context) {
         const text = event.document.lineAt(0).text;
         position = new vscode.Position(0, text.length);
       }
+      if (!isCodePosition(event.document, position)) return;
       buildContextCompletionCandidates(event.document, position, projectIndex).then(candidates => {
         if (!candidates.length) return;
         return Promise.resolve(vscode.commands.executeCommand('editor.action.triggerSuggest')).catch(() => {});
@@ -698,8 +808,23 @@ function activate(context) {
   }
   if (typeof vscode.workspace.onDidDeleteFiles === 'function') {
     optionalWorkspaceListeners.push(vscode.workspace.onDidDeleteFiles(event => {
-      for (const uri of event?.files || []) projectIndex.remove(uri);
+      for (const uri of event?.files || []) projectIndex.invalidate(uri);
     }));
+  }
+  if (typeof vscode.workspace.onDidRenameFiles === 'function') {
+    optionalWorkspaceListeners.push(vscode.workspace.onDidRenameFiles(event => {
+      for (const file of event?.files || []) {
+        projectIndex.invalidate(file.oldUri);
+        projectIndex.refresh(file.newUri);
+      }
+    }));
+  }
+  if (typeof vscode.workspace.createFileSystemWatcher === 'function') {
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.arl');
+    watcher.onDidCreate(uri => projectIndex.refresh(uri));
+    watcher.onDidChange(uri => projectIndex.refresh(uri));
+    watcher.onDidDelete(uri => projectIndex.invalidate(uri));
+    optionalWorkspaceListeners.push(watcher);
   }
 
   const configListener = vscode.workspace.onDidChangeConfiguration(event => {

@@ -90,4 +90,62 @@ assert.deepStrictEqual(getFoldingRanges(repeatFold), [
 const compactFold = ['if(a) MoveJ(p1)', 'endif'].join('\n');
 assert.deepStrictEqual(getFoldingRanges(compactFold), [], 'Compact single-line statements must not create folding ranges');
 
+const lexicalMessy = [
+  'func void main()',
+  '/*',
+  'endfunc',
+  'if(fake)',
+  '*/',
+  'print "endfunc ( )"',
+  'if(check(")"))',
+  'MoveJ(p1)',
+  'endif',
+  'endfunc'
+].join('\n');
+const lexicalExpected = [
+  'func void main()',
+  '    /*',
+  '    endfunc',
+  '    if(fake)',
+  '    */',
+  '    print "endfunc ( )"',
+  '    if(check(")"))',
+  '        MoveJ(p1)',
+  '    endif',
+  'endfunc'
+].join('\n');
+assert.strictEqual(
+  formatArl(lexicalMessy),
+  lexicalExpected,
+  'Formatter must ignore block keywords and parentheses inside comments and strings'
+);
+
+const lexicalFold = [
+  'func void main()',        // 0
+  '    /*',                  // 1
+  '    endfunc',             // 2
+  '    if(fake)',            // 3
+  '    */',                  // 4
+  '    if(check(")"))',      // 5
+  '        MoveJ(p1)',       // 6
+  '    endif',               // 7
+  'endfunc'                  // 8
+].join('\n');
+assert.deepStrictEqual(getFoldingRanges(lexicalFold), [
+  { start: 0, end: 7, type: 'func' },
+  { start: 5, end: 6, type: 'if' }
+], 'Folding must ignore block keywords and parentheses inside comments and strings');
+
+const nestedCondition = ['if(getdi(abs(1)))', 'MoveJ(p1)', 'endif'].join('\n');
+assert.strictEqual(
+  formatArl(nestedCondition),
+  ['if(getdi(abs(1)))', '    MoveJ(p1)', 'endif'].join('\n'),
+  'Nested function calls in a block condition must open indentation'
+);
+
+const languageConfiguration = require('../language-configuration.json');
+const increaseIndent = new RegExp(languageConfiguration.indentationRules.increaseIndentPattern);
+assert(increaseIndent.test('if(getdi(abs(1)))'), 'VS Code auto-indent must recognize nested function calls in conditions');
+assert(!increaseIndent.test('if(getdi(abs(1))) MoveJ(p1)'), 'VS Code auto-indent must keep compact single-line statements compact');
+
 console.log('ARL formatter/folding tests passed');

@@ -45,6 +45,9 @@ const sameFile = findFunction(code, 'SINGLEmodle');
 assert(sameFile, 'Function lookup should be case-insensitive');
 assert.strictEqual(sameFile.startLine, 0);
 assert.strictEqual(sameFile.nameStart, 'func pose '.length);
+const suffixNameFunction=parseFunctions('func int in()\nendfunc')[0];
+assert.strictEqual(suffixNameFunction.nameStart,'func int '.length,'Function name offsets must not match a suffix inside the return type');
+assert.strictEqual(suffixNameFunction.nameEnd,'func int in'.length);
 
 assert.deepStrictEqual(parseFunctionReference('    singleModle(1,0)', 8), {
   file: null,
@@ -59,6 +62,31 @@ assert.deepStrictEqual(parseFunctionReference('    def::point_offset()', 10), {
   end: 21
 });
 assert.strictEqual(parseFunctionReference('    MoveJ p:p1', 7), null, 'Instruction without () must not be treated as function call');
+assert.strictEqual(parseFunctionReference('    // hiddenCall()', 10), null, 'Calls inside line comments must not become references');
+assert.strictEqual(parseFunctionReference('    print "hiddenCall()"', 15), null, 'Calls inside strings must not become references');
+assert.strictEqual(parseFunctionReference('    /* hiddenCall() */', 12), null, 'Calls inside block comments must not become references');
+
+const lexicalCode = [
+  '/*',
+  'func void blockGhost(int ghostParam)',
+  '    double ghostLocal',
+  'endfunc',
+  '*/',
+  'string banner="func void stringGhost()"',
+  'func void real(int liveParam)',
+  '    // endfunc',
+  '    /* int hiddenLocal',
+  '       endfunc */',
+  '    string text="func void nested() endfunc hiddenCall()"',
+  '    int liveLocal',
+  'endfunc'
+].join('\n');
+const lexicalFunctions = parseFunctions(lexicalCode);
+assert.deepStrictEqual(lexicalFunctions.map(fn=>({name:fn.name,startLine:fn.startLine,endLine:fn.endLine})), [
+  {name:'real',startLine:6,endLine:12}
+], 'Comments and strings must not create or terminate functions, while source line numbers stay unchanged');
+const lexicalVars = parseVariables(lexicalCode);
+assert.deepStrictEqual(lexicalVars.map(v=>v.name), ['banner','liveParam','text','liveLocal'], 'Commented declarations and ghost function parameters must not enter variable parsing');
 
 const docs = {
   entries: {
@@ -89,11 +117,34 @@ assert(vars.some(v=>v.name==='localCount' && v.type==='int' && v.scope==='calcOf
 assert(vars.some(v=>v.name==='retry' && v.type==='int' && v.scope==='calcOffset'));
 
 const languageData = require('../language-data/arl-language.json');
-const completions = buildCompletionCandidates(completionCode, languageData);
+const completions = buildCompletionCandidates(completionCode, languageData, 4);
 for (const label of ['ptp','offset','setdo','calcOffset','vFast','pHome','localCount']) {
   assert(completions.some(c=>c.label===label), `Missing completion: ${label}`);
 }
 assert.strictEqual(completions.filter(c=>c.label.toLowerCase()==='offset').length,1,'Completions must be de-duplicated case-insensitively');
+
+const scopedCode = [
+  'bool shared',
+  'pose globalPose',
+  'func void first()',
+  '    int shared',
+  '    int privateFirst',
+  '    shared=1',
+  'endfunc',
+  'func void second()',
+  '    bool privateSecond',
+  '    shared=true',
+  'endfunc'
+].join('\n');
+const firstVisible = collectVisibleVariables(scopedCode, 5, languageData);
+assert.strictEqual(firstVisible.filter(v=>v.name==='shared').length, 1, 'A local declaration must hide a same-name global');
+assert.strictEqual(firstVisible.find(v=>v.name==='shared').type, 'int', 'The visible shadowing declaration must supply the completion type');
+assert(firstVisible.some(v=>v.name==='privateFirst'));
+assert(!firstVisible.some(v=>v.name==='privateSecond'), 'A later function local must not leak into the current function');
+const secondCompletions = buildCompletionCandidates(scopedCode, languageData, 9);
+assert(secondCompletions.some(v=>v.label==='privateSecond'));
+assert(!secondCompletions.some(v=>v.label==='privateFirst'), 'Normal completion must not leak another function local');
+assert.strictEqual(secondCompletions.find(v=>v.label==='shared').type, 'bool', 'A function without a shadowing local must see the global type');
 
 const reference = require('../language-data/arl-reference.json');
 let sigText='func void main()\n    offset(pHome,10,20,\nendfunc';
@@ -115,6 +166,29 @@ sig = getSignatureContext(sigText, sigText.indexOf('\nendfunc'), reference, lang
 assert(sig, 'Expected signature help for ARL instruction syntax');
 assert(sig.label.startsWith('ptp '));
 assert.strictEqual(sig.activeParameter,2);
+
+const ignoredSignatureText = [
+  'func void main()',
+  '    // rand(1,',
+  '    string note="rand(1,"',
+  '    /* rand(1,',
+  '       offset(pHome, */',
+  'endfunc'
+].join('\n');
+for (const needle of ['// rand(1,','"rand(1,','rand(1,\n       offset']) {
+  const pos=ignoredSignatureText.indexOf(needle)+needle.length;
+  assert.strictEqual(getSignatureContext(ignoredSignatureText,pos,reference,languageData),null,'Calls inside comments/strings must not create signature context');
+}
+
+const randEmpty='func void main()\n    rand(\nendfunc';
+sig=getSignatureContext(randEmpty,randEmpty.indexOf('\nendfunc'),reference,languageData);
+assert.strictEqual(sig.label,'int rand()','An empty rand call must select the zero-argument prototype');
+assert.deepStrictEqual(sig.parameters,[]);
+const randRange='func void main()\n    rand(1, \nendfunc';
+sig=getSignatureContext(randRange,randRange.indexOf('\nendfunc'),reference,languageData);
+assert.strictEqual(sig.label,'double rand(double start, double end)','Arguments must select the matching pipe-separated prototype');
+assert.deepStrictEqual(sig.parameters,['double start','double end']);
+assert.strictEqual(sig.activeParameter,1);
 
 assert.deepStrictEqual(getFontWeightProfile("'JetBrains Mono', Consolas"), { base:'200', mid:'350', heavy:'400', family:'jetbrains-mono' });
 assert.deepStrictEqual(getFontWeightProfile("'Cascadia Code', Consolas"), { base:'300', mid:'350', heavy:'400', family:'cascadia-code' });
@@ -142,6 +216,8 @@ assert.deepStrictEqual(getCompletionPrefix('$', 1), { text:'$', start:0, end:1 }
 assert.deepStrictEqual(getCompletionPrefix('$AT_', 4), { text:'$AT_', start:0, end:4 });
 assert.deepStrictEqual(getCompletionPrefix('    off', 7), { text:'off', start:4, end:7 });
 assert.deepStrictEqual(getCompletionPrefix('def::poi', 8), { text:'poi', start:5, end:8 });
+assert.strictEqual(getTypedCompletionContext('// wai',6,reference,languageData).prefix,'','Line-comment text must not trigger normal completion');
+assert.strictEqual(getTypedCompletionContext('print "wai',10,reference,languageData).prefix,'','String text must not trigger normal completion');
 
 // Weight ranges must be disjoint. A full-document base decoration overlapping
 // heavy/mid tokens can win CSS precedence and erase the visible weight contrast.
@@ -490,6 +566,31 @@ assert.strictEqual(wizCtx.symbol, 'setdo');
 assert.strictEqual(wizCtx.paramIndex, 1);
 assert.strictEqual(wizCtx.prefix, 'f');
 
+const setdoThreeArgs='setdo(1, f, 1)';
+wizCtx=getWizardParamContext(setdoThreeArgs,setdoThreeArgs.indexOf('f')+1,parsedWizard,reference,languageData);
+assert.strictEqual(wizCtx.variantIndex,1,'The complete three-argument call must select the multi-channel setdo variant even while editing its second argument');
+assert.strictEqual(wizCtx.expectedType,'int');
+const nestedSetdo='setdo(getdi(1), f, 1)';
+wizCtx=getWizardParamContext(nestedSetdo,nestedSetdo.indexOf('f')+1,parsedWizard,reference,languageData);
+assert.strictEqual(wizCtx.variantIndex,1,'Nested function parentheses must not truncate the outer call when selecting a Wizard variant');
+assert.strictEqual(wizCtx.expectedType,'int');
+wizCtx=getWizardParamContext('setdo(1, 2, f','setdo(1, 2, f'.length,parsedWizard,reference,languageData);
+assert.strictEqual(wizCtx.variantIndex,1,'The third setdo argument exists only in the multi-channel variant');
+assert.strictEqual(wizCtx.parameter,'val');
+assert.strictEqual(wizCtx.expectedType,'int');
+
+const dualGetdi={entries:{getdi:{name:'getdi',type:'function',proto:'bool getdi(int chan)',variants:[
+  {name:'单通道',params:[{key:'chan',type:'int',req:true,opt:false,candidates:[]}]},
+  {name:'多通道',params:[{key:'from',type:'int',req:true,opt:false,candidates:[]},{key:'to',type:'int',req:true,opt:false,candidates:[]}]}
+]}}};
+wizCtx=getWizardParamContext('getdi(1, t','getdi(1, t'.length,dualGetdi,reference,languageData);
+assert.strictEqual(wizCtx.variantIndex,1,'A second getdi argument must select its two-channel variant');
+assert.strictEqual(wizCtx.parameter,'to');
+
+const nestedValueCtx=require('../src/arl-intelligence.cjs').getWizardValueContext(nestedSetdo,nestedSetdo.indexOf('f')+1,parsedWizard,reference,languageData);
+assert.strictEqual(nestedValueCtx.variantIndex,1,'Wizard value capture must use the outer matching parenthesis when arguments contain nested calls');
+assert.strictEqual(nestedValueCtx.expectedType,'int');
+
 const wizardVars = [
   {label:'flagReady',kind:'variable',type:'bool'},
   {label:'flagTimeout',kind:'variable',type:'bool'},
@@ -521,6 +622,10 @@ wizCands = buildWizardParameterCandidates({
   variables:wizardVars, prefix:'zzz'
 });
 assert.deepStrictEqual(wizCands, [], 'No strict-prefix match means an empty candidate list');
+assert.strictEqual(require('../src/arl-intelligence.cjs').wizardTypeMatches('byte[]','byte'),true,'Array element types must match declarations of their scalar base type');
+assert.strictEqual(require('../src/arl-intelligence.cjs').wizardTypeMatches('string/double','double'),true,'Slash-separated Wizard types must accept every documented alternative');
+assert.strictEqual(require('../src/arl-intelligence.cjs').wizardTypeMatches('string/double','string'),true);
+assert.strictEqual(require('../src/arl-intelligence.cjs').wizardTypeMatches('string/double','bool'),false);
 
 console.log('ARL 1.0.0 RC Wizard-driven completion tests passed');
 
@@ -534,6 +639,13 @@ assert.deepStrictEqual(packagedWizard.entries.waituntil.variants[0].params[0].ca
 assert.strictEqual(packagedWizard.entries.setdo.variants.length, 2, 'setdo must retain original Single/Multi channel variants');
 assert.strictEqual(packagedWizard.entries.lin.variants[1].params.find(p=>p.key==='vl').unit, 'mm/s');
 assert.strictEqual(packagedWizard.entries.ptp.variants[1].params.find(p=>p.key==='vp').unit, '%');
+
+const packagedRandRange='func void main()\n    rand(1, \nendfunc';
+sig=getSignatureContext(packagedRandRange,packagedRandRange.indexOf('\nendfunc'),reference,languageData,packagedWizard);
+assert.strictEqual(sig.label,'double rand(double start, double end)','Explicit pipe-separated overloads must retain the selected overload return type when Wizard data is also present');
+const packagedConnect='func void main()\n    connect(sock, \nendfunc';
+sig=getSignatureContext(packagedConnect,packagedConnect.indexOf('\nendfunc'),reference,languageData,packagedWizard);
+assert.deepStrictEqual(sig.parameters,['socket s','string host','int port'],'Complete Wizard parameters must override the conflicting legacy connect prototype');
 
 let packagedTemplates = getSmartCompletionTemplates('waituntil','instruction',reference,packagedWizard);
 assert.strictEqual(packagedTemplates.length,2);
@@ -560,6 +672,15 @@ const nearbyCode = [
 ].join('\n');
 const nearbyCtx = getWizardParamContext('waituntil cond:', 'waituntil cond:'.length, packagedWizard, reference, languageData);
 assert.deepStrictEqual(collectNearbyWizardValues(nearbyCode,3,nearbyCtx), ['getdi(1)','getdi(2)']);
+const nearbyLexicalCode = [
+  '// waituntil cond:getdi(9)',
+  'string note="waituntil cond:getdi(8)"',
+  '/* waituntil cond:getdi(7)',
+  '   waituntil cond:getdi(6) */',
+  'waituntil cond:getdi(1)',
+  'waituntil cond:'
+].join('\n');
+assert.deepStrictEqual(collectNearbyWizardValues(nearbyLexicalCode,5,nearbyCtx),['getdi(1)'],'Nearby values inside comments and strings must not enter completion history');
 const ordered = buildWizardParameterCandidates({
   entry:packagedWizard.entries.waituntil,variantIndex:0,paramIndex:0,
   variables:[{label:'ready',kind:'variable',type:'bool'}],lastUsed:['getdi(2)'],prefix:''
@@ -627,6 +748,12 @@ assert(overloadTemplates.some(x=>x.snippet==='baz()'));
 assert(overloadTemplates.some(x=>x.snippet==='baz(${1:start}, ${2:end})'));
 console.log('ARL proto-overload fallback tests passed');
 
+const getdiSignatureText='func void main()\n    getdi(1, \nendfunc';
+sig=getSignatureContext(getdiSignatureText,getdiSignatureText.indexOf('\nendfunc'),reference,languageData,dualGetdi);
+assert.strictEqual(sig.label,'bool getdi(int from, int to)','Signature Help must prefer the selected Wizard variant when the reference prototype is incomplete');
+assert.deepStrictEqual(sig.parameters,['int from','int to']);
+assert.strictEqual(sig.variantIndex,1);
+
 // Proto fallback also needs to understand the compact forms used by the
 // original TIPS table: array types, inherited shorthand types, and optional
 // bracketed arguments written as `[, arg]`.
@@ -650,15 +777,14 @@ console.log('ARL compact TIPS proto parsing tests passed');
 // do not yet have a packaged detailed Wizard table still get safe Smart
 // structure/type completion.
 let tipTemplates = getSmartCompletionTemplates('asin','function',reference,packagedWizard);
-assert(tipTemplates.some(x=>x.snippet==='asin(${1:x})'),'Math functions from original TIPS should get Smart positional completion');
+assert(tipTemplates.some(x=>x.snippet==='asin(${1})'),'Detailed Wizard metadata should drive the one-argument asin structure');
 tipTemplates = getSmartCompletionTemplates('connect','function',reference,packagedWizard);
-assert(tipTemplates.some(x=>x.snippet==='connect(${1:host}, ${2:port})'));
-assert(tipTemplates.some(x=>x.snippet==='connect(${1:host}, ${2:port}, ${3:timeout})'));
+assert(tipTemplates.some(x=>x.snippet==='connect(${1}, ${2}, ${3})'),'Complete Wizard metadata should override the conflicting legacy connect prototype');
 tipTemplates = getSmartCompletionTemplates('rand','function',reference,packagedWizard);
 assert(tipTemplates.some(x=>x.snippet==='rand()'));
-assert(tipTemplates.some(x=>x.snippet==='rand(${1:start}, ${2:end})'));
+assert(tipTemplates.some(x=>x.snippet==='rand(${1}, ${2})'));
 tipTemplates = getSmartCompletionTemplates('clkread','function',reference,packagedWizard);
-assert(tipTemplates.some(x=>x.snippet==='clkread(${1:c})'));
+assert(tipTemplates.some(x=>x.snippet==='clkread(${1})'));
 let tipCtx = getWizardParamContext('clkread(', 'clkread('.length, packagedWizard, reference, languageData);
 assert.strictEqual(tipCtx.expectedType,'clock');
 tipCtx = getWizardParamContext('getwobj_indi(j1, j2, ', 'getwobj_indi(j1, j2, '.length, packagedWizard, reference, languageData);

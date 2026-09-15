@@ -2,8 +2,8 @@
 
 /**
  * Lightweight in-memory index of global ARL variables across a workspace.
- * Discovery is lazy and happens once. Subsequent completions reuse parsed
- * globals and only changed files are reparsed through updateText().
+ * Discovery is lazy and happens once. Open-buffer changes use updateText(),
+ * while filesystem watchers can refresh or invalidate cached disk entries.
  */
 class WorkspaceVariableIndex {
   constructor({ parseVariables, languageData, discoverUris, readText, uriKey, sourceName }) {
@@ -14,8 +14,15 @@ class WorkspaceVariableIndex {
     this.uriKey = uriKey || (uri => String(uri));
     this.sourceName = sourceName || (uri => String(uri));
     this.byUri = new Map();
+    this.revisions = new Map();
     this.initialized = false;
     this.initPromise = null;
+  }
+
+  _nextRevision(key) {
+    const revision = (this.revisions.get(key) || 0) + 1;
+    this.revisions.set(key, revision);
+    return revision;
   }
 
   _parseGlobals(text, source) {
@@ -27,6 +34,7 @@ class WorkspaceVariableIndex {
   updateText(uri, text, source) {
     const key = this.uriKey(uri);
     if (!key) return;
+    this._nextRevision(key);
     this.byUri.set(key, this._parseGlobals(text, source || this.sourceName(uri)));
   }
 
@@ -37,7 +45,29 @@ class WorkspaceVariableIndex {
 
   remove(uri) {
     const key = this.uriKey(uri);
-    if (key) this.byUri.delete(key);
+    if (!key) return;
+    this._nextRevision(key);
+    this.byUri.delete(key);
+  }
+
+  invalidate(uri) {
+    this.remove(uri);
+  }
+
+  async refresh(uri, source) {
+    const key = this.uriKey(uri);
+    if (!key) return false;
+
+    const revision = this._nextRevision(key);
+    try {
+      const text = await this.readText(uri);
+      if (this.revisions.get(key) !== revision) return false;
+      this.byUri.set(key, this._parseGlobals(text, source || this.sourceName(uri)));
+      return true;
+    } catch (_) {
+      if (this.revisions.get(key) === revision) this.byUri.delete(key);
+      return false;
+    }
   }
 
   async initialize() {
@@ -48,12 +78,7 @@ class WorkspaceVariableIndex {
       for (const uri of uris || []) {
         const key = this.uriKey(uri);
         if (!key || this.byUri.has(key)) continue;
-        try {
-          const text = await this.readText(uri);
-          this.updateText(uri, text, this.sourceName(uri));
-        } catch (_) {
-          // One unreadable file must not disable completion for the workspace.
-        }
+        await this.refresh(uri, this.sourceName(uri));
       }
       this.initialized = true;
     })();

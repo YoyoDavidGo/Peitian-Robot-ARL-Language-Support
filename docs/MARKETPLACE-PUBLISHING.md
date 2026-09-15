@@ -6,7 +6,7 @@ This file is for release preparation and is excluded from the VSIX package.
 
 - Display name: `Peitian Robot ARL Language Support`
 - Extension ID name: `peitian-arl-language-support`
-- Intended publisher ID: `yoyodavidgo`
+- Publisher ID: `David-Workshop`
 - Version: `1.0.0`
 - Category: Programming Languages / Formatters / Themes
 - Marketplace icon: square 256×256 PNG based on the existing AE logo
@@ -28,13 +28,13 @@ Before publishing publicly, confirm that you are authorized to use the **PEITIAN
 
 ### 1. Create or confirm the Marketplace Publisher
 
-The current `package.json` uses:
+The current `package.json` uses the confirmed Marketplace publisher ID:
 
 ```text
-publisher: yoyodavidgo
+publisher: David-Workshop
 ```
 
-Create that exact Publisher ID in Visual Studio Marketplace, or choose a different permanent Publisher ID and update `package.json` before the first public publish. Marketplace Publisher IDs are part of the extension's public identity, so choose carefully.
+Keep this ID unchanged for future releases so installed copies continue to receive updates under the same extension identity.
 
 ### 2. Create a standalone public GitHub repository
 

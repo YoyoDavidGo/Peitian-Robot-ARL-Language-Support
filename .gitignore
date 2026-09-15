@@ -1,0 +1,6 @@
+# Local review inputs and packaged test artifacts
+/user/
+*.vsix
+
+# Local scratch work
+/.scratch/

@@ -20,8 +20,61 @@ function firstWord(trimmedLine) {
   return trimmedLine.split(/[\s(:]/)[0].toLowerCase();
 }
 
+function sanitizeStructureLine(line, state = { inBlockComment: false }) {
+  let code = '';
+  let inString = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (state.inBlockComment) {
+      if (char === '*' && next === '/') {
+        code += '  ';
+        state.inBlockComment = false;
+        i++;
+      } else {
+        code += ' ';
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (char === '\\' && next !== undefined) {
+        code += '  ';
+        i++;
+      } else {
+        code += ' ';
+        if (char === '"') inString = false;
+      }
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      code += ' '.repeat(line.length - i);
+      break;
+    }
+    if (char === '/' && next === '*') {
+      code += '  ';
+      state.inBlockComment = true;
+      i++;
+      continue;
+    }
+    if (char === '"') {
+      code += ' ';
+      inString = true;
+      continue;
+    }
+
+    code += char;
+  }
+
+  return code;
+}
+
 function hasCompactStatementAfterCondition(trimmedLine, keyword) {
-  let rest = trimmedLine.slice(keyword.length).trim();
+  const structuralText = sanitizeStructureLine(trimmedLine).trim();
+  let rest = structuralText.slice(keyword.length).trim();
 
   // ARL-IDE treats (...) after block keywords as the condition/argument list.
   // Text after the matching top-level ')' means compact single-line syntax.
@@ -61,12 +114,14 @@ function formatArl(text, options = {}) {
   const unit = indentUnit(options);
   const lines = text.split(/\r?\n/);
   let depth = 0;
+  const lexicalState = { inBlockComment: false };
 
   const formatted = lines.map(raw => {
     const trimmed = raw.trim();
     if (!trimmed) return '';
 
-    const keyword = firstWord(trimmed);
+    const structuralText = sanitizeStructureLine(raw, lexicalState).trim();
+    const keyword = firstWord(structuralText);
 
     if (CLOSE.has(keyword)) {
       depth = Math.max(0, depth - 1);
@@ -81,7 +136,7 @@ function formatArl(text, options = {}) {
     }
 
     const out = unit.repeat(depth) + trimmed;
-    if (opensIndentedBlock(trimmed, keyword)) depth++;
+    if (opensIndentedBlock(structuralText, keyword)) depth++;
     return out;
   });
 
@@ -92,10 +147,11 @@ function getFoldingRanges(text) {
   const lines = text.split(/\r?\n/);
   const stack = [];
   const ranges = [];
+  const lexicalState = { inBlockComment: false };
 
   for (let line = 0; line < lines.length; line++) {
-    const trimmed = lines[line].trim();
-    if (!trimmed || trimmed.startsWith('//')) continue;
+    const trimmed = sanitizeStructureLine(lines[line], lexicalState).trim();
+    if (!trimmed) continue;
 
     const keyword = firstWord(trimmed);
 

@@ -267,8 +267,15 @@ assert.strictEqual(arlUnicodeDefaults['editor.unicodeHighlight.includeComments']
 console.log('ARL Unicode-highlight defaults tests passed');
 
 const wizardData = require('../language-data/arl-wizard.json');
+const { parseWizardMarkdown } = require('../src/arl-intelligence.cjs');
+const wizardSource = fs.readFileSync(path.join(root, 'language-data/ARL_Wizard.source.md'), 'utf8');
+const parsedWizardSource = parseWizardMarkdown(wizardSource);
 assert.strictEqual(wizardData.source.arcsVersion, '2.6.6');
 assert.strictEqual(wizardData.source.arlReferenceVersion, '4.5.0');
-assert(wizardData.entries && Object.keys(wizardData.entries).length >= 60, 'Wizard metadata should cover the detailed ARL reference set');
+assert(wizardData.entries && Object.keys(wizardData.entries).length >= 250, 'Wizard metadata should retain the complete embedded Wizard document');
+assert.deepStrictEqual(wizardData.entries, parsedWizardSource, 'Generated Wizard metadata has drifted from its checked-in source');
 assert(wizardData.entries.waituntil?.variants?.[0]?.params?.some(p=>p.key==='cond' && p.type==='bool'), 'Wizard waituntil metadata missing');
+assert.strictEqual(wizardData.entries.connect?.variants?.[0]?.params?.[0]?.type, 'socket', 'connect must retain the reference editor socket parameter');
+assert.strictEqual(wizardData.entries.read?.variants?.[0]?.params?.[1]?.key, 'data', 'read must retain its output data parameter');
+assert.strictEqual(wizardData.entries.getdi?.variants?.length, 2, 'getdi must retain both single-channel and multi-channel variants');
 console.log('ARL Wizard metadata validation passed');

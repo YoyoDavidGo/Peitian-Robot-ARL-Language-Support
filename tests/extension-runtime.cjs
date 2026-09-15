@@ -12,6 +12,8 @@ const registrations = {
   completionTriggers: [],
   signature: null,
   changeTextDocumentListener: null,
+  activeTextEditorListener: null,
+  fileWatcher: null,
   selectionListener: null,
   executedCommands: [],
   registeredCommands: new Map()
@@ -59,7 +61,7 @@ function makeDocument(fsPath, text) {
       return new Position(before.length-1,before[before.length-1].length);
     }
   };
-  docs.set(fsPath.toLowerCase(), doc);
+  docs.set(fsPath.replace(/\\/g,'/').toLowerCase(), doc);
   return doc;
 }
 
@@ -86,11 +88,23 @@ const fakeVscode = {
   workspace: {
     textDocuments: [],
     async openTextDocument(uri) {
-      const doc=docs.get(uri.fsPath.toLowerCase());
+      const doc=docs.get(uri.fsPath.replace(/\\/g,'/').toLowerCase());
       if(!doc) throw new Error('not found: '+uri.fsPath);
       return doc;
     },
     async findFiles() { return []; },
+    createFileSystemWatcher(pattern) {
+      const listeners={create:null,change:null,delete:null};
+      registrations.fileWatcher={
+        pattern,
+        listeners,
+        onDidCreate(listener){ listeners.create=listener; return {dispose(){}}; },
+        onDidChange(listener){ listeners.change=listener; return {dispose(){}}; },
+        onDidDelete(listener){ listeners.delete=listener; return {dispose(){}}; },
+        dispose(){}
+      };
+      return registrations.fileWatcher;
+    },
     getConfiguration(section) {
       if(section==='editor') return { get(key){ if(key==='fontFamily') return "'JetBrains Mono', Consolas"; return undefined; } };
       if(section==='peitianArl') return { get(key, fallback){ if(key==='preciseFontWeights.enabled') return true; if(key==='smartCompletion.enabled') return smartCompletionEnabled; return fallback; } };
@@ -116,7 +130,7 @@ const fakeVscode = {
     activeTextEditor: null,
     visibleTextEditors: [],
     createTextEditorDecorationType(options){ return { options, dispose(){} }; },
-    onDidChangeActiveTextEditor(){ return {dispose(){}}; },
+    onDidChangeActiveTextEditor(listener){ registrations.activeTextEditorListener=listener; return {dispose(){}}; },
     onDidChangeVisibleTextEditors(){ return {dispose(){}}; },
     onDidChangeTextEditorSelection(listener){ registrations.selectionListener=listener; return {dispose(){}}; }
   }
@@ -180,6 +194,15 @@ try {
   assert.strictEqual(crossDef.uri.fsPath,'/ws/def.arl');
   assert.strictEqual(crossDef.range.start.line,0);
 
+  const foreignDefDoc=makeDocument('/other/def.arl','func pose point_offset()\nreturn pForeign\nendfunc');
+  const siblingDefDoc=makeDocument('/project/def.arl','func pose point_offset()\nreturn pSibling\nendfunc');
+  const siblingMainDoc=makeDocument('/project/main.arl','def::point_offset()');
+  fakeVscode.workspace.textDocuments=[foreignDefDoc,siblingDefDoc,siblingMainDoc];
+  const siblingDef=await registrations.definition.provideDefinition(siblingMainDoc,new Position(0,10));
+  assert(siblingDef instanceof Location);
+  assert.strictEqual(siblingDef.uri.fsPath,siblingDefDoc.uri.fsPath,'file::func must resolve an adjacent same-name file before an already-open file from another directory');
+  fakeVscode.workspace.textDocuments=[document,defDoc];
+
   const hover=await registrations.hover.provideHover(document,new Position(7,3));
   assert(hover instanceof Hover);
   const hoverText=Array.isArray(hover.contents)?hover.contents.map(x=>x.value??String(x)).join('\n'):hover.contents.value;
@@ -234,17 +257,17 @@ try {
   const ptpSmartDoc=makeDocument('/ws/ptp-smart.arl','ptp');
   const ptpSmartItems=await registrations.completion.provideCompletionItems(ptpSmartDoc,new Position(0,3));
   const ptpSmartSnippets=ptpSmartItems.filter(x=>x.insertText instanceof SnippetString).map(x=>x.insertText.value);
-  assert(ptpSmartSnippets.includes('ptp p:${1},vp:${2}%,sp:${3}%,t:${4:$FLANGE},w:${5:$WORLD}'),'Smart ptp literal template should keep units fixed but leave value placeholders blank');
-  assert(ptpSmartSnippets.includes('ptp p:${1},v:${2},s:${3},t:${4:$FLANGE},w:${5:$WORLD}'),'Smart ptp should offer variable-parameter structure');
+  assert(ptpSmartSnippets.includes('ptp p:${1},vp:${2}%,sp:${3}%,t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'Smart ptp literal template should escape ARL $ defaults while keeping snippet placeholders active');
+  assert(ptpSmartSnippets.includes('ptp p:${1},v:${2},s:${3},t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'Smart ptp should escape ARL $ defaults in the variable-parameter structure');
   const linSmartDoc=makeDocument('/ws/lin-smart.arl','lin');
   const linSmartItems=await registrations.completion.provideCompletionItems(linSmartDoc,new Position(0,3));
   const linSmartSnippets=linSmartItems.filter(x=>x.insertText instanceof SnippetString).map(x=>x.insertText.value);
-  assert(linSmartSnippets.includes('lin p:${1},vl:${2}mm/s,sl:${3}mm,t:${4:$FLANGE},w:${5:$WORLD}'),'lin value template must keep unit syntax outside blank editable placeholders');
+  assert(linSmartSnippets.includes('lin p:${1},vl:${2}mm/s,sl:${3}mm,t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'lin value template must escape ARL $ defaults and keep unit syntax outside placeholders');
   const ptpSmartItem=ptpSmartItems.find(x=>x.command?.command==='peitianArl.beginSmartCompletion');
   assert(ptpSmartItem,'Motion Smart Completion should start snippet-session tracking');
   assert(!ptpSmartSnippets.some(x=>x.includes('p4')),'Smart snippets must leave user values editable');
-  const ptpLiteralItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},vp:${2}%,sp:${3}%,t:${4:$FLANGE},w:${5:$WORLD}');
-  const ptpVariableItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},v:${2},s:${3},t:${4:$FLANGE},w:${5:$WORLD}');
+  const ptpLiteralItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},vp:${2}%,sp:${3}%,t:${4:\\$FLANGE},w:${5:\\$WORLD}');
+  const ptpVariableItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},v:${2},s:${3},t:${4:\\$FLANGE},w:${5:\\$WORLD}');
   assert.strictEqual(ptpLiteralItem?.kind, fakeVscode.CompletionItemKind.Value, 'Value/double smart template should use Value icon');
   assert(ptpLiteralItem?.detail.includes('Value / double'), 'Value template description should make clear that numeric literals or double variables are accepted');
   assert.strictEqual(ptpVariableItem?.kind, fakeVscode.CompletionItemKind.Variable, 'Variable smart template should use Variable icon');
@@ -434,6 +457,18 @@ try {
   assert(!manualMotionCommands.includes('hideSuggestWidget'),'Manual numeric typing no longer needs a special hide path; strict prefix matching removes unrelated candidates');
   assert(!manualMotionCommands.includes('editor.action.triggerSuggest'),'Typing 22 must not open suggestions when no candidate starts with 22');
 
+  const numericPrefixDoc=makeDocument('/ws/numeric-prefix.arl','lin p:p1,vl:2mm/s,sl:0mm,t:$FLANGE,w:$WORLD');
+  const numericPrefixPos=new Position(0,'lin p:p1,vl:2'.length);
+  fakeVscode.workspace.textDocuments=[document,defDoc,numericPrefixDoc];
+  fakeVscode.window.activeTextEditor={document:numericPrefixDoc,selection:{active:numericPrefixPos,start:numericPrefixPos,end:numericPrefixPos,isEmpty:true},setDecorations(){}};
+  await registrations.registeredCommands.get('peitianArl.beginSmartCompletion')();
+  registrations.executedCommands.length=0;
+  const numericPrefixItems=await registrations.completion.provideCompletionItems(
+    numericPrefixDoc,numericPrefixPos,null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke}
+  );
+  assert(numericPrefixItems.some(x=>String(x.label)==='250'),'The 2 prefix must keep the matching 250 Wizard candidate');
+  assert(registrations.executedCommands.some(x=>x.command==='setContext' && x.args[0]==='peitianArl.smartValueReady' && x.args[1]===false),'A numeric prefix with a different matching candidate must leave Tab/Enter to the Suggest Widget');
+
   const firstCharDoc=makeDocument('/ws/first-char.arl','double i123=10.2\nwaittime time:i');
   const firstCharPos=new Position(1,'waittime time:i'.length);
   fakeVscode.workspace.textDocuments=[document,defDoc,firstCharDoc];
@@ -506,7 +541,7 @@ try {
   assert(dollarPoseLabels.includes('$P[21]'),'Typing $ should show previously used $P[21]');
   const baseP=dollarPoseItems.find(x=>x.label==='$P');
   assert(baseP?.insertText instanceof SnippetString,'Base $P completion should be an indexed snippet');
-  assert.strictEqual(baseP.insertText.value,'$P[${1}]','$P should insert brackets and place the cursor inside');
+  assert.strictEqual(baseP.insertText.value,'\\$P[${1}]','$P should be escaped as ARL text while the bracket placeholder remains active');
   const usedP21=dollarPoseItems.find(x=>x.label==='$P[21]');
   assert.strictEqual(usedP21?.insertText,'$P[21]','Observed indexed system-variable values should insert directly');
 
@@ -573,6 +608,37 @@ try {
   assert(typedSpeedItems.some(x=>x.label==='vh'),'ptp v:v should include speed variables');
   assert(!typedSpeedItems.some(x=>x.label==='p1'),'ptp v:v must exclude pose variables');
 
+  const standaloneMain=makeDocument('/standalone/job.arl','ptp p:p');
+  makeDocument('/standalone/job_data.arl','pose pairedPoint');
+  fakeVscode.workspace.textDocuments=[standaloneMain];
+  const standaloneItems=await registrations.completion.provideCompletionItems(standaloneMain,new Position(0,'ptp p:p'.length));
+  assert(standaloneItems.some(x=>x.label==='pairedPoint'),'A standalone ARL file must load its closed same-directory _data.arl companion');
+
+  assert.strictEqual(registrations.fileWatcher?.pattern,'**/*.arl','Workspace ARL files must be watched for external changes');
+  makeDocument('/standalone/job_data.arl','pose pRefreshed');
+  await registrations.fileWatcher.listeners.change(makeUri('/standalone/job_data.arl'));
+  const refreshedItems=await registrations.completion.provideCompletionItems(standaloneMain,new Position(0,'ptp p:p'.length));
+  assert(refreshedItems.some(x=>x.label==='pRefreshed'),'External companion-file changes must refresh indexed variables');
+  assert(!refreshedItems.some(x=>x.label==='pairedPoint'),'External companion-file changes must remove stale variables');
+
+  const middleTokenDoc=makeDocument('/ws/middle-token.arl','pose pHome\nptp p:pOld');
+  fakeVscode.workspace.textDocuments=[middleTokenDoc];
+  const middleTokenItems=await registrations.completion.provideCompletionItems(middleTokenDoc,new Position(1,'ptp p:p'.length));
+  const middlePHome=middleTokenItems.find(x=>x.label==='pHome');
+  assert(middlePHome,'Typing inside pOld must still offer pHome');
+  assert.strictEqual(middlePHome.range.start.character,'ptp p:'.length);
+  assert.strictEqual(middlePHome.range.end.character,'ptp p:pOld'.length,'Completion in the middle of a token must replace its old suffix');
+
+  for (const [source,cursor] of [
+    ['// mov','// mov'.length],
+    ['print "mov','print "mov'.length],
+    ['/* mov','/* mov'.length]
+  ]) {
+    const nonCodeDoc=makeDocument(`/ws/non-code-${cursor}-${source.charCodeAt(0)}.arl`,source);
+    const nonCodeItems=await registrations.completion.provideCompletionItems(nonCodeDoc,new Position(0,cursor));
+    assert.deepStrictEqual(nonCodeItems,[],`Completion must stay silent inside ${JSON.stringify(source)}`);
+  }
+
   // v0.6.2: typing a matching ARL prefix must proactively open VS Code's
   // Suggest Widget, so Copilot inline suggestions cannot silently mask the
   // language provider. Unknown prefixes must not open it.
@@ -593,6 +659,21 @@ try {
   registrations.changeTextDocumentListener({document:xyzDoc,contentChanges:[{text:'z'}]});
   await new Promise(resolve=>setTimeout(resolve,120));
   assert(!registrations.executedCommands.some(x=>x.command==='editor.action.triggerSuggest'),'Unknown prefix must not trigger the Suggest Widget');
+
+  for (const source of ['// mov','print "mov','/* mov']) {
+    registrations.executedCommands.length=0;
+    const nonCodeDoc=makeDocument(`/ws/non-code-trigger-${source.length}.arl`,source);
+    const nonCodePos=new Position(0,source.length);
+    const nonCodeEditor={document:nonCodeDoc,selection:{active:nonCodePos,start:nonCodePos,end:nonCodePos,isEmpty:true},setDecorations(){}};
+    fakeVscode.window.activeTextEditor=nonCodeEditor;
+    fakeVscode.window.visibleTextEditors=[nonCodeEditor];
+    registrations.changeTextDocumentListener({document:nonCodeDoc,contentChanges:[{text:'v'}]});
+    await new Promise(resolve=>setTimeout(resolve,60));
+    assert(!registrations.executedCommands.some(x=>x.command==='editor.action.triggerSuggest'),`Typing inside ${JSON.stringify(source)} must not proactively trigger completion`);
+  }
+
+  assert(registrations.activeTextEditorListener,'Expected active editor listener');
+  assert.doesNotThrow(()=>registrations.activeTextEditorListener(editor),'Switching editors must clear Smart state without calling a missing function');
 
   const sigDoc=makeDocument('/ws/sig.arl','func void main()\n    offset(p1,10,20,\nendfunc');
   const sig=registrations.signature.provideSignatureHelp(sigDoc,new Position(1,'    offset(p1,10,20,'.length));

@@ -26,18 +26,62 @@ function splitTopLevel(text, separator=',') {
   return out.filter(Boolean);
 }
 
+function maskLexical(text, maskStrings=true) {
+  const src=String(text||'');
+  let out='', quote=null, lineComment=false, blockComment=false, esc=false;
+  for(let i=0;i<src.length;i++){
+    const ch=src[i], next=src[i+1];
+    if(lineComment){
+      if(ch==='\n'){ lineComment=false; out+='\n'; }
+      else out+=' ';
+      continue;
+    }
+    if(blockComment){
+      if(ch==='*' && next==='/'){ out+='  '; i++; blockComment=false; }
+      else out+=ch==='\n'?'\n':' ';
+      continue;
+    }
+    if(quote){
+      if(maskStrings) out+=ch==='\n'?'\n':' ';
+      else out+=ch;
+      if(esc){ esc=false; continue; }
+      if(ch==='\\'){ esc=true; continue; }
+      if(ch===quote) quote=null;
+      continue;
+    }
+    if(ch==='/' && next==='/'){ out+='  '; i++; lineComment=true; continue; }
+    if(ch==='/' && next==='*'){ out+='  '; i++; blockComment=true; continue; }
+    if(ch==='"' || ch==="'"){
+      quote=ch;
+      out+=maskStrings?' ':ch;
+      continue;
+    }
+    out+=ch;
+  }
+  return out;
+}
+
+function stripComments(text){
+  return maskLexical(text,false);
+}
+
 function parseFunctions(text) {
-  const lines = String(text || '').split(/\r?\n/);
+  const source=String(text||'');
+  const lines=source.split(/\r?\n/);
+  const codeLines=stripStringsAndComments(source).split(/\r?\n/);
   const functions = [];
   let current = null;
 
   for (let line = 0; line < lines.length; line++) {
     const raw = lines[line];
-    const match = FUNC_DEF_RE.exec(raw);
+    const code=codeLines[line];
+    const match = FUNC_DEF_RE.exec(code);
     if (match) {
       const returnType = match[1];
       const name = match[2];
-      const nameStart = raw.toLowerCase().indexOf(name.toLowerCase(), match.index);
+      const declarationOpen=match[0].lastIndexOf('(');
+      const relativeNameStart=match[0].toLowerCase().lastIndexOf(name.toLowerCase(),declarationOpen);
+      const nameStart=match.index+relativeNameStart;
       current = {
         name,
         returnType,
@@ -52,7 +96,7 @@ function parseFunctions(text) {
       continue;
     }
 
-    if (/^\s*endfunc\b/i.test(raw) && current) {
+    if (/^\s*endfunc\b/i.test(code) && current) {
       current.endLine = line;
       current = null;
     }
@@ -70,10 +114,11 @@ function findFunction(text, name) {
 
 function parseFunctionReference(lineText, character) {
   const line = String(lineText || '');
+  const code=stripStringsAndComments(line);
   const cursor = Math.max(0, Number(character) || 0);
   CALL_RE.lastIndex = 0;
   let match;
-  while ((match = CALL_RE.exec(line)) !== null) {
+  while ((match = CALL_RE.exec(code)) !== null) {
     const full = match[0];
     const openParenOffset = full.lastIndexOf('(');
     const tokenText = full.slice(0, openParenOffset).trimEnd();
@@ -81,7 +126,7 @@ function parseFunctionReference(lineText, character) {
     const tokenEnd = tokenStart + tokenText.length;
     if (cursor < tokenStart || cursor > tokenEnd) continue;
 
-    if (/^\s*func\b/i.test(line.slice(0, tokenStart))) return null;
+    if (/^\s*func\b/i.test(code.slice(0, tokenStart))) return null;
 
     return {
       file: match.groups?.file || null,
@@ -108,12 +153,14 @@ function parseParamDecl(param){
 }
 
 function parseVariables(text, languageData=defaultLanguageData){
-  const lines=String(text||'').split(/\r?\n/);
+  const source=String(text||'');
+  const lines=source.split(/\r?\n/);
+  const codeLines=stripStringsAndComments(source).split(/\r?\n/);
   const types=datatypeSet(languageData);
   const vars=[];
   let currentFn='';
   for(let line=0; line<lines.length; line++){
-    const raw=lines[line];
+    const raw=codeLines[line];
     const fm=FUNC_DEF_RE.exec(raw);
     if(fm){
       currentFn=fm[2];
@@ -138,12 +185,15 @@ function parseVariables(text, languageData=defaultLanguageData){
   return vars.filter(v=>{ const k=`${v.scope.toLowerCase()}\0${v.name.toLowerCase()}`; if(seen.has(k)) return false; seen.add(k); return true; });
 }
 
-function buildCompletionCandidates(text, languageData=defaultLanguageData){
+function buildCompletionCandidates(text, languageData=defaultLanguageData, lineNumber){
   const out=[];
   const seen=new Set();
   const add=(item)=>{ const key=String(item.label).toLowerCase(); if(!key || seen.has(key)) return; seen.add(key); out.push(item); };
 
-  for(const v of parseVariables(text,languageData)) add({label:v.name,kind:'variable',type:v.type,detail:`${v.kind} · ${v.type}`});
+  const variables=Number.isFinite(Number(lineNumber))
+    ? collectVisibleVariables(text,Number(lineNumber),languageData)
+    : parseVariables(text,languageData).filter(v=>v.scope==='global');
+  for(const v of variables) add({label:v.name,kind:'variable',type:v.type,detail:`${v.kind} · ${v.type}`});
   for(const fn of parseFunctions(text)) add({label:fn.name,kind:'user-function',type:fn.returnType,detail:fn.signature,insertText:`${fn.name}()`});
 
   const cats=languageData.categories||{};
@@ -177,6 +227,19 @@ function findInnermostOpenParen(prefix){
   return -1;
 }
 
+function findMatchingCloseParen(text,open){
+  let depth=0;
+  for(let i=Math.max(0,Number(open)||0);i<String(text||'').length;i++){
+    const ch=text[i];
+    if(ch==='(') depth++;
+    else if(ch===')'){
+      depth--;
+      if(depth===0) return i;
+    }
+  }
+  return -1;
+}
+
 function countTopLevelCommas(text){
   let count=0,par=0,sq=0,br=0,quote=null,esc=false;
   for(const ch of String(text||'')){
@@ -198,15 +261,63 @@ function parametersFromProto(proto, name){
   return splitTopLevel(p.replace(re,'').trim().replace(/^\s+/,''));
 }
 
-function getSignatureContext(text, offset, reference, languageData=defaultLanguageData){
+function protoFunctionSignatures(proto,name){
+  const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const out=[];
+  for(const alternative of String(proto||'').split(/\s+\|\s+/).map(x=>x.trim()).filter(Boolean)){
+    if(!new RegExp(`\\b${escaped}\\s*\\(`,'i').test(alternative)) continue;
+    out.push({label:alternative,parameters:parametersFromProto(alternative,name)});
+  }
+  return out;
+}
+
+function argumentCount(text){
+  const inside=String(text||'');
+  return inside.trim()?countTopLevelCommas(inside)+1:0;
+}
+
+function chooseByArity(items, count, activeIndex=0, getLength=item=>item?.parameters?.length||0){
+  const candidates=(items||[]).filter(item=>getLength(item)>activeIndex || (count===0 && getLength(item)===0));
+  if(!candidates.length) return (items||[])[0] || null;
+  return candidates.find(item=>getLength(item)===count)
+    || candidates.filter(item=>getLength(item)>=count).sort((a,b)=>getLength(a)-getLength(b))[0]
+    || candidates.sort((a,b)=>getLength(b)-getLength(a))[0];
+}
+
+function wizardSignature(entry,name,count,activeIndex){
+  const variants=entry?.variants||[];
+  const variant=chooseByArity(variants,count,activeIndex,item=>item?.params?.length||0);
+  if(!variant) return null;
+  const parameters=(variant.params||[]).map(param=>`${param.type||'any'} ${param.key}`.trim());
+  const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const returnType=String(entry?.proto||'').match(new RegExp(`^\\s*(.*?)\\s+${escaped}\\s*\\(`,'i'))?.[1]?.trim() || '';
+  return {
+    label:`${returnType?returnType+' ':''}${name}(${parameters.join(', ')})`,
+    parameters,
+    variantIndex:variants.indexOf(variant)
+  };
+}
+
+function wizardSignatureExact(entry,name,count,activeIndex){
+  const exact=(entry?.variants||[]).find(variant=>{
+    const length=variant?.params?.length||0;
+    return length===count && (length>activeIndex || count===0);
+  });
+  return exact?wizardSignature(entry,name,count,activeIndex):null;
+}
+
+function getSignatureContext(text, offset, reference, languageData=defaultLanguageData, wizard=null){
   const source=String(text||'');
+  const masked=stripStringsAndComments(source);
   const pos=Math.max(0,Math.min(Number(offset)||0,source.length));
   const lineStart=source.lastIndexOf('\n',pos-1)+1;
   const lineEndRaw=source.indexOf('\n',pos);
   const lineEnd=lineEndRaw<0?source.length:lineEndRaw;
   const line=source.slice(lineStart,lineEnd);
+  const codeLine=masked.slice(lineStart,lineEnd);
+  const valueLine=stripComments(source).slice(lineStart,lineEnd);
   const rel=pos-lineStart;
-  const prefix=line.slice(0,rel);
+  const prefix=codeLine.slice(0,rel);
   const functions=parseFunctions(source);
 
   const open=findInnermostOpenParen(prefix);
@@ -217,7 +328,8 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
       const name=m[1];
       const local=functions.find(fn=>fn.name.toLowerCase()===name.toLowerCase());
       const inside=prefix.slice(open+1);
-      const active=countTopLevelCommas(inside);
+      const valueInside=valueLine.slice(open+1,rel);
+      const active=countTopLevelCommas(valueInside);
       if(local){
         const params=splitTopLevel(local.params);
         return {name:local.name,label:local.signature,parameters:params,activeParameter:Math.min(active,Math.max(0,params.length-1)),documentation:'ARL user function',kind:'user-function'};
@@ -225,14 +337,22 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
       const entry=lookupHoverEntry(name,reference);
       const knownFn=(languageData.categories?.functions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase()) || (languageData.categories?.parenOnlyFunctions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase());
       if(entry || knownFn){
-        const label=entry?.proto || `${name}(...)`;
-        const params=entry?.proto ? parametersFromProto(entry.proto,name) : [];
-        return {name,label,parameters:params,activeParameter:params.length?Math.min(active,params.length-1):0,documentation:entry?.desc||'PEITIAN ARL built-in function',kind:'function'};
+        const count=argumentCount(valueInside);
+        const wizardEntry=wizard?resolveWizardEntry(wizard,name,reference,'function'):null;
+        const protoSignatures=protoFunctionSignatures(entry?.proto,name);
+        const explicitProtoOverloads=/\s\|\s/.test(String(entry?.proto||''));
+        const selected=(explicitProtoOverloads?chooseByArity(protoSignatures,count,active):null)
+          || wizardSignatureExact(wizardEntry,name,count,active)
+          || wizardSignature(wizardEntry,name,count,active)
+          || chooseByArity(protoSignatures,count,active)
+          || {label:`${name}(...)`,parameters:[]};
+        const params=selected.parameters||[];
+        return {name,label:selected.label,parameters:params,activeParameter:params.length?Math.min(active,params.length-1):0,documentation:entry?.desc||wizardEntry?.desc||'PEITIAN ARL built-in function',kind:'function',variantIndex:selected.variantIndex};
       }
     }
   }
 
-  const im=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
+  const im=codeLine.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
   if(im){
     const name=im[1];
     const isInstruction=(languageData.categories?.instructions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase());
@@ -240,7 +360,7 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
       const entry=lookupHoverEntry(name,reference);
       const label=entry?.proto || name;
       const params=entry?.proto ? parametersFromProto(entry.proto,name) : [];
-      const rest=line.slice(im[0].length,rel);
+      const rest=codeLine.slice(im[0].length,rel);
       const active=countTopLevelCommas(rest);
       return {name,label,parameters:params,activeParameter:params.length?Math.min(active,params.length-1):0,documentation:entry?.desc||'PEITIAN ARL instruction',kind:'instruction'};
     }
@@ -286,31 +406,7 @@ function isIndexedSystemVariable(label, reference){
 }
 
 function stripStringsAndComments(text){
-  const src=String(text||'');
-  let out='', quote=null, lineComment=false, blockComment=false, esc=false;
-  for(let i=0;i<src.length;i++){
-    const ch=src[i], next=src[i+1];
-    if(lineComment){
-      if(ch==='\n'){ lineComment=false; out+='\n'; } else out+=' ';
-      continue;
-    }
-    if(blockComment){
-      if(ch==='*' && next==='/'){ out+='  '; i++; blockComment=false; }
-      else out += ch==='\n' ? '\n' : ' ';
-      continue;
-    }
-    if(quote){
-      if(esc){ esc=false; out+=' '; continue; }
-      if(ch==='\\'){ esc=true; out+=' '; continue; }
-      if(ch===quote){ quote=null; out+=' '; } else out += ch==='\n' ? '\n' : ' ';
-      continue;
-    }
-    if(ch==='/' && next==='/'){ out+='  '; i++; lineComment=true; continue; }
-    if(ch==='/' && next==='*'){ out+='  '; i++; blockComment=true; continue; }
-    if(ch==='"' || ch==="'"){ quote=ch; out+=' '; continue; }
-    out += ch;
-  }
-  return out;
+  return maskLexical(text,true);
 }
 
 function collectIndexedSystemVariableUsages(text, reference){
@@ -337,11 +433,10 @@ function collectVisibleVariables(text, lineNumber, languageData=defaultLanguageD
   const line=Math.max(0, Number(lineNumber)||0);
   const vars=parseVariables(text,languageData);
   const fn=parseFunctions(text).find(item=>line>=item.startLine && line<=item.endLine) || null;
-  return vars.filter(v=>{
-    if(v.scope==='global') return v.line<=line;
-    if(!fn || v.scope.toLowerCase()!==fn.name.toLowerCase()) return false;
-    return v.line<=line;
-  });
+  const locals=fn?vars.filter(v=>v.scope!=='global' && v.scope.toLowerCase()===fn.name.toLowerCase() && v.line<=line):[];
+  const shadowed=new Set(locals.map(v=>v.name.toLowerCase()));
+  const globals=vars.filter(v=>v.scope==='global' && v.line<=line && !shadowed.has(v.name.toLowerCase()));
+  return [...locals,...globals];
 }
 
 function instructionParamType(instruction, parameter, reference){
@@ -359,11 +454,13 @@ function instructionParamType(instruction, parameter, reference){
 
 function getTypedCompletionContext(lineText, character, reference, languageData=defaultLanguageData){
   const line=String(lineText||'');
+  const code=stripStringsAndComments(line);
   const end=Math.max(0,Math.min(Number(character)||0,line.length));
   const prefixInfo=getCompletionPrefix(line,end);
   const base={mode:'free',prefix:prefixInfo.text,expectedType:null,instruction:null,parameter:null};
-  const beforePrefix=line.slice(0,prefixInfo.start);
-  const im=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
+  if(prefixInfo.text && code.slice(prefixInfo.start,end)!==line.slice(prefixInfo.start,end)) return {...base,prefix:''};
+  const beforePrefix=code.slice(0,prefixInfo.start);
+  const im=code.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
   if(!im) return base;
   const instruction=im[1].toLowerCase();
   const isInstruction=(languageData.categories?.instructions||[]).some(x=>String(x).toLowerCase()===instruction);
@@ -582,21 +679,23 @@ function resolveWizardEntry(wizard,name,reference,kind){
 }
 
 function wizardTypeMatches(expected, actual){
-  const e=String(expected||'any').toLowerCase().split('/')[0].replace(/&/g,'').trim();
-  const a=String(actual||'').toLowerCase().replace(/&/g,'').trim();
-  if(!e || e==='any') return true;
-  if(e===a) return true;
-  if(e==='int') return ['int','uint','byte'].includes(a);
-  if(e==='double') return a==='double';
-  if(e==='bool') return a==='bool';
-  if(e==='pose' || e==='frame') return a==='pose' || a==='frame';
-  return false;
+  const normalize=value=>String(value||'').toLowerCase().replace(/&/g,'').replace(/\[\s*\]/g,'').trim();
+  const expectedTypes=String(expected||'any').split('/').map(normalize).filter(Boolean);
+  const actualTypes=String(actual||'').split('/').map(normalize).filter(Boolean);
+  if(!expectedTypes.length || expectedTypes.includes('any')) return true;
+  return expectedTypes.some(e=>actualTypes.some(a=>{
+    if(e===a) return true;
+    if(e==='int') return ['int','uint','byte'].includes(a);
+    if(e==='pose' || e==='frame') return a==='pose' || a==='frame';
+    return false;
+  }));
 }
 
 
 function collectNearbyWizardValues(text, lineNumber, context, radius=10){
   const source=String(text||'');
-  const lines=source.split(/\r?\n/);
+  const lines=stripComments(source).split(/\r?\n/);
+  const codeLines=stripStringsAndComments(source).split(/\r?\n/);
   const line=Math.max(0,Math.min(Number(lineNumber)||0,Math.max(0,lines.length-1)));
   const symbol=String(context?.symbol||'').toLowerCase();
   const parameter=String(context?.parameter||'');
@@ -611,13 +710,21 @@ function collectNearbyWizardValues(text, lineNumber, context, radius=10){
   const lo=Math.max(0,line-radius), hi=Math.min(lines.length-1,line+radius);
   for(let i=lo;i<=hi;i++){
     if(i===line) continue;
-    const raw=lines[i].replace(/\/\/.*$/,'').trim();
-    if(!raw) continue;
-    const call=raw.match(new RegExp(`(?:^|\\s)${symbol}\\s*\\((.*)\\)`,'i'));
-    if(call){ const args=splitTopLevel(call[1]); if(args[paramIndex]!==undefined) add(args[paramIndex]); continue; }
-    const inst=raw.match(new RegExp(`^${symbol}\\b(.*)$`,'i'));
+    const raw=lines[i];
+    const code=codeLines[i];
+    if(!code.trim()) continue;
+    const call=code.match(new RegExp(`(?:^|\\s)${symbol}\\s*\\(`,'i'));
+    if(call){
+      const open=call.index+call[0].lastIndexOf('(');
+      const close=raw.lastIndexOf(')');
+      const args=splitTopLevel(raw.slice(open+1,close>open?close:raw.length));
+      if(args[paramIndex]!==undefined) add(args[paramIndex]);
+      continue;
+    }
+    const inst=code.match(new RegExp(`^\\s*${symbol}\\b`,'i'));
     if(inst && parameter){
-      const pieces=splitTopLevel(inst[1].trim());
+      const symbolEnd=inst.index+inst[0].length;
+      const pieces=splitTopLevel(raw.slice(symbolEnd).trim());
       for(const piece of pieces){
         const m=piece.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.*)$/);
         if(m && m[1].toLowerCase()===parameter.toLowerCase()){ add(m[2]); break; }
@@ -748,9 +855,11 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
 
 function getWizardParamContext(lineText, character, wizard, reference, languageData=defaultLanguageData){
   const line=String(lineText||'');
+  const code=stripStringsAndComments(line);
   const end=Math.max(0,Math.min(Number(character)||0,line.length));
   const prefixInfo=getCompletionPrefix(line,end);
-  const before=line.slice(0,prefixInfo.start);
+  if(prefixInfo.text && code.slice(prefixInfo.start,end)!==line.slice(prefixInfo.start,end)) return null;
+  const before=code.slice(0,prefixInfo.start);
 
   const open=findInnermostOpenParen(before);
   if(open>=0){
@@ -760,14 +869,16 @@ function getWizardParamContext(lineText, character, wizard, reference, languageD
       const entry=resolveWizardEntry(wizard,symbol,reference,'function');
       if(entry){
         const argIndex=countTopLevelCommas(before.slice(open+1));
-        const variant=(entry.variants||[]).find(v=>v.params?.[argIndex]) || entry.variants?.[0];
+        const close=findMatchingCloseParen(code,open);
+        const fullInside=code.slice(open+1,close>=0?close:code.length);
+        const variant=chooseByArity(entry.variants||[],argumentCount(fullInside),argIndex,item=>item?.params?.length||0);
         const param=variant?.params?.[argIndex];
         if(param) return {mode:'wizard',prefix:prefixInfo.text,expectedType:param.type,symbol,parameter:param.key,paramIndex:argIndex,variantIndex:entry.variants.indexOf(variant),entry};
       }
     }
   }
 
-  const im=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
+  const im=code.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
   if(im){
     const symbol=im[1].toLowerCase();
     const entry=resolveWizardEntry(wizard,symbol,reference,'instruction');
@@ -799,8 +910,9 @@ function stripWizardParamUnit(value,param){
 // parameters later.
 function getWizardValueContext(lineText, character, wizard, reference, languageData=defaultLanguageData){
   const line=String(lineText||'');
+  const code=stripStringsAndComments(line);
   const end=Math.max(0,Math.min(Number(character)||0,line.length));
-  const before=line.slice(0,end);
+  const before=code.slice(0,end);
 
   const open=findInnermostOpenParen(before);
   if(open>=0){
@@ -811,10 +923,12 @@ function getWizardValueContext(lineText, character, wizard, reference, languageD
       if(entry){
         const inside=before.slice(open+1);
         const argIndex=countTopLevelCommas(inside);
-        const variant=(entry.variants||[]).find(v=>v.params?.[argIndex]) || entry.variants?.[0];
+        const close=findMatchingCloseParen(code,open);
+        const fullInside=code.slice(open+1,close>=0?close:code.length);
+        const variant=chooseByArity(entry.variants||[],argumentCount(fullInside),argIndex,item=>item?.params?.length||0);
         const param=variant?.params?.[argIndex];
         if(param){
-          const pieces=splitTopLevel(inside);
+          const pieces=splitTopLevel(line.slice(open+1,end));
           const raw=pieces.length ? pieces[pieces.length-1] : '';
           return {
             mode:'wizard-value', symbol, parameter:param.key, paramIndex:argIndex,
@@ -826,7 +940,7 @@ function getWizardValueContext(lineText, character, wizard, reference, languageD
     }
   }
 
-  const im=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
+  const im=code.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\b/);
   if(im){
     const symbol=im[1].toLowerCase();
     const entry=resolveWizardEntry(wizard,symbol,reference,'instruction');
@@ -906,7 +1020,25 @@ function getSmartCompletionTemplates(name, kind, reference, wizard=null){
   if(block) return [{ variant:'block', description:block.description, snippet:block.snippet, triggerSuggest:false }];
 
   const wizardTemplates=getWizardSmartTemplates(key,kind,wizard,reference);
-  if(wizardTemplates.length) return wizardTemplates;
+  if(wizardTemplates.length){
+    // A detailed Wizard table is authoritative for parameter names/types, but
+    // a few source entries (notably rand) document an additional zero-argument
+    // overload only in the pipe-separated TIPS prototype. Preserve only arities
+    // absent from the detailed table so conflicting legacy prototypes cannot
+    // override entries such as connect/read/getdi.
+    const proto=String(lookupHoverEntry(key,reference)?.proto||'');
+    const exact=getWizardEntry(wizard,key);
+    if(exact?.variants?.length && /\s\|\s/.test(proto)){
+      const exactArities=new Set((exact?.variants||[]).map(variant=>variant.params?.length||0));
+      const synthetic=synthesizeWizardEntryFromProto(key,kind,reference);
+      const missing=(synthetic?.variants||[]).filter(variant=>!exactArities.has(variant.params?.length||0));
+      if(missing.length){
+        const supplemental=getWizardSmartTemplates(key,kind,{entries:{[key]:{...synthetic,variants:missing}}},{entries:{}});
+        return [...wizardTemplates,...supplemental];
+      }
+    }
+    return wizardTemplates;
+  }
 
   const entry=lookupHoverEntry(key,reference);
   if(kind==='function' || entry?.type==='function'){

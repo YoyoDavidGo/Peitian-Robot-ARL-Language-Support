@@ -2,6 +2,15 @@
 
 ## 1.0.0
 
+- Restored the complete 287-entry Wizard source from the reference editor and added reproducible generation plus source-drift validation.
+- Escaped literal `$` characters in Smart Completion snippets so `$P`, `$FLANGE`, `$WORLD`, and other ARL system variables are inserted intact.
+- Fixed Smart Tab acceptance for custom numeric input and prevented completion from leaving stale token suffixes behind.
+- Excluded comments and strings from function, variable, reference, signature, nearby-value, formatting, folding, and proactive-completion analysis.
+- Scoped variable completion to the current function, including local-over-global shadowing, without leaking locals from other functions.
+- Selected Wizard overloads using the complete outer call, including nested function arguments, and used authoritative Wizard signatures when legacy TIPS prototypes disagree.
+- Kept paired `_data.arl` variables current for workspace and standalone files, including file changes, renames, and deletion.
+- Preferred same-directory cross-file definitions and fixed nested-condition auto-indentation.
+- Fixed the active-editor listener crash caused by a stale Smart Completion function name.
 - Stabilized Smart parameter completion before marketplace release: empty placeholders no longer auto-open suggestions; candidates appear only after the first typed character.
 - Applied strict prefix filtering to numeric parameters as well as identifiers/system variables, preventing values such as `250` from stealing Tab after the user types `22`.
 - Smart Tab now advances to the next empty placeholder without opening suggestions; typing the first matching character triggers the native Suggest Widget.

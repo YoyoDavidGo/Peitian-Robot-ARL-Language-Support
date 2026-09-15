@@ -1,10 +1,12 @@
 .git/**
+.gitignore
 .github/**
 tests/**
 scripts/**
 *.vsix
 *.zip
 docs/MARKETPLACE-PUBLISHING.md
+docs/superpowers/**
 icons/*.svg
 language-data/*.md
 user

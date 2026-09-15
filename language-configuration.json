@@ -61,7 +61,7 @@
     ]
   ],
   "indentationRules": {
-    "increaseIndentPattern": "^\\s*(?:[fF][uU][nN][cC]\\b.*|(?:[dD][eE][fF][aA][uU][lL][tT]|[eE][lL][sS][eE][iI][fF]|[eE][lL][sS][eE]|[cC][aA][sS][eE])\\b.*|(?:[iI][nN][tT][eE][rR][rR][uU][pP][tT]|[tT][rR][iI][gG][gG][eE][rR]|[sS][wW][iI][tT][cC][hH]|[rR][eE][pP][eE][aA][tT]|[wW][hH][iI][lL][eE]|[tT][iI][mM][eE][rR]|[lL][oO][oO][pP]|[fF][oO][rR]|[iI][fF])\\b(?:\\s*\\((?:[^()]|\\([^()]*\\))*\\))?\\s*(?://.*)?$)",
+    "increaseIndentPattern": "^\\s*(?:[fF][uU][nN][cC]\\b.*|(?:[dD][eE][fF][aA][uU][lL][tT]|[eE][lL][sS][eE][iI][fF]|[eE][lL][sS][eE]|[cC][aA][sS][eE])\\b.*|(?:[iI][nN][tT][eE][rR][rR][uU][pP][tT]|[tT][rR][iI][gG][gG][eE][rR]|[sS][wW][iI][tT][cC][hH]|[rR][eE][pP][eE][aA][tT]|[wW][hH][iI][lL][eE]|[tT][iI][mM][eE][rR]|[lL][oO][oO][pP]|[fF][oO][rR]|[iI][fF])\\b(?:\\s*\\((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*\\))?\\s*(?://.*)?$)",
     "decreaseIndentPattern": "^\\s*(?:[eE][nN][dD][sS][wW][iI][tT][cC][hH]|[eE][nN][dD][wW][hH][iI][lL][eE]|[eE][nN][dD][fF][uU][nN][cC]|[eE][nN][dD][lL][oO][oO][pP]|[dD][eE][fF][aA][uU][lL][tT]|[eE][nN][dD][fF][oO][rR]|[eE][lL][sS][eE][iI][fF]|[eE][nN][dD][iI][fF]|[uU][nN][tT][iI][lL]|[eE][lL][sS][eE]|[cC][aA][sS][eE])\\b"
   },
   "colorizedBracketPairs": []

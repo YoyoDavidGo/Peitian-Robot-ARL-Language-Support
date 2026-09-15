@@ -112,7 +112,7 @@ The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically
 
 For direct-value motion templates, fixed units such as `%`, `mm/s`, and `mm` are inserted automatically outside the editable numeric tab stop. For example, changing `30` to `50` yields `vp:50%` without retyping `%`. Literal templates use a Value icon, while variable templates use a Variable icon in IntelliSense.
 
-Smart Completion is now **Wizard-driven**. The extension maps the ARL Wizard metadata used by the PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. For built-in functions that do not have a packaged detailed Wizard table, the extension falls back to the exact function prototypes from the original editor's TIPS table, so all 131 built-in ARL functions have source-driven Smart structure without inventing undocumented signatures.
+Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 built-in ARL functions have source-driven Smart structure without inventing undocumented signatures.
 
 For example:
 
@@ -124,7 +124,7 @@ offset(p1, dx, dy, dz, rz, ry, rx)
 
 Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
 
-The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments such as `connect(host, port [, timeout])`, array parameters, and shorthand repeated types used by the original ARL references.
+The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments, array parameters, and shorthand repeated types used by the original ARL references. When Wizard and TIPS disagree, the detailed Wizard parameter table takes precedence; for example, `connect` uses `connect(socket, host, port)`.
 
 Parameter candidates use one common source priority across Wizard-driven completion: **(1)** current type-compatible declared variables, **(2)** Wizard-documented candidates, and **(3)** recent values that still exist in nearby source code for the same instruction parameter. The list is shown only after the first character is typed, and all three sources are then filtered by that strict prefix. Deleted/transient inputs are not kept as persistent type-wide history, and unrelated builtin scalar system variables are not injected into primitive parameters.
 
