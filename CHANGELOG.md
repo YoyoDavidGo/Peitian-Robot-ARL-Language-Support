@@ -2,7 +2,7 @@
 
 ## 1.0.0
 
-- Replaced the AE marketplace mark with the shared AIL-inspired A logo; the red parallelogram crossbar now touches the inner blue edges without overlapping them, and both file/marketplace PNGs come from one SVG source.
+- Replaced the AE marketplace mark with the shared AIL-inspired A logo; the red parallelogram crossbar touches the inner blue edges without overlapping them, the Marketplace PNG uses a tighter canvas while file-icon spacing stays unchanged, and both outputs come from one SVG source.
 - Kept numeric highlighting for `mm` and `mm/s` values inside Wizard-defined motion instructions without broadening number matching in other ARL code.
 - Restored the complete 287-entry Wizard source from the reference editor and added reproducible generation plus source-drift validation.
 - Escaped literal `$` characters in Smart Completion snippets so `$P`, `$FLANGE`, `$WORLD`, and other ARL system variables are inserted intact.

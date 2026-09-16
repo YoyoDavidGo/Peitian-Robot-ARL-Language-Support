@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="title">
   <title id="title">ARL A logo</title>
-  <!-- AIL-inspired A. Keep this file as the single source for all PNG sizes. -->
+  <!-- AIL-inspired A. File icons use this canvas; the Marketplace render crops it to 2 2 20 20. -->
   <path fill="#24ABF2" d="M2.65 20 8.7 5.35C9.08 4.44 9.93 3.9 10.9 3.9h2.2c.97 0 1.82.54 2.2 1.45L21.35 20h-4.05L12.92 9.1c-.18-.44-.5-.68-.92-.68s-.74.24-.92.68L6.7 20H2.65Z"/>
   <!-- Keep the original parallelogram: its lower-left and upper-right corners touch the inner A edges without overlap. -->
   <path fill="#FF0000" d="M9.0943 14.05h5.8156l-1.45 3.6H7.6443l1.45-3.6Z"/>

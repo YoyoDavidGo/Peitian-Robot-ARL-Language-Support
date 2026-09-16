@@ -264,6 +264,8 @@ for (const key of ['configuration.smartCompletion.description']) {
   assert(nlsZh[key], `Chinese localization missing ${key}`);
 }
 const logoSvg=fs.readFileSync(path.join(root,'icons/arl-logo.svg'),'utf8');
+assert(logoSvg.includes('viewBox="0 0 24 24"'),'Shared A logo must retain the original file-icon canvas');
+assert(logoSvg.includes('Marketplace render crops it to 2 2 20 20'),'Shared source must document the tighter Marketplace-only canvas');
 assert(logoSvg.includes('#24ABF2'),'ARL A icon must keep RGB(36,171,242) blue');
 assert(logoSvg.includes('#FF0000'),'ARL A icon crossbar must keep the red accent');
 assert(logoSvg.includes('M9.0943 14.05h5.8156l-1.45 3.6H7.6443l1.45-3.6Z'),'ARL A crossbar must remain a parallelogram that touches the inner A edges without entering the blue legs');
@@ -276,7 +278,7 @@ const pngInfo = relativePath => {
 const marketplaceIcon=pngInfo('icon.png');
 const darkFileIcon=pngInfo('icons/arl-dark.png');
 const lightFileIcon=pngInfo('icons/arl-light.png');
-assert.deepStrictEqual([marketplaceIcon.width,marketplaceIcon.height,marketplaceIcon.colorType],[256,256,6],'Marketplace A logo must be a 256px transparent RGBA PNG');
+assert.deepStrictEqual([marketplaceIcon.width,marketplaceIcon.height,marketplaceIcon.colorType],[256,256,6],'Marketplace A logo must be a tightly cropped 256px transparent RGBA PNG');
 assert.deepStrictEqual([darkFileIcon.width,darkFileIcon.height,darkFileIcon.colorType],[24,24,6],'Dark ARL file icon must be a 24px transparent RGBA PNG');
 assert.deepStrictEqual([lightFileIcon.width,lightFileIcon.height,lightFileIcon.colorType],[24,24,6],'Light ARL file icon must be a 24px transparent RGBA PNG');
 assert(darkFileIcon.png.equals(lightFileIcon.png),'Light and dark ARL file icons must come from the same SVG rendering');
