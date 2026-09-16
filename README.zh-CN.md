@@ -12,23 +12,23 @@
 
 ### 深色主题 · Hover、高亮与大纲
 
-![深色主题 ARL Hover 与大纲](./docs/images/01-dark-hover-and-outline.jpg)
+![深色主题 ARL Hover 与大纲](./docs/images/01-dark-hover-and-outline.png)
 
 ### 深色主题 · 程序整体效果
 
-![深色主题 ARL 程序整体效果](./docs/images/02-dark-program-overview.jpg)
+![深色主题 ARL 程序整体效果](./docs/images/02-dark-program-overview.png)
 
 ### 浅色主题 · 高亮与大纲
 
-![浅色主题 ARL 高亮与大纲](./docs/images/03-light-syntax-and-outline.jpg)
+![浅色主题 ARL 高亮与大纲](./docs/images/03-light-syntax-and-outline.png)
 
 ### IntelliSense 代码补全
 
-![ARL IntelliSense 代码补全](./docs/images/04-intellisense-completion.jpg)
+![ARL IntelliSense 代码补全](./docs/images/04-intellisense-completion.png)
 
 ### 插件详情页
 
-![配天机器人 ARL 语言支持插件详情](./docs/images/05-extension-details.jpg)
+![配天机器人 ARL 语言支持插件详情](./docs/images/05-extension-details.png)
 
 ## 功能
 

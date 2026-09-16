@@ -33,6 +33,26 @@ const readmeZh = fs.readFileSync(path.join(root, 'README.zh-CN.md'), 'utf8');
 assert(readmeEn.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.zh-CN.md'), 'English README Chinese switch must use an absolute GitHub URL that works in the VS Code extension details view');
 assert(!readmeEn.includes('](./README.zh-CN.md)'), 'English README must not use the non-working relative Chinese README link');
 assert(readmeZh.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md'), 'Chinese README English switch must use an absolute GitHub URL');
+const screenshotNames = [
+  '01-dark-hover-and-outline.png',
+  '02-dark-program-overview.png',
+  '03-light-syntax-and-outline.png',
+  '04-intellisense-completion.png',
+  '05-extension-details.png'
+];
+assert(!/docs\/images\/[^)]+\.jpg/i.test(readmeEn + readmeZh), 'README files must not reference the old low-resolution JPG screenshots');
+assert.deepStrictEqual(
+  fs.readdirSync(path.join(root,'docs/images')).filter(name=>/\.png$/i.test(name)).sort(),
+  screenshotNames,
+  'Screenshot directory must contain only the five semantic PNG names'
+);
+for (const name of screenshotNames) {
+  const relative=`docs/images/${name}`;
+  const png=fs.readFileSync(path.join(root,relative));
+  assert(png.subarray(1,4).equals(Buffer.from('PNG')), `${relative} must be a PNG`);
+  assert(png.readUInt32BE(16)>=1600 && png.readUInt32BE(20)>=900, `${relative} must retain the uploaded high resolution`);
+  assert(readmeEn.includes(`./${relative}`) && readmeZh.includes(`./${relative}`), `${relative} must be referenced by both README files`);
+}
 assert(pkg.repository && pkg.repository.url.includes('YoyoDavidGo/Peitian-Robot-ARL-Language-Support'), 'Repository metadata must point to the public GitHub repository');
 assert(pkg.bugs && pkg.bugs.url.endsWith('/issues'), 'Marketplace issues URL is required');
 assert(pkg.homepage && pkg.homepage.includes('YoyoDavidGo/Peitian-Robot-ARL-Language-Support'), 'Marketplace homepage must point to the project repository');

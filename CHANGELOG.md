@@ -2,6 +2,7 @@
 
 ## 1.0.0
 
+- Replaced all five outdated README screenshots with the new 1652×970 PNG captures and semantic filenames, including the current A logo and motion-unit highlighting.
 - Replaced the AE marketplace mark with the shared AIL-inspired A logo; the red parallelogram crossbar touches the inner blue edges without overlapping them, the Marketplace PNG uses a tighter canvas while file-icon spacing stays unchanged, and both outputs come from one SVG source.
 - Kept numeric highlighting for `mm` and `mm/s` values inside Wizard-defined motion instructions without broadening number matching in other ARL code.
 - Restored the complete 287-entry Wizard source from the reference editor and added reproducible generation plus source-drift validation.
