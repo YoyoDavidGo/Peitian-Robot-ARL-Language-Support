@@ -253,8 +253,8 @@ console.log(Object.fromEntries(Object.entries(data.categories).map(([k,v])=>[k,v
 assert(pkg.contributes.configuration && pkg.contributes.configuration.properties['peitianArl.preciseFontWeights.enabled'], 'Missing precise font-weight setting');
 
 
-// v1.1.0: Smart Completion is user-controllable and the ARL file A icon uses
-// the taller/longer red crossbar requested for the public release.
+// Smart Completion is user-controllable. Both runtime icon sizes are rendered
+// from one AIL-inspired A logo source so their geometry cannot drift.
 const smartSetting = pkg.contributes.configuration.properties['peitianArl.smartCompletion.enabled'];
 assert(smartSetting, 'Missing Smart Completion on/off setting');
 assert.strictEqual(smartSetting.type, 'boolean');
@@ -263,12 +263,23 @@ for (const key of ['configuration.smartCompletion.description']) {
   assert(nlsEn[key], `English localization missing ${key}`);
   assert(nlsZh[key], `Chinese localization missing ${key}`);
 }
-for (const svgPath of ['icons/arl-dark.svg','icons/arl-light.svg']) {
-  const svg=fs.readFileSync(path.join(root,svgPath),'utf8');
-  assert(svg.includes('#24ABF2'),'ARL A icon must keep RGB(36,171,242) blue');
-  assert(svg.includes('#FF0000'),'ARL A icon crossbar must use the updated red accent');
-  assert(svg.includes('M6.85 14.05h8.65l-1.45 3.6H5.4l1.45-3.6Z'),'ARL A icon must use the taller/longer crossbar geometry');
-}
+const logoSvg=fs.readFileSync(path.join(root,'icons/arl-logo.svg'),'utf8');
+assert(logoSvg.includes('#24ABF2'),'ARL A icon must keep RGB(36,171,242) blue');
+assert(logoSvg.includes('#FF0000'),'ARL A icon crossbar must keep the red accent');
+assert(logoSvg.includes('M9.0943 14.05h5.8156l-1.45 3.6H7.6443l1.45-3.6Z'),'ARL A crossbar must remain a parallelogram that touches the inner A edges without entering the blue legs');
+assert(!logoSvg.includes('M6.85 14.05h8.65'),'The old overlapping crossbar geometry must not return');
+const pngInfo = relativePath => {
+  const png=fs.readFileSync(path.join(root,relativePath));
+  assert(png.subarray(1,4).equals(Buffer.from('PNG')), `${relativePath} must be a PNG`);
+  return {png,width:png.readUInt32BE(16),height:png.readUInt32BE(20),colorType:png[25]};
+};
+const marketplaceIcon=pngInfo('icon.png');
+const darkFileIcon=pngInfo('icons/arl-dark.png');
+const lightFileIcon=pngInfo('icons/arl-light.png');
+assert.deepStrictEqual([marketplaceIcon.width,marketplaceIcon.height,marketplaceIcon.colorType],[256,256,6],'Marketplace A logo must be a 256px transparent RGBA PNG');
+assert.deepStrictEqual([darkFileIcon.width,darkFileIcon.height,darkFileIcon.colorType],[24,24,6],'Dark ARL file icon must be a 24px transparent RGBA PNG');
+assert.deepStrictEqual([lightFileIcon.width,lightFileIcon.height,lightFileIcon.colorType],[24,24,6],'Light ARL file icon must be a 24px transparent RGBA PNG');
+assert(darkFileIcon.png.equals(lightFileIcon.png),'Light and dark ARL file icons must come from the same SVG rendering');
 assert(nlsEn['extension.description'].includes('ARCS 2.6.6') && nlsEn['extension.description'].includes('v4.5.0'), 'English description must state ARCS/manual version');
 assert(nlsZh['extension.description'].includes('ARCS 2.6.6') && nlsZh['extension.description'].includes('v4.5.0'), 'Chinese description must state ARCS/manual version');
 

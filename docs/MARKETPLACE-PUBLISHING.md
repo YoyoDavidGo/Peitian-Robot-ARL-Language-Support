@@ -9,7 +9,7 @@ This file is for release preparation and is excluded from the VSIX package.
 - Publisher ID: `David-Workshop`
 - Version: `1.0.0`
 - Category: Programming Languages / Formatters / Themes
-- Marketplace icon: square 256×256 PNG based on the existing AE logo
+- Marketplace icon: square 256×256 PNG rendered from the shared AIL-inspired `icons/arl-logo.svg` source
 - `.arl` Explorer icon: standalone stylized A SVG
 - README / CHANGELOG / SUPPORT
 - `pricing: Free`
