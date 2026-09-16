@@ -25,14 +25,17 @@ assert.strictEqual(pkg.contributes.configurationDefaults['[arl]']['editor.defaul
 assert.deepStrictEqual(cfg.comments.blockComment, ['/*','*/'], 'ARL block comments must be declared in language configuration');
 const commentPatterns = grammar.repository.comments.patterns || [];
 assert(commentPatterns.some(p => p.name === 'comment.block.arl' && p.begin === '/\\*' && p.end === '\\*/'), 'TextMate grammar must recognize /* ... */ block comments');
-for (const file of ['package.nls.json','package.nls.zh-cn.json','README.zh-CN.md','LICENSE']) {
+for (const file of ['package.nls.json','package.nls.zh-cn.json','README.en.md','README.zh-CN.md','LICENSE']) {
   assert(fs.existsSync(path.join(root, file)), `Marketplace release is missing ${file}`);
 }
-const readmeEn = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+const readmeMain = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+const readmeEn = fs.readFileSync(path.join(root, 'README.en.md'), 'utf8');
 const readmeZh = fs.readFileSync(path.join(root, 'README.zh-CN.md'), 'utf8');
-assert(readmeEn.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.zh-CN.md'), 'English README Chinese switch must use an absolute GitHub URL that works in the VS Code extension details view');
-assert(!readmeEn.includes('](./README.zh-CN.md)'), 'English README must not use the non-working relative Chinese README link');
-assert(readmeZh.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md'), 'Chinese README English switch must use an absolute GitHub URL');
+assert(readmeMain.startsWith('# 配天机器人 ARL 语言支持'), 'The packaged README must display Simplified Chinese directly');
+assert(readmeMain.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md'), 'Primary README English switch must use an absolute GitHub URL');
+assert(readmeZh.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md'), 'Chinese companion README English switch must use an absolute GitHub URL');
+assert(readmeEn.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md'), 'English README Chinese switch must use an absolute GitHub URL');
+assert(!/\]\(\.\/README(?:\.en|\.zh-CN)?\.md\)/.test(readmeMain + readmeEn + readmeZh), 'README language switches must not use relative links that fail in the VS Code Details view');
 const screenshotNames = [
   '01-dark-hover-and-outline.png',
   '02-dark-program-overview.png',
@@ -40,7 +43,7 @@ const screenshotNames = [
   '04-intellisense-completion.png',
   '05-extension-details.png'
 ];
-assert(!/docs\/images\/[^)]+\.jpg/i.test(readmeEn + readmeZh), 'README files must not reference the old low-resolution JPG screenshots');
+assert(!/docs\/images\/[^)]+\.jpg/i.test(readmeMain + readmeEn + readmeZh), 'README files must not reference the old low-resolution JPG screenshots');
 assert.deepStrictEqual(
   fs.readdirSync(path.join(root,'docs/images')).filter(name=>/\.png$/i.test(name)).sort(),
   screenshotNames,
@@ -51,7 +54,7 @@ for (const name of screenshotNames) {
   const png=fs.readFileSync(path.join(root,relative));
   assert(png.subarray(1,4).equals(Buffer.from('PNG')), `${relative} must be a PNG`);
   assert(png.readUInt32BE(16)>=1600 && png.readUInt32BE(20)>=900, `${relative} must retain the uploaded high resolution`);
-  assert(readmeEn.includes(`./${relative}`) && readmeZh.includes(`./${relative}`), `${relative} must be referenced by both README files`);
+  assert(readmeMain.includes(`./${relative}`) && readmeEn.includes(`./${relative}`) && readmeZh.includes(`./${relative}`), `${relative} must be referenced by all README files`);
 }
 assert(pkg.repository && pkg.repository.url.includes('YoyoDavidGo/Peitian-Robot-ARL-Language-Support'), 'Repository metadata must point to the public GitHub repository');
 assert(pkg.bugs && pkg.bugs.url.endsWith('/issues'), 'Marketplace issues URL is required');

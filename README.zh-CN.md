@@ -1,6 +1,6 @@
 # 配天机器人 ARL 语言支持
 
-[English](https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md) | **简体中文**
+**简体中文** | [English](https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md)
 
 面向 **配天（PEITIAN）工业机器人 ARL** 程序的轻量级 Visual Studio Code 语言支持插件。
 

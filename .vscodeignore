@@ -10,4 +10,6 @@ docs/MARKETPLACE-PUBLISHING.md
 docs/superpowers/**
 icons/*.svg
 language-data/*.md
+README.en.md
+README.zh-CN.md
 user
