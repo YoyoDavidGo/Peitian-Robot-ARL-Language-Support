@@ -106,6 +106,40 @@ for (const group of ['logic','instructions','functions','keywords','datatypes','
 }
 assert(grammar.repository.systemVariables.patterns[0].match.includes('\\$'));
 
+const numericPattern = grammar.repository.numbers.patterns.find(pattern => pattern.name === 'constant.numeric.arl');
+assert(numericPattern, 'TextMate grammar must expose the ARL numeric scope');
+const motionPattern = grammar.repository.motionInstructions.patterns[0];
+const rootGrammarIncludes = grammar.patterns.map(pattern => pattern.include);
+assert(
+  rootGrammarIncludes.indexOf('#motionInstructions') >= 0 &&
+  rootGrammarIncludes.indexOf('#motionInstructions') < rootGrammarIncludes.indexOf('#instructions'),
+  'Motion instruction context must be active before the generic instruction rule'
+);
+assert.strictEqual(
+  motionPattern.begin,
+  '(?i:\\b(?:movej|ptp|lin|cir|ccir|spl|jump)\\b)',
+  'Unit-aware numeric highlighting must stay limited to Wizard motion instructions'
+);
+const unitNumericPattern = motionPattern.patterns.find(pattern => pattern.name === 'constant.numeric.arl');
+assert(unitNumericPattern, 'Motion instructions must expose a unit-aware numeric scope');
+// JavaScript uses `i` here to mirror the local case-insensitive groups in the
+// Oniguruma/TextMate expressions.
+const toJavaScriptRegex = pattern => pattern.replaceAll('(?i:', '(?:');
+const numericRegex = new RegExp(toJavaScriptRegex(numericPattern.match), 'gi');
+const unitNumericRegex = new RegExp(toJavaScriptRegex(unitNumericPattern.match), 'gi');
+const numericSample = 'p:offset(p1,0,0,0),vl:12mm/s,sl:0mm,vp:50%,a:1.25e-2,b:0x1F,bad:12abc';
+assert.deepStrictEqual(
+  [...numericSample.matchAll(numericRegex)].map(match => match[0]),
+  ['0', '0', '0', '50', '1.25e-2', '0x1F'],
+  'General numeric highlighting must remain strict outside unit-aware motion contexts'
+);
+assert.deepStrictEqual(
+  [...numericSample.matchAll(unitNumericRegex)].map(match => match[0]),
+  ['12', '0'],
+  'Motion values immediately followed by mm or mm/s must keep numeric highlighting'
+);
+assert.strictEqual('double distance=12mm'.match(numericRegex), null, 'Unit-aware matching must not leak into normal ARL code');
+
 
 
 // v0.3: exact ARL-IDE Black/Light palette and automatic matching for VS Code built-in themes.

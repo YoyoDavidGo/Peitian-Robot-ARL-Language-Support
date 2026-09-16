@@ -2,6 +2,7 @@
 
 ## 1.0.0
 
+- Kept numeric highlighting for `mm` and `mm/s` values inside Wizard-defined motion instructions without broadening number matching in other ARL code.
 - Restored the complete 287-entry Wizard source from the reference editor and added reproducible generation plus source-drift validation.
 - Escaped literal `$` characters in Smart Completion snippets so `$P`, `$FLANGE`, `$WORLD`, and other ARL system variables are inserted intact.
 - Fixed Smart Tab acceptance for custom numeric input and prevented completion from leaving stale token suffixes behind.

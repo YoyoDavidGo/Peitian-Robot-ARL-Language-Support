@@ -1,6 +1,7 @@
 .git/**
 .gitignore
 .github/**
+.scratch/**
 tests/**
 scripts/**
 *.vsix
