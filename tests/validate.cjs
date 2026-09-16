@@ -32,7 +32,10 @@ const readmeMain = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
 const readmeEn = fs.readFileSync(path.join(root, 'README.en.md'), 'utf8');
 const readmeZh = fs.readFileSync(path.join(root, 'README.zh-CN.md'), 'utf8');
 assert(readmeMain.startsWith('# 配天机器人 ARL 语言支持'), 'The packaged README must display Simplified Chinese directly');
-assert(readmeMain.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md'), 'Primary README English switch must use an absolute GitHub URL');
+assert(readmeMain.includes('[English](#english)'), 'Primary README English switch must jump to the English section on the same Details page');
+assert(readmeMain.includes('## English'), 'Primary README must include the complete English section');
+assert(readmeMain.includes('[简体中文](#配天机器人-arl-语言支持)'), 'English section must provide an in-page return link to Chinese');
+assert(!/\]\(https:\/\/github\.com\/YoyoDavidGo\/Peitian-Robot-ARL-Language-Support\/blob\/main\/README\.(?:en|zh-CN)\.md\)/.test(readmeMain), 'Primary README language switches must not leave the VS Code Details page');
 assert(readmeZh.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md'), 'Chinese companion README English switch must use an absolute GitHub URL');
 assert(readmeEn.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md'), 'English README Chinese switch must use an absolute GitHub URL');
 assert(!/\]\(\.\/README(?:\.en|\.zh-CN)?\.md\)/.test(readmeMain + readmeEn + readmeZh), 'README language switches must not use relative links that fail in the VS Code Details view');
@@ -55,6 +58,7 @@ for (const name of screenshotNames) {
   assert(png.subarray(1,4).equals(Buffer.from('PNG')), `${relative} must be a PNG`);
   assert(png.readUInt32BE(16)>=1600 && png.readUInt32BE(20)>=900, `${relative} must retain the uploaded high resolution`);
   assert(readmeMain.includes(`./${relative}`) && readmeEn.includes(`./${relative}`) && readmeZh.includes(`./${relative}`), `${relative} must be referenced by all README files`);
+  assert.strictEqual(readmeMain.split(`./${relative}`).length - 1, 2, `${relative} must appear once in each language section of the packaged README`);
 }
 assert(pkg.repository && pkg.repository.url.includes('YoyoDavidGo/Peitian-Robot-ARL-Language-Support'), 'Repository metadata must point to the public GitHub repository');
 assert(pkg.bugs && pkg.bugs.url.endsWith('/issues'), 'Marketplace issues URL is required');

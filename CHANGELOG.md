@@ -2,7 +2,7 @@
 
 ## 1.0.0
 
-- Made Simplified Chinese the primary packaged README so the VS Code Details page displays it directly; retained the English documentation as `README.en.md`.
+- Made the packaged Details page bilingual: Chinese appears first, the in-page English link jumps to the complete English section, and each language section has its own five-screenshot gallery without leaving VS Code.
 - Replaced all five outdated README screenshots with the new 1652×970 PNG captures and semantic filenames, including the current A logo and motion-unit highlighting.
 - Replaced the AE marketplace mark with the shared AIL-inspired A logo; the red parallelogram crossbar touches the inner blue edges without overlapping them, the Marketplace PNG uses a tighter canvas while file-icon spacing stays unchanged, and both outputs come from one SVG source.
 - Kept numeric highlighting for `mm` and `mm/s` values inside Wizard-defined motion instructions without broadening number matching in other ARL code.

@@ -11,7 +11,7 @@ This file is for release preparation and is excluded from the VSIX package.
 - Category: Programming Languages / Formatters / Themes
 - Marketplace icon: square 256×256 PNG rendered from the shared AIL-inspired `icons/arl-logo.svg` source
 - `.arl` Explorer icon: standalone stylized A SVG
-- Simplified Chinese primary README / English companion README / CHANGELOG / SUPPORT
+- Single bilingual Marketplace README with in-page language navigation and a complete five-screenshot gallery for each language / companion language READMEs / CHANGELOG / SUPPORT
 - `pricing: Free`
 - Marketplace gallery banner metadata
 - Pre-publish tests
