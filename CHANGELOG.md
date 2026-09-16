@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Clarified that parameter filtering is generic and Wizard-driven across instructions and functions; the `p:` / `j:` / `v:` table now appears explicitly as a motion-parameter example rather than the full supported range.
+
 ## 1.0.0
 
 - Made the packaged Details page bilingual: Chinese appears first, the in-page English link jumps to the complete English section, and each language section has its own five-screenshot gallery without leaving VS Code.

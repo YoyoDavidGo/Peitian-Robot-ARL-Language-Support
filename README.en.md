@@ -42,7 +42,7 @@ The extension focuses on editing ARL source files well inside native VS Code. It
 - Cross-file navigation for calls such as `file::func()`
 - Hover documentation for ARL instructions, logic keywords, data types, functions, and system variables
 - IntelliSense for ARL keywords, instructions, functions, variables, and system variables
-- Type-aware completion for named robot-motion parameters
+- Wizard-driven, type-aware parameter completion for instructions and functions
 - Optional Smart Completion templates for motion instructions, functions, and control blocks
 - Signature Help for built-in ARL calls and user functions
 
@@ -69,7 +69,7 @@ speed vFast
 ptp p:p
 ```
 
-The `p:` context accepts `pose`, so the list contains matching declared `pose` variables such as `pHome` and `pPick`, not unrelated instructions or `joint` / `speed` variables.
+The `p:` context accepts `pose`, so the list contains matching declared `pose` variables such as `pHome` and `pPick`, not unrelated instructions or `joint` / `speed` variables. This is only a motion-instruction example: the actual filtering is driven by the complete ARL Wizard parameter metadata and also applies to ordinary instructions and positional function arguments.
 
 For motion parameters with engineering units, Smart Completion keeps the unit outside the editable placeholder. A value parameter can be either a numeric literal or a declared `double` variable. For example, both forms are valid:
 
@@ -84,7 +84,7 @@ In a typed parameter slot, an empty prefix shows no candidates. After the first 
 
 Chinese/full-width punctuation inside ARL strings and comments is treated as normal text; VS Code Unicode-confusable highlighting remains available for actual code tokens.
 
-Current typed parameter filters include:
+Common named motion parameters (examples, not the complete supported range):
 
 | Context | Expected type |
 | --- | --- |
@@ -95,7 +95,9 @@ Current typed parameter filters include:
 | `t:` | `tool` |
 | `w:` | `wobj` |
 
-For typed parameter completion, variables come from the current ARL file plus its paired `<program>_data.arl` file in the same directory. The paired data file is cached in memory, so unrelated ARL programs do not pollute the suggestion list.
+Generic filtering reads each parameter's Wizard-declared type, including `bool`, `string`, `int`, `double`, `pose`, `joint`, `speed`, `slip`, `tool`, `wobj`, `socket`, `byte[]`, and `function`. Candidates are ordered as follows: visible type-compatible declared variables, Wizard-documented values, then values still used by the same instruction or function parameter in nearby source. Parameters typed as `any` intentionally accept multiple types; unknown calls without Wizard or TIPS parameter metadata cannot be type-inferred.
+
+Declared-variable candidates come from the current ARL file plus its paired `<program>_data.arl` file in the same directory. The paired data file is cached in memory, so unrelated ARL programs do not pollute the suggestion list.
 
 ## Smart Completion
 

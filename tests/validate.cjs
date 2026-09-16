@@ -8,7 +8,7 @@ const data = read('language-data/arl-language.json');
 const grammar = read('syntaxes/arl.tmLanguage.json');
 const cfg = read('language-configuration.json');
 
-assert.strictEqual(pkg.version, '1.0.0', 'Pre-Marketplace release must remain version 1.0.0');
+assert.strictEqual(pkg.version, '1.0.1', 'Marketplace documentation update must use version 1.0.1');
 assert.strictEqual(pkg.displayName, '%extension.displayName%', 'Extension display name should be localized through package.nls');
 assert.strictEqual(pkg.icon, 'icon.png', 'Extension manifest must point to icon.png');
 assert(fs.existsSync(path.join(root, pkg.icon)), 'Extension icon file is missing');
@@ -19,7 +19,7 @@ assert(pkg.keywords.length >= 8 && pkg.keywords.length <= 30, 'Marketplace keywo
 assert.strictEqual(pkg.scripts['vscode:prepublish'], 'npm test', 'Packaging must run the full test suite');
 assert(!fs.readFileSync(path.join(root,'.vscodeignore'),'utf8').includes('docs/**'), 'Marketplace package must retain README screenshots under docs/images');
 
-// 1.0.0 release hardening: block comments, localization, publisher/repository metadata.
+// Marketplace release hardening: block comments, localization, publisher/repository metadata.
 assert.strictEqual(pkg.publisher, 'David-Workshop', 'Publisher must match the Visual Studio Marketplace publisher ID');
 assert.strictEqual(pkg.contributes.configurationDefaults['[arl]']['editor.defaultFormatter'], 'David-Workshop.peitian-arl-language-support', 'Default formatter ID must use the Marketplace publisher ID');
 assert.deepStrictEqual(cfg.comments.blockComment, ['/*','*/'], 'ARL block comments must be declared in language configuration');
@@ -36,6 +36,16 @@ assert(readmeMain.includes('[English](#english)'), 'Primary README English switc
 assert(readmeMain.includes('## English'), 'Primary README must include the complete English section');
 assert(readmeMain.includes('[简体中文](#配天机器人-arl-语言支持)'), 'English section must provide an in-page return link to Chinese');
 assert(!/\]\(https:\/\/github\.com\/YoyoDavidGo\/Peitian-Robot-ARL-Language-Support\/blob\/main\/README\.(?:en|zh-CN)\.md\)/.test(readmeMain), 'Primary README language switches must not leave the VS Code Details page');
+for (const readme of [readmeMain, readmeZh]) {
+  assert(readme.includes('Wizard 驱动的通用参数类型感知补全（指令与函数）'), 'Chinese documentation must describe generic Wizard-driven parameter filtering');
+  assert(readme.includes('常见运动指令命名参数示例（不是完整支持范围）'), 'Chinese documentation must label the motion-parameter table as examples');
+  assert(!readme.includes('当前支持的类型筛选：'), 'Chinese documentation must not present the motion examples as the complete supported range');
+}
+for (const readme of [readmeMain, readmeEn]) {
+  assert(readme.includes('Wizard-driven, type-aware parameter completion for instructions and functions'), 'English documentation must describe generic Wizard-driven parameter filtering');
+  assert(readme.includes('Common named motion parameters (examples, not the complete supported range)'), 'English documentation must label the motion-parameter table as examples');
+  assert(!readme.includes('Current typed parameter filters include:'), 'English documentation must not present the motion examples as the complete supported range');
+}
 assert(readmeZh.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.en.md'), 'Chinese companion README English switch must use an absolute GitHub URL');
 assert(readmeEn.includes('https://github.com/YoyoDavidGo/Peitian-Robot-ARL-Language-Support/blob/main/README.md'), 'English README Chinese switch must use an absolute GitHub URL');
 assert(!/\]\(\.\/README(?:\.en|\.zh-CN)?\.md\)/.test(readmeMain + readmeEn + readmeZh), 'README language switches must not use relative links that fail in the VS Code Details view');
@@ -170,7 +180,7 @@ assert.strictEqual('double distance=12mm'.match(numericRegex), null, 'Unit-aware
 
 
 // v0.3: exact ARL-IDE Black/Light palette and automatic matching for VS Code built-in themes.
-assert.strictEqual(pkg.version, '1.0.0');
+assert.strictEqual(pkg.version, '1.0.1');
 assert(Array.isArray(pkg.contributes.themes) && pkg.contributes.themes.length === 2, 'Expected optional Black and Light themes');
 const blackContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Black');
 const lightContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Light');
@@ -329,7 +339,7 @@ assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('!s
 assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('suggestWidgetVisible') && String(x.when||'').includes('peitianArl.smartValueReady')), 'Smart Tab must advance a complete manually typed value even while suggestions are visible');
 for(const binding of smartTabBindings) assert(String(binding.when||'').includes('peitianArl.smartSnippetActive'), 'Smart Tab must be scoped to generic ARL Smart Completion');
 
-console.log('ARL 1.0.0 RC manifest/icon validation passed');
+console.log('ARL 1.0.1 manifest/icon validation passed');
 
 
 // Chinese punctuation is common inside ARL strings/comments. Keep VS Code
