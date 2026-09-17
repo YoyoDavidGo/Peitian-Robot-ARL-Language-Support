@@ -25,8 +25,10 @@ Source: `YoyoDavidGo/ARL-IDE-NEW` / commit `3b450afc3de5b745403e3a4d533e6fe164d1
 
 - Checked-in source: `language-data/ARL_Wizard.source.md`
 - Generated data: `language-data/arl-wizard.json`
-- Parsed entries: 287
-- Normalized source SHA-256: `08b346b39eab871375430eaa7c94b836f58cd46d894f44d676ff9fcf040a5ddf`
+- Original editor entries: 287
+- Maintainer/manual trajectory-trigger supplements: 4 (`T`, `P`, `S`, `StoEnd`)
+- Parsed entries: 291
+- Normalized source SHA-256: `0c7b8917f73c828d2cd0496de03aff846ae85787f4c6a3cbe57d36a30a7833a9`
 
 Run `npm run data:generate-wizard` after updating the checked-in source. The validation suite compares every generated entry with the source document to detect drift.
 

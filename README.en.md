@@ -114,7 +114,7 @@ The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically
 
 For direct-value motion templates, fixed units such as `%`, `mm/s`, and `mm` are inserted automatically outside the editable numeric tab stop. For example, changing `30` to `50` yields `vp:50%` without retyping `%`. Literal templates use a Value icon, while variable templates use a Variable icon in IntelliSense.
 
-Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 built-in ARL functions have source-driven Smart structure without inventing undocumented signatures.
+Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 regular built-in ARL functions plus the four trajectory-trigger conditions have source-backed Smart structure without inventing signatures.
 
 For example:
 
@@ -123,6 +123,17 @@ waituntil cond:getdi(1)
 setdo(1, 1)
 offset(p1, dx, dy, dz, rz, ry, rx)
 ```
+
+Trajectory-trigger conditions use the same structured metadata:
+
+| Prototype | Condition becomes true when | Parameter unit |
+| --- | --- | --- |
+| `bool T(double t)` | The current path has run for `t` seconds from its start | seconds (`s`) |
+| `bool P(double p)` | The current path has completed `p%` from its start | percent (`%`) |
+| `bool S(double s)` | The current path has traveled `s` millimeters from its start | millimeters (`mm`) |
+| `bool StoEnd(double s)` | The current path is `s` millimeters from its target | millimeters (`mm`) |
+
+These four functions are intended mainly for a `trigger` `when:` condition. Units describe the parameter meaning; ARL source remains `T(1)`, `P(50)`, `S(100)`, or `StoEnd(100)` without a unit suffix.
 
 Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
 

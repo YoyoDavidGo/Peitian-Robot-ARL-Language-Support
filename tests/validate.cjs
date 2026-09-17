@@ -362,6 +362,22 @@ assert(wizardData.entries.waituntil?.variants?.[0]?.params?.some(p=>p.key==='con
 assert.strictEqual(wizardData.entries.connect?.variants?.[0]?.params?.[0]?.type, 'socket', 'connect must retain the reference editor socket parameter');
 assert.strictEqual(wizardData.entries.read?.variants?.[0]?.params?.[1]?.key, 'data', 'read must retain its output data parameter');
 assert.strictEqual(wizardData.entries.getdi?.variants?.length, 2, 'getdi must retain both single-channel and multi-channel variants');
+const trajectoryTriggerFunctions = {
+  t: {name:'T', proto:'bool T(double t)', key:'t', unit:'s'},
+  p: {name:'P', proto:'bool P(double p)', key:'p', unit:'%'},
+  s: {name:'S', proto:'bool S(double s)', key:'s', unit:'mm'},
+  stoend: {name:'StoEnd', proto:'bool StoEnd(double s)', key:'s', unit:'mm'}
+};
+for(const [key,expected] of Object.entries(trajectoryTriggerFunctions)){
+  const entry=wizardData.entries[key];
+  assert(entry,`Trajectory-trigger function ${expected.name} missing from Wizard metadata`);
+  assert.strictEqual(entry.type,'function');
+  assert.strictEqual(entry.proto,expected.proto);
+  assert(entry.desc && entry.desc_en,`${expected.name} must have bilingual Hover documentation`);
+  assert.strictEqual(entry.variants?.[0]?.params?.[0]?.key,expected.key);
+  assert.strictEqual(entry.variants?.[0]?.params?.[0]?.type,'double');
+  assert.strictEqual(entry.variants?.[0]?.params?.[0]?.unit,expected.unit);
+}
 const hoverReferenceData = require('../language-data/arl-reference.json');
 const hoverGroups = ['logic','instructions','functions','keywords','datatypes','systemVariables','parenOnlyFunctions'];
 const hoverNames = [...new Set(hoverGroups.flatMap(group => data.categories[group] || []).map(name => String(name).toLowerCase()))];
@@ -370,5 +386,5 @@ const unresolvedHoverNames = hoverNames.filter(name => {
   const wizardEntry = wizardData.entries?.[name];
   return !(referenceEntry?.desc || referenceEntry?.desc_en || wizardEntry?.desc || wizardEntry?.desc_en);
 }).sort();
-assert.deepStrictEqual(unresolvedHoverNames, ['p','s','stoend','t'], 'Every documented ARL symbol must have a concrete Hover description from reference or Wizard data');
+assert.deepStrictEqual(unresolvedHoverNames, [], 'Every documented ARL symbol must have a concrete Hover description from reference or Wizard data');
 console.log('ARL Wizard metadata validation passed');

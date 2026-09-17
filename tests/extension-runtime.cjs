@@ -233,6 +233,12 @@ try {
   const getipHoverText=Array.isArray(getipHover.contents)?getipHover.contents.map(x=>x.value??String(x)).join('\n'):getipHover.contents.value;
   assert(getipHoverText.includes('bool getip(string ip [, string if_name])'),'Optional function parameters must be visibly marked in Hover');
 
+  const pathPercentHoverDoc=makeDocument('/ws/path-percent-hover.arl','trigger when:P(50),do:onHalfway');
+  const pathPercentHover=await registrations.hover.provideHover(pathPercentHoverDoc,new Position(0,14));
+  const pathPercentHoverText=Array.isArray(pathPercentHover.contents)?pathPercentHover.contents.map(x=>x.value??String(x)).join('\n'):pathPercentHover.contents.value;
+  assert(pathPercentHoverText.includes('当前运动轨迹从起点开始是否已经完成 p%'),'P Hover must explain the user-supplied path-percentage semantics');
+  assert(pathPercentHoverText.includes('bool P(double p)'),'P Hover must show its canonical function prototype');
+
 
   const sysDoc=makeDocument('/ws/sys.arl','$Config_check');
   const sysHover=await registrations.hover.provideHover(sysDoc,new Position(0,5));

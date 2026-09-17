@@ -383,10 +383,11 @@ function getWizardHoverSignatures(lineText,character,wizard,reference,languageDa
   ranked.sort((a,b)=>a.score-b.score);
   const seen=new Set();
   const signatures=[];
+  const displayName=entry.name || name;
   for(const item of ranked){
     const signature=isFunction
-      ?formatWizardFunctionSignature(entry,name,item.variant)
-      :formatWizardInstructionSignature(entry,name,item.variant);
+      ?formatWizardFunctionSignature(entry,displayName,item.variant)
+      :formatWizardInstructionSignature(entry,displayName,item.variant);
     if(signature && !seen.has(signature)){seen.add(signature);signatures.push(signature);}
   }
   return signatures;
@@ -398,7 +399,7 @@ function wizardSignature(entry,name,count,activeIndex){
   if(!variant) return null;
   const parameters=(variant.params||[]).map(param=>`${param.type||'any'} ${param.key}`.trim());
   return {
-    label:formatWizardFunctionSignature(entry,name,variant),
+    label:formatWizardFunctionSignature(entry,entry.name||name,variant),
     parameters,
     variantIndex:variants.indexOf(variant)
   };
@@ -884,7 +885,7 @@ function buildWizardParameterCandidates(options={}){
   return merged.map((item,index)=>({
     ...item,
     wizardOrder:index,
-    wizardUnit:param.unit||''
+    wizardUnit:entry?.type==='function'?'':(param.unit||'')
   }));
 }
 
@@ -912,6 +913,7 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
   const entry=resolveWizardEntry(wizard,key,reference,kind);
   if(!entry || !Array.isArray(entry.variants) || !entry.variants.length) return [];
   const functionStyle=entry.type==='function' || kind==='function' || wizardEntryLooksFunctionStyle(entry,key);
+  const displayName=entry.name || key;
   const out=[];
   const makeTemplate=(variant,index,params,suffix='')=>{
     const parts=params.map((p,i)=>{
@@ -922,12 +924,12 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
       // Proto-only fallback entries keep a descriptive placeholder because no
       // detailed candidate table exists for them.
       const def=entry.synthetic ? snippetEscapeDefault(wizardDefaultValue(p)) : '';
-      const placeholder=(def ? '${'+n+':'+def+'}' : '${'+n+'}')+(p.unit||'');
+      const placeholder=(def ? '${'+n+':'+def+'}' : '${'+n+'}')+(functionStyle?'':(p.unit||''));
       if(functionStyle) return placeholder;
       return instructionParamUsesColon(entry,p.key)?`${p.key}:${placeholder}`:placeholder;
     });
     const sep=variant.sep===';'?'; ':', ';
-    const snippet=functionStyle?`${key}(${parts.join(sep)})`:`${key}${parts.length?' ':''}${parts.join(sep)}`;
+    const snippet=functionStyle?`${displayName}(${parts.join(sep)})`:`${displayName}${parts.length?' ':''}${parts.join(sep)}`;
     const baseName=variant.name || `Variant ${index+1}`;
     const baseNameEn=variant.name_en || '';
     return {

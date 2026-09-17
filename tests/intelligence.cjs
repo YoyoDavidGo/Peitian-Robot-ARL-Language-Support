@@ -823,6 +823,29 @@ assert(getWizardHoverSignatures('bool ok=getip(ip)',10,packagedWizard,reference,
 assert(getWizardHoverSignatures('movej',0,packagedWizard,reference,languageData).some(signature=>signature.includes('vp:<double>%') && signature.includes('sp:<double>%')),'Alternative named instruction parameters must keep their names, types and units in Hover');
 console.log(`ARL Wizard Hover coverage tests passed (${multiShapeEntries.length} multi-shape entries, ${optionalVariantCount} optional shapes)`);
 
+const trajectoryTriggerCases = [
+  ['t','T','bool T(double t)','s'],
+  ['p','P','bool P(double p)','%'],
+  ['s','S','bool S(double s)','mm'],
+  ['stoend','StoEnd','bool StoEnd(double s)','mm']
+];
+for(const [key,displayName,prototype,unit] of trajectoryTriggerCases){
+  const signatures=getWizardHoverSignatures(`${displayName}(1)`,1,packagedWizard,reference,languageData);
+  assert(signatures.includes(prototype),`${displayName} Hover must use its canonical trajectory-trigger prototype`);
+  const call=`trigger when:${displayName}(1`;
+  const signatureContext=getSignatureContext(call,call.length,reference,languageData,packagedWizard);
+  assert.strictEqual(signatureContext.label,prototype,`${displayName} Signature Help must use its canonical trajectory-trigger prototype`);
+  assert.deepStrictEqual(signatureContext.parameters,[`double ${key==='stoend'?'s':key}`]);
+  const templates=getWizardSmartTemplates(key,'function',packagedWizard,reference);
+  assert(templates.some(item=>item.snippet===`${displayName}(\${1})`),`${displayName} Smart Completion must preserve canonical casing without inserting its documentation unit`);
+  const context=getWizardParamContext(`${displayName}(`,displayName.length+1,packagedWizard,reference,languageData);
+  assert.strictEqual(context.expectedType,'double');
+  const candidates=buildWizardParameterCandidates({entry:context.entry,variantIndex:0,paramIndex:0,prefix:'',variables:[]});
+  assert(candidates.length>0,`${displayName} must retain its documented parameter candidates`);
+  assert(candidates.every(candidate=>candidate.wizardUnit===''),`${displayName} parameter unit ${unit} is documentation and must not be inserted into ARL source`);
+}
+console.log('ARL trajectory-trigger function metadata tests passed');
+
 // Every built-in function listed by the original ARL editor now has a Smart
 // structure source: exact Wizard variants where available, otherwise the exact
 // original TIPS proto. Unknown signatures are never fabricated.

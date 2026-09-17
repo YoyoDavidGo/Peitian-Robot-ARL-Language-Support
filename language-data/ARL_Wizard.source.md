@@ -4391,3 +4391,63 @@ desc_en: DO port number when the foreground-channel robot is on path
 type: sysvar
 
 ---
+
+## T
+desc: 返回当前运动轨迹距离起点是否已经走了 t 秒，主要用于轨迹触发中的事件定义
+desc_en: Return whether the current trajectory has reached t seconds from its start; mainly used to define path-trigger events
+type: function
+proto: bool T(double t)
+params: 1
+
+### variant: 基本写法
+### variant_en: Basic
+| 参数 | 类型 | 必填 | 备选项 | 单位 | 候选项 | 说明 | desc_en |
+|---|---|---|---|---|---|---|---|
+| t | double | * |  | s | 1 | 距轨迹起点的时间 | elapsed time from path start |
+
+---
+
+## P
+desc: 返回当前运动轨迹从起点开始是否已经完成 p%，主要用于轨迹触发中的事件定义
+desc_en: Return whether the current trajectory has completed p percent from its start; mainly used to define path-trigger events
+type: function
+proto: bool P(double p)
+params: 1
+
+### variant: 基本写法
+### variant_en: Basic
+| 参数 | 类型 | 必填 | 备选项 | 单位 | 候选项 | 说明 | desc_en |
+|---|---|---|---|---|---|---|---|
+| p | double | * | 0~100 | % | 0,50,100 | 距轨迹起点的行程百分比 | traveled percentage from path start |
+
+---
+
+## S
+desc: 返回当前运动轨迹距离起点是否已经走了 s 毫米，主要用于轨迹触发中的事件定义
+desc_en: Return whether the current trajectory has traveled s millimeters from its start; mainly used to define path-trigger events
+type: function
+proto: bool S(double s)
+params: 1
+
+### variant: 基本写法
+### variant_en: Basic
+| 参数 | 类型 | 必填 | 备选项 | 单位 | 候选项 | 说明 | desc_en |
+|---|---|---|---|---|---|---|---|
+| s | double | * |  | mm | 100 | 距轨迹起点的距离 | traveled distance from path start |
+
+---
+
+## StoEnd
+desc: 返回当前运动轨迹距离目标点是否还剩 s 毫米，主要用于轨迹触发中的事件定义
+desc_en: Return whether the current trajectory is within s millimeters of its target; mainly used to define path-trigger events
+type: function
+proto: bool StoEnd(double s)
+params: 1
+
+### variant: 基本写法
+### variant_en: Basic
+| 参数 | 类型 | 必填 | 备选项 | 单位 | 候选项 | 说明 | desc_en |
+|---|---|---|---|---|---|---|---|
+| s | double | * |  | mm | 100 | 距轨迹目标点的剩余距离 | remaining distance to path target |
+
+---

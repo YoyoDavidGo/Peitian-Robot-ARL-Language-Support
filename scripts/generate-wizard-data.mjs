@@ -22,7 +22,7 @@ const output = {
     wizard: 'ARL 指令向导文档 v4.5.0',
     arlReferenceVersion: '4.5.0',
     arcsVersion: '2.6.6',
-    notes: 'Generated without semantic rewriting from the Wizard document embedded in the reference editor.'
+    notes: 'Generated from the Wizard document embedded in the reference editor, plus the checked-in T/P/S/StoEnd trajectory-trigger supplements documented from the ARL manual and maintainer-provided P semantics.'
   },
   entries
 };

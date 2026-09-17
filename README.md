@@ -102,7 +102,7 @@ ptp p:,v:,s:,t:,w:
 
 插件只负责自动写入固定语法结构（例如 `p:`、`v:`、`s:`、`t:`、`w:`），所有参数值仍然是可编辑的 Tab Stop。空参数位置保持安静；输入第一个字符后才启动类型感知、严格前缀补全。你可以从匹配候选中选择，也可以继续手工输入自定义变量名或数值。**Tab** 负责进入下一个占位符，**Enter** 可以正常结束 Smart Snippet 并换行，上一行参数不会继续保持占位符高亮。
 
-Smart Completion 现在改为 **Wizard 数据驱动**。插件完整打包参考版配天 ARL 编辑器内嵌的 Wizard 数据，把参数类型、必填/可选、Variant、候选项、单位和中英文说明映射成 VS Code 原生 Snippet 与 IntelliSense；运动指令继续保留经过实际使用优化的模板。只有内置函数没有详细 Wizard Variant 时，才安全回退到原编辑器 TIPS 中的真实函数原型，因此 131 个 ARL 内置函数都可以从原始资料生成结构化补全，不会凭空猜测函数签名。
+Smart Completion 现在改为 **Wizard 数据驱动**。插件完整打包参考版配天 ARL 编辑器内嵌的 Wizard 数据，把参数类型、必填/可选、Variant、候选项、单位和中英文说明映射成 VS Code 原生 Snippet 与 IntelliSense；运动指令继续保留经过实际使用优化的模板。只有内置函数没有详细 Wizard Variant 时，才安全回退到原编辑器 TIPS 中的真实函数原型，因此 131 个常规 ARL 内置函数及 4 个轨迹触发条件函数都可以从资料生成结构化补全，不会凭空猜测函数签名。
 
 例如：
 
@@ -111,6 +111,17 @@ waituntil cond:getdi(1)
 setdo(1, 1)
 offset(p1, dx, dy, dz, rz, ry, rx)
 ```
+
+轨迹触发条件函数也使用同一套结构数据：
+
+| 函数原型 | 条件成立的时刻 | 参数单位 |
+| --- | --- | --- |
+| `bool T(double t)` | 当前轨迹从起点开始已经运行 `t` 秒 | 秒（`s`） |
+| `bool P(double p)` | 当前轨迹从起点开始已经完成 `p%` | 百分比（`%`） |
+| `bool S(double s)` | 当前轨迹从起点开始已经行进 `s` 毫米 | 毫米（`mm`） |
+| `bool StoEnd(double s)` | 当前轨迹距离目标点还剩 `s` 毫米 | 毫米（`mm`） |
+
+这四个函数主要用于 `trigger` 的 `when:` 条件。单位是参数含义，实际代码仍写作 `T(1)`、`P(50)`、`S(100)`、`StoEnd(100)`，不在数值后附加单位字符。
 
 有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；像 `setdo` 这种原 Wizard 中存在“单通道 / 多通道” Variant 的函数，会在 VS Code 中分别给出对应模板。
 
@@ -345,7 +356,7 @@ The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically
 
 For direct-value motion templates, fixed units such as `%`, `mm/s`, and `mm` are inserted automatically outside the editable numeric tab stop. For example, changing `30` to `50` yields `vp:50%` without retyping `%`. Literal templates use a Value icon, while variable templates use a Variable icon in IntelliSense.
 
-Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 built-in ARL functions have source-driven Smart structure without inventing undocumented signatures.
+Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 regular built-in ARL functions plus the four trajectory-trigger conditions have source-backed Smart structure without inventing signatures.
 
 For example:
 
@@ -354,6 +365,17 @@ waituntil cond:getdi(1)
 setdo(1, 1)
 offset(p1, dx, dy, dz, rz, ry, rx)
 ```
+
+Trajectory-trigger conditions use the same structured metadata:
+
+| Prototype | Condition becomes true when | Parameter unit |
+| --- | --- | --- |
+| `bool T(double t)` | The current path has run for `t` seconds from its start | seconds (`s`) |
+| `bool P(double p)` | The current path has completed `p%` from its start | percent (`%`) |
+| `bool S(double s)` | The current path has traveled `s` millimeters from its start | millimeters (`mm`) |
+| `bool StoEnd(double s)` | The current path is `s` millimeters from its target | millimeters (`mm`) |
+
+These four functions are intended mainly for a `trigger` `when:` condition. Units describe the parameter meaning; ARL source remains `T(1)`, `P(50)`, `S(100)`, or `StoEnd(100)` without a unit suffix.
 
 Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
 
