@@ -27,9 +27,25 @@ const {
   wizardTypeMatches
 } = require('./src/arl-intelligence.cjs');
 const languageData = require('./language-data/arl-language.json');
-const hoverReference = require('./language-data/arl-reference.json');
+const baseHoverReference = require('./language-data/arl-reference.json');
 const wizardData = require('./language-data/arl-wizard.json');
+const hoverReference = mergeHoverReference(baseHoverReference, wizardData);
 const { WorkspaceVariableIndex } = require('./src/workspace-variable-index.cjs');
+
+function mergeHoverReference(reference, wizard) {
+  const merged = {
+    ...(reference || {}),
+    entries: { ...(reference?.entries || {}) }
+  };
+  for (const [name, wizardEntry] of Object.entries(wizard?.entries || {})) {
+    const entry = { ...(merged.entries[name] || {}) };
+    for (const field of ['type', 'desc', 'desc_en', 'proto']) {
+      if (!entry[field] && wizardEntry?.[field]) entry[field] = wizardEntry[field];
+    }
+    if (Object.keys(entry).length) merged.entries[name] = entry;
+  }
+  return merged;
+}
 
 function functionRange(document, fn) {
   const endText = document.lineAt(fn.endLine).text;

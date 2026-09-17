@@ -8,7 +8,7 @@ const data = read('language-data/arl-language.json');
 const grammar = read('syntaxes/arl.tmLanguage.json');
 const cfg = read('language-configuration.json');
 
-assert.strictEqual(pkg.version, '1.0.1', 'Marketplace documentation update must use version 1.0.1');
+assert.strictEqual(pkg.version, '1.0.2', 'Marketplace Hover coverage update must use version 1.0.2');
 assert.strictEqual(pkg.displayName, '%extension.displayName%', 'Extension display name should be localized through package.nls');
 assert.strictEqual(pkg.icon, 'icon.png', 'Extension manifest must point to icon.png');
 assert(fs.existsSync(path.join(root, pkg.icon)), 'Extension icon file is missing');
@@ -180,7 +180,7 @@ assert.strictEqual('double distance=12mm'.match(numericRegex), null, 'Unit-aware
 
 
 // v0.3: exact ARL-IDE Black/Light palette and automatic matching for VS Code built-in themes.
-assert.strictEqual(pkg.version, '1.0.1');
+assert.strictEqual(pkg.version, '1.0.2');
 assert(Array.isArray(pkg.contributes.themes) && pkg.contributes.themes.length === 2, 'Expected optional Black and Light themes');
 const blackContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Black');
 const lightContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Light');
@@ -339,7 +339,7 @@ assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('!s
 assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('suggestWidgetVisible') && String(x.when||'').includes('peitianArl.smartValueReady')), 'Smart Tab must advance a complete manually typed value even while suggestions are visible');
 for(const binding of smartTabBindings) assert(String(binding.when||'').includes('peitianArl.smartSnippetActive'), 'Smart Tab must be scoped to generic ARL Smart Completion');
 
-console.log('ARL 1.0.1 manifest/icon validation passed');
+console.log('ARL 1.0.2 manifest/icon validation passed');
 
 
 // Chinese punctuation is common inside ARL strings/comments. Keep VS Code
@@ -362,4 +362,13 @@ assert(wizardData.entries.waituntil?.variants?.[0]?.params?.some(p=>p.key==='con
 assert.strictEqual(wizardData.entries.connect?.variants?.[0]?.params?.[0]?.type, 'socket', 'connect must retain the reference editor socket parameter');
 assert.strictEqual(wizardData.entries.read?.variants?.[0]?.params?.[1]?.key, 'data', 'read must retain its output data parameter');
 assert.strictEqual(wizardData.entries.getdi?.variants?.length, 2, 'getdi must retain both single-channel and multi-channel variants');
+const hoverReferenceData = require('../language-data/arl-reference.json');
+const hoverGroups = ['logic','instructions','functions','keywords','datatypes','systemVariables','parenOnlyFunctions'];
+const hoverNames = [...new Set(hoverGroups.flatMap(group => data.categories[group] || []).map(name => String(name).toLowerCase()))];
+const unresolvedHoverNames = hoverNames.filter(name => {
+  const referenceEntry = hoverReferenceData.entries?.[name];
+  const wizardEntry = wizardData.entries?.[name];
+  return !(referenceEntry?.desc || referenceEntry?.desc_en || wizardEntry?.desc || wizardEntry?.desc_en);
+}).sort();
+assert.deepStrictEqual(unresolvedHoverNames, ['p','s','stoend','t'], 'Every documented ARL symbol must have a concrete Hover description from reference or Wizard data');
 console.log('ARL Wizard metadata validation passed');

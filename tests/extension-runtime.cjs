@@ -209,6 +209,14 @@ try {
   assert(hoverText.includes('等待条件成立'));
   assert(hoverText.includes('waituntil cond:'));
 
+  const getposeHoverDoc=makeDocument('/ws/getpose-hover.arl','pose p1=getpose(j1,$FLANGE,$WORLD)');
+  const getposeHover=await registrations.hover.provideHover(getposeHoverDoc,new Position(0,10));
+  assert(getposeHover instanceof Hover);
+  const getposeHoverText=Array.isArray(getposeHover.contents)?getposeHover.contents.map(x=>x.value??String(x)).join('\n'):getposeHover.contents.value;
+  assert(getposeHoverText.includes('运动学正解：由轴位置求TCP位姿'),'getpose Hover must use its detailed Wizard description');
+  assert(getposeHoverText.includes('Forward kinematics: joint → TCP pose'),'getpose Hover must include its English Wizard description');
+  assert(getposeHoverText.includes('pose getpose(joint j, tool t, wobj w)'),'getpose Hover must show the Wizard prototype');
+
 
   const sysDoc=makeDocument('/ws/sys.arl','$Config_check');
   const sysHover=await registrations.hover.provideHover(sysDoc,new Position(0,5));

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Merged detailed Wizard descriptions and prototypes into Hover fallback data, restoring concrete bilingual Hover help for 14 built-in functions including `getpose`, `getjoint`, `cpose`, math, string, and bit functions.
+
 ## 1.0.1
 
 - Clarified that parameter filtering is generic and Wizard-driven across instructions and functions; the `p:` / `j:` / `v:` table now appears explicitly as a motion-parameter example rather than the full supported range.
