@@ -18,6 +18,7 @@ const {
   collectWeightRanges,
   getCompletionPrefix,
   getSmartCompletionTemplates,
+  getWizardHoverSignatures,
   getWizardParamContext,
   getWizardValueContext,
   collectNearbyWizardValues,
@@ -218,12 +219,13 @@ function userFunctionHover(fn, fileName) {
   return md;
 }
 
-function builtinHover(word, entry, category) {
+function builtinHover(word, entry, category, signatures=[]) {
   const md = new vscode.MarkdownString();
   const label = entry?.type || category || 'symbol';
   md.appendMarkdown(`**${word}** — PEITIAN ARL ${label}`);
   if (entry?.desc) md.appendMarkdown(`  \n${entry.desc}`);
-  if (entry?.proto) md.appendCodeblock(entry.proto, 'arl');
+  const labels=signatures.length?signatures:(entry?.proto?[entry.proto]:[]);
+  if (labels.length) md.appendCodeblock(labels.join('\n'), 'arl');
   if (entry?.desc_en) md.appendMarkdown(`  \n_${entry.desc_en}_`);
   return md;
 }
@@ -676,7 +678,8 @@ function activate(context) {
         new vscode.Position(position.line, token.start),
         new vscode.Position(position.line, token.end)
       );
-      return new vscode.Hover(builtinHover(token.word, entry, category), range);
+      const signatures=getWizardHoverSignatures(line,position.character,wizardData,hoverReference,languageData);
+      return new vscode.Hover(builtinHover(token.word, entry, category, signatures), range);
     }
   });
 

@@ -444,6 +444,7 @@ console.log('ARL 1.0.0 RC indexed system-variable completion tests passed');
 const {
   parseWizardMarkdown,
   getWizardEntry,
+  getWizardHoverSignatures,
   getWizardParamContext,
   buildWizardParameterCandidates,
   getWizardSmartTemplates
@@ -583,6 +584,10 @@ const dualGetdi={entries:{getdi:{name:'getdi',type:'function',proto:'bool getdi(
   {name:'单通道',params:[{key:'chan',type:'int',req:true,opt:false,candidates:[]}]},
   {name:'多通道',params:[{key:'from',type:'int',req:true,opt:false,candidates:[]},{key:'to',type:'int',req:true,opt:false,candidates:[]}]}
 ]}}};
+let hoverSignatures=getWizardHoverSignatures('bool active=getdi(45,48)',14,dualGetdi,reference,languageData);
+assert.deepStrictEqual(hoverSignatures.slice(0,2),['bool getdi(int from, int to)','bool getdi(int chan)'],'Two-argument Hover must rank the matching Wizard shape first while retaining the other valid shape');
+hoverSignatures=getWizardHoverSignatures('bool active=getdi(45)',14,dualGetdi,reference,languageData);
+assert.deepStrictEqual(hoverSignatures.slice(0,2),['bool getdi(int chan)','bool getdi(int from, int to)'],'Single-argument Hover must rank the matching Wizard shape first');
 wizCtx=getWizardParamContext('getdi(1, t','getdi(1, t'.length,dualGetdi,reference,languageData);
 assert.strictEqual(wizCtx.variantIndex,1,'A second getdi argument must select its two-channel variant');
 assert.strictEqual(wizCtx.parameter,'to');
@@ -796,6 +801,27 @@ const saveSvCandidates=buildWizardParameterCandidates({
 });
 assert.deepStrictEqual(saveSvCandidates.map(x=>x.label),['"I"','"D"','"B"','"P"','"J"','"S"'],'savesv must preserve original MD-only candidate rule');
 console.log('ARL original TIPS broad-coverage tests passed');
+
+// Hover is also Wizard-driven: every multi-shape entry keeps all distinct
+// forms, and every optional shape marks the optional section explicitly.
+const multiShapeEntries=Object.entries(packagedWizard.entries).filter(([,entry])=>(entry.variants||[]).length>1);
+for(const [name,entry] of multiShapeEntries){
+  const signatures=getWizardHoverSignatures(name,0,packagedWizard,reference,languageData);
+  assert(signatures.length>1,`Multi-shape ${name} must expose more than one Hover signature`);
+  assert.strictEqual(new Set(signatures).size,signatures.length,`Multi-shape ${name} Hover signatures must be distinct`);
+}
+const optionalEntries=Object.entries(packagedWizard.entries).filter(([,entry])=>(entry.variants||[]).some(variant=>(variant.params||[]).some(param=>param.req===false || param.opt===true)));
+let optionalVariantCount=0;
+for(const [name] of optionalEntries){
+  const signatures=getWizardHoverSignatures(name,0,packagedWizard,reference,languageData);
+  const entry=packagedWizard.entries[name];
+  const entryOptionalVariantCount=(entry.variants||[]).filter(variant=>(variant.params||[]).some(param=>param.req===false || param.opt===true)).length;
+  optionalVariantCount+=entryOptionalVariantCount;
+  assert(signatures.filter(signature=>signature.includes('[')).length>=entryOptionalVariantCount,`Every optional shape for ${name} must be visibly bracketed in Hover`);
+}
+assert(getWizardHoverSignatures('bool ok=getip(ip)',10,packagedWizard,reference,languageData).includes('bool getip(string ip [, string if_name])'),'Function Hover must retain the documented optional-parameter notation');
+assert(getWizardHoverSignatures('movej',0,packagedWizard,reference,languageData).some(signature=>signature.includes('vp:<double>%') && signature.includes('sp:<double>%')),'Alternative named instruction parameters must keep their names, types and units in Hover');
+console.log(`ARL Wizard Hover coverage tests passed (${multiShapeEntries.length} multi-shape entries, ${optionalVariantCount} optional shapes)`);
 
 // Every built-in function listed by the original ARL editor now has a Smart
 // structure source: exact Wizard variants where available, otherwise the exact

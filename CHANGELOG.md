@@ -3,6 +3,7 @@
 ## 1.0.2
 
 - Merged detailed Wizard descriptions and prototypes into Hover fallback data, restoring concrete bilingual Hover help for 14 built-in functions including `getpose`, `getjoint`, `cpose`, math, string, and bit functions.
+- Made Hover signatures fully Wizard-driven: all documented instruction/function shapes are shown, the shape matching the current arguments appears first, and optional parameters are visibly bracketed.
 
 ## 1.0.1
 

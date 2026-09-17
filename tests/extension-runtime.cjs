@@ -217,6 +217,22 @@ try {
   assert(getposeHoverText.includes('Forward kinematics: joint → TCP pose'),'getpose Hover must include its English Wizard description');
   assert(getposeHoverText.includes('pose getpose(joint j, tool t, wobj w)'),'getpose Hover must show the Wizard prototype');
 
+  const getdiMultiHoverDoc=makeDocument('/ws/getdi-multi-hover.arl','bool active=getdi(45,48)');
+  const getdiMultiHover=await registrations.hover.provideHover(getdiMultiHoverDoc,new Position(0,14));
+  const getdiMultiHoverText=Array.isArray(getdiMultiHover.contents)?getdiMultiHover.contents.map(x=>x.value??String(x)).join('\n'):getdiMultiHover.contents.value;
+  assert(getdiMultiHoverText.includes('bool getdi(int from, int to)'),'Two-argument getdi Hover must show its matching multi-channel signature');
+  assert(getdiMultiHoverText.indexOf('bool getdi(int from, int to)')<getdiMultiHoverText.indexOf('bool getdi(int chan)'),'The signature matching the current getdi call must appear first');
+
+  const getdiSingleHoverDoc=makeDocument('/ws/getdi-single-hover.arl','bool active=getdi(45)');
+  const getdiSingleHover=await registrations.hover.provideHover(getdiSingleHoverDoc,new Position(0,14));
+  const getdiSingleHoverText=Array.isArray(getdiSingleHover.contents)?getdiSingleHover.contents.map(x=>x.value??String(x)).join('\n'):getdiSingleHover.contents.value;
+  assert(getdiSingleHoverText.indexOf('bool getdi(int chan)')<getdiSingleHoverText.indexOf('bool getdi(int from, int to)'),'Single-argument getdi Hover must rank its matching signature first');
+
+  const getipHoverDoc=makeDocument('/ws/getip-hover.arl','bool ok=getip(ip)');
+  const getipHover=await registrations.hover.provideHover(getipHoverDoc,new Position(0,10));
+  const getipHoverText=Array.isArray(getipHover.contents)?getipHover.contents.map(x=>x.value??String(x)).join('\n'):getipHover.contents.value;
+  assert(getipHoverText.includes('bool getip(string ip [, string if_name])'),'Optional function parameters must be visibly marked in Hover');
+
 
   const sysDoc=makeDocument('/ws/sys.arl','$Config_check');
   const sysHover=await registrations.hover.provideHover(sysDoc,new Position(0,5));

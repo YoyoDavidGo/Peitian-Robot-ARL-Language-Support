@@ -284,15 +284,121 @@ function chooseByArity(items, count, activeIndex=0, getLength=item=>item?.parame
     || candidates.sort((a,b)=>getLength(b)-getLength(a))[0];
 }
 
+function wizardReturnType(entry,name){
+  const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return String(entry?.proto||'').match(new RegExp(`^\\s*(.*?)\\s+${escaped}\\s*\\(`,'i'))?.[1]?.trim() || '';
+}
+
+function wizardParamIsOptional(param){
+  return param?.req===false || param?.opt===true;
+}
+
+function formatWizardParamList(params, render, separator=', '){
+  let label='';
+  for(const param of params||[]){
+    const value=render(param);
+    if(wizardParamIsOptional(param)) label+=label?` [${separator.trimEnd()} ${value}]`:`[${value}]`;
+    else label+=`${label?separator:''}${value}`;
+  }
+  return label;
+}
+
+function formatWizardFunctionSignature(entry,name,variant){
+  const parameters=formatWizardParamList(variant?.params||[],param=>`${param.type||'any'} ${param.key}`.trim());
+  const returnType=wizardReturnType(entry,name);
+  return `${returnType?returnType+' ':''}${name}(${parameters})`;
+}
+
+function formatWizardInstructionSignature(entry,name,variant){
+  const separator=variant?.sep===';'?'; ':', ';
+  const parameters=formatWizardParamList(variant?.params||[],param=>{
+    const type=`<${param.type||'any'}>`;
+    const value=instructionParamUsesColon(entry,param.key)?`${param.key}:${type}`:type;
+    return `${value}${param.unit||''}`;
+  },separator);
+  return `${name}${parameters?' '+parameters:''}`;
+}
+
+function wordAtCharacter(text,character){
+  const source=String(text||'');
+  const at=Math.max(0,Math.min(Number(character)||0,source.length));
+  let start=at,end=at;
+  if(start===source.length || !/[A-Za-z0-9_]/.test(source[start]||'')) start--;
+  if(start<0 || !/[A-Za-z0-9_]/.test(source[start]||'')) return null;
+  end=start+1;
+  while(start>0 && /[A-Za-z0-9_]/.test(source[start-1])) start--;
+  while(end<source.length && /[A-Za-z0-9_]/.test(source[end])) end++;
+  const word=source.slice(start,end);
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(word)?{word,start,end}:null;
+}
+
+function getWizardHoverSignatures(lineText,character,wizard,reference,languageData=defaultLanguageData){
+  const line=String(lineText||'');
+  const code=stripStringsAndComments(line);
+  const token=wordAtCharacter(code,character);
+  if(!token) return [];
+  const name=token.word.toLowerCase();
+  const referenceEntry=lookupHoverEntry(name,reference);
+  const functionNames=languageData.categories?.functions||[];
+  const parenOnlyNames=languageData.categories?.parenOnlyFunctions||[];
+  const functionStyle=referenceEntry?.type==='function'
+    || functionNames.some(item=>String(item).toLowerCase()===name)
+    || parenOnlyNames.some(item=>String(item).toLowerCase()===name);
+  const entry=resolveWizardEntry(wizard,name,reference,functionStyle?'function':'instruction');
+  if(!entry || !Array.isArray(entry.variants) || !entry.variants.length) return [];
+  const isFunction=functionStyle || entry.type==='function';
+  const instructionNames=languageData.categories?.instructions||[];
+  const isInstruction=entry.type==='instruction'
+    || referenceEntry?.type==='instruction'
+    || instructionNames.some(item=>String(item).toLowerCase()===name);
+  if(!isFunction && !isInstruction) return [];
+  const ranked=entry.variants.map((variant,index)=>({variant,index,score:index}));
+
+  if(isFunction){
+    const after=code.slice(token.end);
+    const relativeOpen=after.search(/^\s*\(/);
+    if(relativeOpen>=0){
+      const open=token.end+after.indexOf('(',relativeOpen);
+      const close=findMatchingCloseParen(code,open);
+      const inside=code.slice(open+1,close>=0?close:code.length);
+      const supplied=argumentCount(inside);
+      for(const item of ranked){
+        const params=item.variant?.params||[];
+        const required=params.filter(param=>!wizardParamIsOptional(param)).length;
+        const compatible=supplied>=required && supplied<=params.length;
+        item.score=(compatible?0:100)+Math.abs(params.length-supplied)*10+item.index;
+      }
+    }
+  } else {
+    const suppliedKeys=splitTopLevel(code.slice(token.end)).map(piece=>piece.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:/)?.[1]?.toLowerCase()).filter(Boolean);
+    if(suppliedKeys.length){
+      for(const item of ranked){
+        const keys=new Set((item.variant?.params||[]).map(param=>String(param.key||'').toLowerCase()));
+        const unsupported=suppliedKeys.filter(key=>!keys.has(key)).length;
+        item.score=unsupported*100+Math.max(0,keys.size-suppliedKeys.length)*10+item.index;
+      }
+    }
+  }
+
+  ranked.sort((a,b)=>a.score-b.score);
+  const seen=new Set();
+  const signatures=[];
+  for(const item of ranked){
+    const signature=isFunction
+      ?formatWizardFunctionSignature(entry,name,item.variant)
+      :formatWizardInstructionSignature(entry,name,item.variant);
+    if(signature && !seen.has(signature)){seen.add(signature);signatures.push(signature);}
+  }
+  return signatures;
+}
+
 function wizardSignature(entry,name,count,activeIndex){
   const variants=entry?.variants||[];
   const variant=chooseByArity(variants,count,activeIndex,item=>item?.params?.length||0);
   if(!variant) return null;
   const parameters=(variant.params||[]).map(param=>`${param.type||'any'} ${param.key}`.trim());
-  const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const returnType=String(entry?.proto||'').match(new RegExp(`^\\s*(.*?)\\s+${escaped}\\s*\\(`,'i'))?.[1]?.trim() || '';
   return {
-    label:`${returnType?returnType+' ':''}${name}(${parameters.join(', ')})`,
+    label:formatWizardFunctionSignature(entry,name,variant),
     parameters,
     variantIndex:variants.indexOf(variant)
   };
@@ -793,7 +899,7 @@ function snippetEscapeDefault(text){
 
 function instructionParamUsesColon(entry,key){
   const escaped=String(key||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return new RegExp(`(?:^|[\\s,\\[])${escaped}\\s*:`, 'i').test(String(entry?.proto||''));
+  return new RegExp(`(?:^|[\\s,\\[|])${escaped}\\s*:`, 'i').test(String(entry?.proto||''));
 }
 
 function wizardEntryLooksFunctionStyle(entry,name){
@@ -1147,6 +1253,7 @@ module.exports = {
   getWizardEntry,
   synthesizeWizardEntryFromProto,
   resolveWizardEntry,
+  getWizardHoverSignatures,
   getWizardParamContext,
   getWizardValueContext,
   collectNearbyWizardValues,
