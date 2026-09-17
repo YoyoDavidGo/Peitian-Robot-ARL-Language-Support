@@ -2,6 +2,8 @@
 
 ## 1.0.2
 
+- Restored per-parameter bilingual explanations in Hover and Signature Help, including each parameter's type, required/optional state, and unit.
+- Corrected overload handling for `rand` and `tostr`, retained complete motion-instruction parameter summaries, and stopped trajectory-trigger Hover from appearing on ordinary variables named `p`, `t`, or `s`.
 - Merged detailed Wizard descriptions and prototypes into Hover fallback data, restoring concrete bilingual Hover help for 14 built-in functions including `getpose`, `getjoint`, `cpose`, math, string, and bit functions.
 - Made Hover signatures fully Wizard-driven: all documented instruction/function shapes are shown, the shape matching the current arguments appears first, and optional parameters are visibly bracketed.
 - Added complete bilingual Hover, Signature Help, Smart Completion, parameter types, and units for the trajectory-trigger functions `T()`, `P()`, `S()`, and `StoEnd()`.

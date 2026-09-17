@@ -445,6 +445,7 @@ const {
   parseWizardMarkdown,
   getWizardEntry,
   getWizardHoverSignatures,
+  getWizardHoverParameters,
   getWizardParamContext,
   buildWizardParameterCandidates,
   getWizardSmartTemplates
@@ -821,6 +822,23 @@ for(const [name] of optionalEntries){
 }
 assert(getWizardHoverSignatures('bool ok=getip(ip)',10,packagedWizard,reference,languageData).includes('bool getip(string ip [, string if_name])'),'Function Hover must retain the documented optional-parameter notation');
 assert(getWizardHoverSignatures('movej',0,packagedWizard,reference,languageData).some(signature=>signature.includes('vp:<double>%') && signature.includes('sp:<double>%')),'Alternative named instruction parameters must keep their names, types and units in Hover');
+assert.deepStrictEqual(getWizardHoverSignatures('rand()',1,packagedWizard,reference,languageData),['int rand()','double rand(double start, double end)'],'Explicit function overloads must retain each documented return type');
+const tostrHoverSignatures=getWizardHoverSignatures('tostr(1.25,2)',2,packagedWizard,reference,languageData);
+assert(tostrHoverSignatures.includes('string tostr(double v, int precision)'),'tostr must retain its documented precision overload');
+assert(!tostrHoverSignatures.some(signature=>signature.includes('int precision, int v')),'tostr must not fabricate a four-argument overload from merged Wizard rows');
+const tostrTemplates=getSmartCompletionTemplates('tostr','function',reference,packagedWizard);
+assert(tostrTemplates.some(template=>(template.snippet.match(/\$\{/g)||[]).length===2),'tostr Smart Completion must retain the two-argument precision overload');
+assert(!tostrTemplates.some(template=>(template.snippet.match(/\$\{/g)||[]).length===4),'tostr Smart Completion must not expose the malformed four-argument Wizard row');
+assert(getWizardHoverSignatures('ptp p:p1,sl:10mm,dura:2',1,packagedWizard,reference,languageData).includes('ptp p:<pose>, [v:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]'),'Partial instruction variants must retain the complete documented proto summary');
+const getposeHoverParameters=getWizardHoverParameters('getpose',packagedWizard,reference,languageData);
+assert.deepStrictEqual(getposeHoverParameters.map(parameter=>[parameter.key,parameter.type,parameter.desc]),[
+  ['j','joint','轴位置'],['t','tool','工具坐标系'],['w','wobj','工件坐标系']
+],'Hover parameter details must preserve the original Wizard key, type and explanation');
+for(const [name,entry] of Object.entries(packagedWizard.entries).filter(([,entry])=>['function','instruction'].includes(entry.type) && entry.variants?.length)){
+  const parameters=getWizardHoverParameters(name,packagedWizard,reference,languageData);
+  assert(parameters.length>0,`${name} must expose Wizard parameter details`);
+  assert(parameters.every(parameter=>parameter.desc || parameter.desc_en),`${name} Hover parameters must include explanations`);
+}
 console.log(`ARL Wizard Hover coverage tests passed (${multiShapeEntries.length} multi-shape entries, ${optionalVariantCount} optional shapes)`);
 
 const trajectoryTriggerCases = [

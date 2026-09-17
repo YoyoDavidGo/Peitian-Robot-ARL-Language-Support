@@ -19,6 +19,7 @@ const {
   getCompletionPrefix,
   getSmartCompletionTemplates,
   getWizardHoverSignatures,
+  getWizardHoverParameters,
   getWizardParamContext,
   getWizardValueContext,
   collectNearbyWizardValues,
@@ -162,6 +163,7 @@ const categoryIndex = (() => {
   }
   return map;
 })();
+const parenOnlyFunctionNames = new Set((languageData.categories?.parenOnlyFunctions || []).map(value => String(value).toLowerCase()));
 
 async function openReferencedDocument(sourceDocument, fileStem) {
   const normalizedStem = String(fileStem || '').replace(/\.(?:arl|txt)$/i, '');
@@ -219,13 +221,23 @@ function userFunctionHover(fn, fileName) {
   return md;
 }
 
-function builtinHover(word, entry, category, signatures=[]) {
+function builtinHover(word, entry, category, signatures=[], parameters=[]) {
   const md = new vscode.MarkdownString();
   const label = entry?.type || category || 'symbol';
   md.appendMarkdown(`**${word}** — PEITIAN ARL ${label}`);
   if (entry?.desc) md.appendMarkdown(`  \n${entry.desc}`);
   const labels=signatures.length?signatures:(entry?.proto?[entry.proto]:[]);
   if (labels.length) md.appendCodeblock(labels.join('\n'), 'arl');
+  if (parameters.length) {
+    md.appendMarkdown(`  \n**参数 / Parameters**`);
+    for (const parameter of parameters) {
+      const requirement=parameter.required?'必填':'可选';
+      const unit=parameter.unit?` · 单位 \`${parameter.unit}\``:'';
+      const description=parameter.desc?` — ${parameter.desc}`:'';
+      const english=parameter.desc_en?` / _${parameter.desc_en}_`:'';
+      md.appendMarkdown(`  \n- \`${parameter.key}\` · \`${parameter.type}\` · ${requirement}${unit}${description}${english}`);
+    }
+  }
   if (entry?.desc_en) md.appendMarkdown(`  \n_${entry.desc_en}_`);
   return md;
 }
@@ -294,7 +306,7 @@ function createSignatureHelp(ctx) {
   if (!ctx) return undefined;
   const help = new vscode.SignatureHelp();
   const sig = new vscode.SignatureInformation(ctx.label, ctx.documentation || undefined);
-  sig.parameters = (ctx.parameters || []).map(p => new vscode.ParameterInformation(p));
+  sig.parameters = (ctx.parameters || []).map((p,index) => new vscode.ParameterInformation(p,ctx.parameterDocumentation?.[index] || undefined));
   help.signatures = [sig];
   help.activeSignature = 0;
   help.activeParameter = ctx.activeParameter || 0;
@@ -667,6 +679,8 @@ function activate(context) {
       const token = wordAt(line, position.character);
       if (!token) return undefined;
 
+      if (parenOnlyFunctionNames.has(token.word.toLowerCase()) && !/^\s*\(/.test(line.slice(token.end))) return undefined;
+
       const localFn = findFunction(document.getText(), token.word);
       if (localFn) return new vscode.Hover(userFunctionHover(localFn, ''));
 
@@ -679,7 +693,8 @@ function activate(context) {
         new vscode.Position(position.line, token.end)
       );
       const signatures=getWizardHoverSignatures(line,position.character,wizardData,hoverReference,languageData);
-      return new vscode.Hover(builtinHover(token.word, entry, category, signatures), range);
+      const parameters=getWizardHoverParameters(token.word,wizardData,hoverReference,languageData);
+      return new vscode.Hover(builtinHover(token.word, entry, category, signatures, parameters), range);
     }
   });
 

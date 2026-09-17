@@ -216,6 +216,9 @@ try {
   assert(getposeHoverText.includes('运动学正解：由轴位置求TCP位姿'),'getpose Hover must use its detailed Wizard description');
   assert(getposeHoverText.includes('Forward kinematics: joint → TCP pose'),'getpose Hover must include its English Wizard description');
   assert(getposeHoverText.includes('pose getpose(joint j, tool t, wobj w)'),'getpose Hover must show the Wizard prototype');
+  for(const detail of ['`j`','`joint`','轴位置','`t`','`tool`','工具坐标系','`w`','`wobj`','工件坐标系']) {
+    assert(getposeHoverText.includes(detail),`getpose Hover must include parameter detail ${detail}`);
+  }
 
   const getdiMultiHoverDoc=makeDocument('/ws/getdi-multi-hover.arl','bool active=getdi(45,48)');
   const getdiMultiHover=await registrations.hover.provideHover(getdiMultiHoverDoc,new Position(0,14));
@@ -238,6 +241,28 @@ try {
   const pathPercentHoverText=Array.isArray(pathPercentHover.contents)?pathPercentHover.contents.map(x=>x.value??String(x)).join('\n'):pathPercentHover.contents.value;
   assert(pathPercentHoverText.includes('当前运动轨迹从起点开始是否已经完成 p%'),'P Hover must explain the user-supplied path-percentage semantics');
   assert(pathPercentHoverText.includes('bool P(double p)'),'P Hover must show its canonical function prototype');
+
+  const plainPDoc=makeDocument('/ws/plain-p.arl','double p=50');
+  assert.strictEqual(await registrations.hover.provideHover(plainPDoc,new Position(0,7)),undefined,'Paren-only P must not show function Hover when used as a variable');
+  const plainTDoc=makeDocument('/ws/plain-t.arl','double t=1');
+  assert.strictEqual(await registrations.hover.provideHover(plainTDoc,new Position(0,7)),undefined,'Paren-only T must not show function Hover when used as a variable');
+
+  const randNoArgDoc=makeDocument('/ws/rand-no-arg.arl','int value=rand()');
+  const randNoArgHover=await registrations.hover.provideHover(randNoArgDoc,new Position(0,11));
+  const randNoArgHoverText=Array.isArray(randNoArgHover.contents)?randNoArgHover.contents.map(x=>x.value??String(x)).join('\n'):randNoArgHover.contents.value;
+  assert(randNoArgHoverText.includes('int rand()'),'rand Hover must retain its no-argument overload');
+  assert(randNoArgHoverText.includes('double rand(double start, double end)'),'rand Hover must retain the ranged double overload and return type');
+
+  const tostrHoverDoc=makeDocument('/ws/tostr-hover.arl','string value=tostr(1.25,2)');
+  const tostrHover=await registrations.hover.provideHover(tostrHoverDoc,new Position(0,15));
+  const tostrHoverText=Array.isArray(tostrHover.contents)?tostrHover.contents.map(x=>x.value??String(x)).join('\n'):tostrHover.contents.value;
+  assert(tostrHoverText.includes('string tostr(double v, int precision)'),'tostr Hover must retain its two-argument precision overload');
+  assert(!tostrHoverText.includes('int precision, int v'),'tostr Hover must not combine separate forms into a fabricated four-argument signature');
+
+  const ptpCompleteDoc=makeDocument('/ws/ptp-complete-hover.arl','ptp p:p1,sl:10mm,dura:2');
+  const ptpCompleteHover=await registrations.hover.provideHover(ptpCompleteDoc,new Position(0,1));
+  const ptpCompleteHoverText=Array.isArray(ptpCompleteHover.contents)?ptpCompleteHover.contents.map(x=>x.value??String(x)).join('\n'):ptpCompleteHover.contents.value;
+  assert(ptpCompleteHoverText.includes('ptp p:<pose>, [v:|vp:], [s:|sl:|sp:], [t:], [w:], [dura:]'),'ptp Hover must retain the complete documented parameter range when Wizard variants are partial');
 
 
   const sysDoc=makeDocument('/ws/sys.arl','$Config_check');
@@ -710,6 +735,10 @@ try {
   assert(sig instanceof SignatureHelp);
   assert(sig.signatures[0].label.includes('offset('));
   assert.strictEqual(sig.activeParameter,3);
+
+  const getposeSigDoc=makeDocument('/ws/getpose-signature.arl','pose p=getpose(j1,');
+  const getposeSig=registrations.signature.provideSignatureHelp(getposeSigDoc,new Position(0,'pose p=getpose(j1,'.length));
+  assert(getposeSig.signatures[0].parameters[1].documentation.includes('工具坐标系'),'Signature Help must expose Wizard parameter explanations');
 
   const userHover=await registrations.hover.provideHover(document,new Position(5,6));
   const userText=Array.isArray(userHover.contents)?userHover.contents.map(x=>x.value??String(x)).join('\n'):userHover.contents.value;

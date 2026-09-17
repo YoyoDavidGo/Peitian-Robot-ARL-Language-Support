@@ -293,6 +293,16 @@ function wizardParamIsOptional(param){
   return param?.req===false || param?.opt===true;
 }
 
+function wizardVariantHasUniqueParameterNames(variant){
+  const names=(variant?.params||[]).map(param=>String(param.key||'').toLowerCase()).filter(Boolean);
+  return new Set(names).size===names.length;
+}
+
+function usableWizardVariants(entry,isFunction){
+  const variants=Array.isArray(entry?.variants)?entry.variants:[];
+  return isFunction?variants.filter(wizardVariantHasUniqueParameterNames):variants;
+}
+
 function formatWizardParamList(params, render, separator=', '){
   let label='';
   for(const param of params||[]){
@@ -332,42 +342,125 @@ function wordAtCharacter(text,character){
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(word)?{word,start,end}:null;
 }
 
+function resolveWizardHoverContext(name,wizard,reference,languageData=defaultLanguageData){
+  const key=String(name||'').toLowerCase();
+  if(!key) return null;
+  const referenceEntry=lookupHoverEntry(key,reference);
+  const functionNames=languageData.categories?.functions||[];
+  const parenOnlyNames=languageData.categories?.parenOnlyFunctions||[];
+  const functionStyle=referenceEntry?.type==='function'
+    || functionNames.some(item=>String(item).toLowerCase()===key)
+    || parenOnlyNames.some(item=>String(item).toLowerCase()===key);
+  const entry=resolveWizardEntry(wizard,key,reference,functionStyle?'function':'instruction');
+  if(!entry) return null;
+  const isFunction=functionStyle || entry.type==='function';
+  const instructionNames=languageData.categories?.instructions||[];
+  const isInstruction=entry.type==='instruction'
+    || referenceEntry?.type==='instruction'
+    || instructionNames.some(item=>String(item).toLowerCase()===key);
+  return isFunction || isInstruction?{key,entry,referenceEntry,isFunction,isInstruction}:null;
+}
+
+function rankHoverSignaturesByArity(signatures,supplied){
+  return signatures.map((signature,index)=>({signature,index,score:Math.abs((signature.parameters||[]).length-supplied)*10+index}))
+    .sort((a,b)=>a.score-b.score)
+    .map(item=>item.signature);
+}
+
+function instructionProtoParameterKeys(proto){
+  const keys=[];
+  const seen=new Set();
+  const re=/([A-Za-z_][A-Za-z0-9_]*)\s*:/g;
+  let match;
+  while((match=re.exec(String(proto||'')))!==null){
+    const key=match[1].toLowerCase();
+    if(!seen.has(key)){seen.add(key);keys.push(key);}
+  }
+  return keys;
+}
+
+function normalizeHoverParameterType(type){
+  const value=String(type||'any').toLowerCase().replace(/\s+/g,'');
+  return value==='anytype'?'any':value;
+}
+
+function findWizardParameter(entry,key,type=''){
+  const targetKey=String(key||'').toLowerCase();
+  const targetType=normalizeHoverParameterType(type);
+  const all=(entry?.variants||[]).flatMap(variant=>variant.params||[]);
+  const candidates=all.filter(param=>String(param.key||'').toLowerCase()===targetKey);
+  const exact=candidates.find(param=>normalizeHoverParameterType(param.type)===targetType);
+  if(exact || candidates[0]) return exact || candidates[0];
+
+  // A few compact TIPS prototypes intentionally shorten the names used by the
+  // detailed Wizard table (for example s -> number_string and
+  // base -> number_base). Prefer an explicit suffix relationship before using
+  // a type-only match so the attached explanation still describes this
+  // parameter rather than another parameter with the same primitive type.
+  const aliased=all.find(param=>{
+    const sourceKey=String(param.key||'').toLowerCase();
+    return sourceKey.endsWith(`_${targetKey}`) || targetKey.endsWith(`_${sourceKey}`);
+  });
+  if(aliased) return aliased;
+
+  const sameType=all.filter(param=>normalizeHoverParameterType(param.type)===targetType);
+  return sameType.length===1 ? sameType[0] : null;
+}
+
+function findSharedInstructionParameter(wizard,key){
+  const groups=new Map();
+  for(const entry of Object.values(wizard?.entries||wizard||{})){
+    if(entry?.type!=='instruction') continue;
+    for(const variant of entry.variants||[]){
+      for(const param of variant.params||[]){
+        if(String(param.key||'').toLowerCase()!==String(key||'').toLowerCase()) continue;
+        const identity=[param.type,param.unit,param.desc,param.desc_en].map(value=>String(value||'').toLowerCase()).join('\u0000');
+        const group=groups.get(identity)||{param,count:0};
+        group.count++;
+        groups.set(identity,group);
+      }
+    }
+  }
+  return [...groups.values()].sort((a,b)=>b.count-a.count)[0]?.param || null;
+}
+
+function instructionProtoParameterIsOptional(proto,key){
+  const escaped=String(key||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return new RegExp(`\\[[^\\]]*\\b${escaped}\\s*:`, 'i').test(String(proto||''));
+}
+
 function getWizardHoverSignatures(lineText,character,wizard,reference,languageData=defaultLanguageData){
   const line=String(lineText||'');
   const code=stripStringsAndComments(line);
   const token=wordAtCharacter(code,character);
   if(!token) return [];
-  const name=token.word.toLowerCase();
-  const referenceEntry=lookupHoverEntry(name,reference);
-  const functionNames=languageData.categories?.functions||[];
-  const parenOnlyNames=languageData.categories?.parenOnlyFunctions||[];
-  const functionStyle=referenceEntry?.type==='function'
-    || functionNames.some(item=>String(item).toLowerCase()===name)
-    || parenOnlyNames.some(item=>String(item).toLowerCase()===name);
-  const entry=resolveWizardEntry(wizard,name,reference,functionStyle?'function':'instruction');
-  if(!entry || !Array.isArray(entry.variants) || !entry.variants.length) return [];
-  const isFunction=functionStyle || entry.type==='function';
-  const instructionNames=languageData.categories?.instructions||[];
-  const isInstruction=entry.type==='instruction'
-    || referenceEntry?.type==='instruction'
-    || instructionNames.some(item=>String(item).toLowerCase()===name);
-  if(!isFunction && !isInstruction) return [];
-  const ranked=entry.variants.map((variant,index)=>({variant,index,score:index}));
+  const context=resolveWizardHoverContext(token.word,wizard,reference,languageData);
+  if(!context) return [];
+  const {key:name,entry,referenceEntry,isFunction}=context;
+  const variants=usableWizardVariants(entry,isFunction);
+  if(!variants.length) return [];
+  const ranked=variants.map((variant,index)=>({variant,index,score:index}));
 
   if(isFunction){
     const after=code.slice(token.end);
     const relativeOpen=after.search(/^\s*\(/);
+    let supplied=null;
     if(relativeOpen>=0){
       const open=token.end+after.indexOf('(',relativeOpen);
       const close=findMatchingCloseParen(code,open);
       const inside=code.slice(open+1,close>=0?close:code.length);
-      const supplied=argumentCount(inside);
+      supplied=argumentCount(inside);
       for(const item of ranked){
         const params=item.variant?.params||[];
         const required=params.filter(param=>!wizardParamIsOptional(param)).length;
         const compatible=supplied>=required && supplied<=params.length;
         item.score=(compatible?0:100)+Math.abs(params.length-supplied)*10+item.index;
       }
+    }
+    const protoSignatures=protoFunctionSignatures(referenceEntry?.proto,name);
+    if(protoSignatures.length>1){
+      const ordered=supplied===null?protoSignatures:rankHoverSignaturesByArity(protoSignatures,supplied);
+      return ordered.map(signature=>signature.label);
     }
   } else {
     const suppliedKeys=splitTopLevel(code.slice(token.end)).map(piece=>piece.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:/)?.[1]?.toLowerCase()).filter(Boolean);
@@ -390,18 +483,79 @@ function getWizardHoverSignatures(lineText,character,wizard,reference,languageDa
       :formatWizardInstructionSignature(entry,displayName,item.variant);
     if(signature && !seen.has(signature)){seen.add(signature);signatures.push(signature);}
   }
+  if(!isFunction){
+    const proto=String(referenceEntry?.proto||entry.proto||'').trim();
+    const variantKeys=new Set(variants.flatMap(variant=>(variant.params||[]).map(param=>String(param.key||'').toLowerCase())));
+    const missingKeys=instructionProtoParameterKeys(proto).filter(key=>!variantKeys.has(key));
+    if(proto && missingKeys.length){
+      const suppliedKeys=splitTopLevel(code.slice(token.end)).map(piece=>piece.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:/)?.[1]?.toLowerCase()).filter(Boolean);
+      if(suppliedKeys.some(key=>missingKeys.includes(key))) signatures.unshift(proto);
+      else signatures.push(proto);
+    }
+  }
   return signatures;
 }
 
+function getWizardHoverParameters(name,wizard,reference,languageData=defaultLanguageData){
+  const context=resolveWizardHoverContext(name,wizard,reference,languageData);
+  if(!context) return [];
+  const parameters=[];
+  const byIdentity=new Map();
+  const add=(param,required=!wizardParamIsOptional(param))=>{
+    if(!param) return;
+    const item={
+      key:String(param.key||''), type:String(param.type||'any'), unit:String(param.unit||''),
+      required:!!required, desc:String(param.desc||''), desc_en:String(param.desc_en||'')
+    };
+    const identity=[item.key,item.type,item.unit,item.desc,item.desc_en].map(value=>value.toLowerCase()).join('\u0000');
+    const existing=byIdentity.get(identity);
+    if(existing){existing.required=existing.required && item.required;return;}
+    byIdentity.set(identity,item);
+    parameters.push(item);
+  };
+
+  const proto=String(context.referenceEntry?.proto||context.entry.proto||'');
+  const protoSignatures=context.isFunction?protoFunctionSignatures(proto,context.key):[];
+  if(context.isFunction && protoSignatures.length>1){
+    for(const signature of protoSignatures){
+      const open=signature.label.indexOf('('),close=signature.label.lastIndexOf(')');
+      const parsed=open>=0 && close>open?parseProtoFunctionParams(signature.label.slice(open+1,close)):[];
+      for(const protoParam of parsed||[]){
+        const source=findWizardParameter(context.entry,protoParam.key,protoParam.type);
+        add({...protoParam,desc:source?.desc||'',desc_en:source?.desc_en||'',unit:source?.unit||''},!wizardParamIsOptional(protoParam));
+      }
+    }
+  } else {
+    for(const variant of usableWizardVariants(context.entry,context.isFunction)) for(const param of variant.params||[]) add(param);
+  }
+
+  if(context.isInstruction){
+    const documentedKeys=new Set(parameters.map(parameter=>parameter.key.toLowerCase()));
+    for(const key of instructionProtoParameterKeys(proto)){
+      if(documentedKeys.has(key)) continue;
+      const shared=findSharedInstructionParameter(wizard,key);
+      if(shared){add(shared,!instructionProtoParameterIsOptional(proto,key));documentedKeys.add(key);}
+    }
+  }
+  return parameters;
+}
+
 function wizardSignature(entry,name,count,activeIndex){
-  const variants=entry?.variants||[];
+  const variants=usableWizardVariants(entry,true);
   const variant=chooseByArity(variants,count,activeIndex,item=>item?.params?.length||0);
   if(!variant) return null;
   const parameters=(variant.params||[]).map(param=>`${param.type||'any'} ${param.key}`.trim());
   return {
     label:formatWizardFunctionSignature(entry,entry.name||name,variant),
     parameters,
-    variantIndex:variants.indexOf(variant)
+    parameterDocumentation:(variant.params||[]).map(param=>{
+      const parts=[];
+      if(param.desc) parts.push(param.desc);
+      if(param.desc_en) parts.push(param.desc_en);
+      if(param.unit) parts.push(`unit: ${param.unit}`);
+      return parts.join(' / ');
+    }),
+    variantIndex:(entry?.variants||[]).indexOf(variant)
   };
 }
 
@@ -454,7 +608,7 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
           || chooseByArity(protoSignatures,count,active)
           || {label:`${name}(...)`,parameters:[]};
         const params=selected.parameters||[];
-        return {name,label:selected.label,parameters:params,activeParameter:params.length?Math.min(active,params.length-1):0,documentation:entry?.desc||wizardEntry?.desc||'PEITIAN ARL built-in function',kind:'function',variantIndex:selected.variantIndex};
+        return {name,label:selected.label,parameters:params,parameterDocumentation:selected.parameterDocumentation||[],activeParameter:params.length?Math.min(active,params.length-1):0,documentation:entry?.desc||wizardEntry?.desc||'PEITIAN ARL built-in function',kind:'function',variantIndex:selected.variantIndex};
       }
     }
   }
@@ -943,7 +1097,7 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
       wizardVariantIndex:index
     };
   };
-  entry.variants.forEach((variant,index)=>{
+  usableWizardVariants(entry,functionStyle).forEach((variant,index)=>{
     const params=variant.params||[];
     const required=params.filter(p=>p.req);
     const hasOptional=params.some(p=>!p.req);
@@ -1256,6 +1410,7 @@ module.exports = {
   synthesizeWizardEntryFromProto,
   resolveWizardEntry,
   getWizardHoverSignatures,
+  getWizardHoverParameters,
   getWizardParamContext,
   getWizardValueContext,
   collectNearbyWizardValues,
