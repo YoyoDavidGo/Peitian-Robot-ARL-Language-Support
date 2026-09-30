@@ -1325,6 +1325,16 @@ function getFontWeightProfile(fontFamily){
   return null;
 }
 
+function collectNonAsciiRuns(source,start,end,ranges){
+  let runStart=-1;
+  for(let index=start;index<end;index++){
+    const isFallbackGlyph=source.charCodeAt(index)>0x7f;
+    if(isFallbackGlyph && runStart<0) runStart=index;
+    if(!isFallbackGlyph && runStart>=0){ranges.push({start:runStart,end:index});runStart=-1;}
+  }
+  if(runStart>=0) ranges.push({start:runStart,end});
+}
+
 function collectWeightRanges(text, languageData=defaultLanguageData){
   const source=String(text||'');
   const heavy=[]; const mid=[];
@@ -1352,8 +1362,14 @@ function collectWeightRanges(text, languageData=defaultLanguageData){
       continue;
     }
     if(source[i]==='"' || source[i]==="'"){
-      const quote=source[i++]; let esc=false;
+      const quote=source[i++]; const contentStart=i; let esc=false;
       while(i<source.length){ const ch=source[i++]; if(esc){esc=false;continue;} if(ch==='\\'){esc=true;continue;} if(ch===quote) break; }
+      const contentEnd=source[i-1]===quote?i-1:i;
+      // JetBrains Mono/Cascadia render Latin weight 200/300 themselves, while
+      // CJK text is supplied by a fallback font. Applying the Latin light
+      // weight to that fallback makes Chinese strings look washed out, so keep
+      // only the non-ASCII glyph runs at the readable normal weight.
+      collectNonAsciiRuns(source,contentStart,contentEnd,heavy);
       continue;
     }
     if('()[]{}'.includes(source[i])){ mid.push({start:i,end:i+1}); i++; continue; }

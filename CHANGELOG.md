@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Kept Chinese and other non-ASCII fallback glyphs inside strings at normal weight, preventing them from becoming washed out when JetBrains Mono or Cascadia uses the extension's light Latin font-weight profile.
+
 ## 1.0.2
 
 - Restored per-parameter bilingual explanations in Hover and Signature Help, including each parameter's type, required/optional state, and unit.

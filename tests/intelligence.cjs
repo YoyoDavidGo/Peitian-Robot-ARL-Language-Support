@@ -207,6 +207,12 @@ const blockWeights=collectWeightRanges(blockWeightCode, languageData);
 const blockHeavyTexts=blockWeights.heavy.map(r=>blockWeightCode.slice(r.start,r.end));
 assert(blockHeavyTexts.includes('/* block comment\ncontinues here */'),'Block comments must receive the same heavy comment weight as // comments');
 
+const mixedStringWeightCode='print "程序回原点完毕! ASCII stays light"';
+const mixedStringWeights=collectWeightRanges(mixedStringWeightCode, languageData);
+const mixedStringHeavyTexts=mixedStringWeights.heavy.map(r=>mixedStringWeightCode.slice(r.start,r.end));
+assert(mixedStringHeavyTexts.includes('程序回原点完毕'),'CJK fallback glyphs inside strings must use a readable normal weight');
+assert(!mixedStringHeavyTexts.some(text=>text.includes('ASCII')),'Latin text inside strings must retain the configured light weight');
+
 console.log('ARL v0.6 intelligence/font-weight tests passed');
 
 

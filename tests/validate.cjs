@@ -8,7 +8,7 @@ const data = read('language-data/arl-language.json');
 const grammar = read('syntaxes/arl.tmLanguage.json');
 const cfg = read('language-configuration.json');
 
-assert.strictEqual(pkg.version, '1.0.2', 'Marketplace Hover coverage update must use version 1.0.2');
+assert.strictEqual(pkg.version, '1.0.3', 'Marketplace CJK font-weight fix must use version 1.0.3');
 assert.strictEqual(pkg.displayName, '%extension.displayName%', 'Extension display name should be localized through package.nls');
 assert.strictEqual(pkg.icon, 'icon.png', 'Extension manifest must point to icon.png');
 assert(fs.existsSync(path.join(root, pkg.icon)), 'Extension icon file is missing');
@@ -180,7 +180,7 @@ assert.strictEqual('double distance=12mm'.match(numericRegex), null, 'Unit-aware
 
 
 // v0.3: exact ARL-IDE Black/Light palette and automatic matching for VS Code built-in themes.
-assert.strictEqual(pkg.version, '1.0.2');
+assert.strictEqual(pkg.version, '1.0.3');
 assert(Array.isArray(pkg.contributes.themes) && pkg.contributes.themes.length === 2, 'Expected optional Black and Light themes');
 const blackContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Black');
 const lightContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Light');
@@ -339,7 +339,7 @@ assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('!s
 assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('suggestWidgetVisible') && String(x.when||'').includes('peitianArl.smartValueReady')), 'Smart Tab must advance a complete manually typed value even while suggestions are visible');
 for(const binding of smartTabBindings) assert(String(binding.when||'').includes('peitianArl.smartSnippetActive'), 'Smart Tab must be scoped to generic ARL Smart Completion');
 
-console.log('ARL 1.0.2 manifest/icon validation passed');
+console.log('ARL 1.0.3 manifest/icon validation passed');
 
 
 // Chinese punctuation is common inside ARL strings/comments. Keep VS Code
