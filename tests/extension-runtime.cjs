@@ -1,3 +1,4 @@
+const completionLabel=item=>typeof item.label==='string'?item.label:item.label.label;
 const assert = require('assert');
 const Module = require('module');
 const path = require('path');
@@ -223,13 +224,13 @@ try {
   const getdiMultiHoverDoc=makeDocument('/ws/getdi-multi-hover.arl','bool active=getdi(45,48)');
   const getdiMultiHover=await registrations.hover.provideHover(getdiMultiHoverDoc,new Position(0,14));
   const getdiMultiHoverText=Array.isArray(getdiMultiHover.contents)?getdiMultiHover.contents.map(x=>x.value??String(x)).join('\n'):getdiMultiHover.contents.value;
-  assert(getdiMultiHoverText.includes('bool getdi(int from, int to)'),'Two-argument getdi Hover must show its matching multi-channel signature');
-  assert(getdiMultiHoverText.indexOf('bool getdi(int from, int to)')<getdiMultiHoverText.indexOf('bool getdi(int chan)'),'The signature matching the current getdi call must appear first');
+  assert(getdiMultiHoverText.includes('int getdi(int from_chan, int to_chan)'),'Two-argument getdi Hover must show its matching multi-channel signature');
+  assert(getdiMultiHoverText.indexOf('int getdi(int from_chan, int to_chan)')<getdiMultiHoverText.indexOf('bool getdi(int chan)'),'The signature matching the current getdi call must appear first');
 
   const getdiSingleHoverDoc=makeDocument('/ws/getdi-single-hover.arl','bool active=getdi(45)');
   const getdiSingleHover=await registrations.hover.provideHover(getdiSingleHoverDoc,new Position(0,14));
   const getdiSingleHoverText=Array.isArray(getdiSingleHover.contents)?getdiSingleHover.contents.map(x=>x.value??String(x)).join('\n'):getdiSingleHover.contents.value;
-  assert(getdiSingleHoverText.indexOf('bool getdi(int chan)')<getdiSingleHoverText.indexOf('bool getdi(int from, int to)'),'Single-argument getdi Hover must rank its matching signature first');
+  assert(getdiSingleHoverText.indexOf('bool getdi(int chan)')<getdiSingleHoverText.indexOf('int getdi(int from_chan, int to_chan)'),'Single-argument getdi Hover must rank its matching signature first');
 
   const getipHoverDoc=makeDocument('/ws/getip-hover.arl','bool ok=getip(ip)');
   const getipHover=await registrations.hover.provideHover(getipHoverDoc,new Position(0,10));
@@ -239,7 +240,7 @@ try {
   const pathPercentHoverDoc=makeDocument('/ws/path-percent-hover.arl','trigger when:P(50),do:onHalfway');
   const pathPercentHover=await registrations.hover.provideHover(pathPercentHoverDoc,new Position(0,14));
   const pathPercentHoverText=Array.isArray(pathPercentHover.contents)?pathPercentHover.contents.map(x=>x.value??String(x)).join('\n'):pathPercentHover.contents.value;
-  assert(pathPercentHoverText.includes('当前运动轨迹从起点开始是否已经完成 p%'),'P Hover must explain the user-supplied path-percentage semantics');
+  assert(pathPercentHoverText.includes('判断轨迹起点到终点经过的百分比'),'P Hover must explain the user-supplied path-percentage semantics');
   assert(pathPercentHoverText.includes('bool P(double p)'),'P Hover must show its canonical function prototype');
 
   const plainPDoc=makeDocument('/ws/plain-p.arl','double p=50');
@@ -276,7 +277,7 @@ try {
   const ifHover=await registrations.hover.provideHover(ifDoc,new Position(0,1));
   assert(ifHover instanceof Hover);
   const ifHoverText=Array.isArray(ifHover.contents)?ifHover.contents.map(x=>x.value??String(x)).join('\n'):ifHover.contents.value;
-  assert(ifHoverText.includes('条件判断，满足时执行块内代码'),'if Hover must use Wizard-derived description');
+  assert(ifHoverText.includes('条件判断；可用 endif 块式或单行紧凑写法'),'if Hover must use Wizard-derived description');
   assert(ifHoverText.includes('if(bool 表达式)'),'if Hover must show its own syntax');
 
 
@@ -287,17 +288,33 @@ try {
   const completionItems=await registrations.completion.provideCompletionItems(document,new Position(3,0));
   assert.deepStrictEqual(completionItems,[], 'Blank input must not show completion candidates');
 
+  // Row descriptions must be supplied before the user selects a candidate.
+  const relDoc=makeDocument('/ws/reltool-descriptions.arl','re');
+  const relItems=await registrations.completion.provideCompletionItems(relDoc,new Position(0,2));
+  assert(relItems.length>=4, 'The prefix must offer both reltool shapes and related instructions');
+  for(const item of relItems){
+    assert(typeof item.label==='object' && item.label.description, `${completionLabel(item)} must explain its purpose in the suggestion row`);
+    assert.strictEqual(item.filterText || completionLabel(item),completionLabel(item), 'Descriptions must not change prefix filtering');
+  }
+  const relShapes=relItems.filter(item=>completionLabel(item)==='reltool').map(item=>item.label.description);
+  assert(relShapes.some(description=>description.endsWith(' · 位置')));
+  assert(relShapes.some(description=>description.endsWith(' · 位置+姿态')));
+  smartCompletionEnabled=false;
+  const plainRelItems=await registrations.completion.provideCompletionItems(relDoc,new Position(0,2));
+  assert(plainRelItems.every(item=>item.label.description), 'Ordinary completions must also show descriptions without selection');
+  smartCompletionEnabled=true;
+
 
   const dollarDoc=makeDocument('/ws/dollar.arl','$');
   const dollarItems=await registrations.completion.provideCompletionItems(dollarDoc,new Position(0,1));
-  assert(dollarItems.length>0 && dollarItems.every(x=>String(x.label).startsWith('$')), 'Typing $ should show only system variables');
-  const atHome=dollarItems.find(x=>x.label==='$AT_HOME');
+  assert(dollarItems.length>0 && dollarItems.every(x=>String(completionLabel(x)).startsWith('$')), 'Typing $ should show only system variables');
+  const atHome=dollarItems.find(x=>completionLabel(x)==='$PI');
   assert(atHome, 'Expected $AT_HOME completion');
   assert.strictEqual(atHome.range.start.character,0,'System-variable completion must replace the typed $');
   assert.strictEqual(atHome.range.end.character,1,'System-variable replacement range must include exactly the typed $');
-  assert.strictEqual(atHome.insertText,'$AT_HOME','System variable insert text must contain one $ only');
+  assert.strictEqual(atHome.insertText,'$PI','System variable insert text must contain one $ only');
 
-  const configCheck=dollarItems.find(x=>x.label==='$Config_check');
+  const configCheck=dollarItems.find(x=>completionLabel(x)==='$Config_check');
   assert(configCheck, 'Expected $Config_check completion');
   assert.strictEqual(configCheck.detail, '轴配置检查使能', 'System-variable completion detail must show its specific Chinese description');
   const configDocumentation=configCheck.documentation?.value ?? String(configCheck.documentation||'');
@@ -312,45 +329,45 @@ try {
   const ptpSmartDoc=makeDocument('/ws/ptp-smart.arl','ptp');
   const ptpSmartItems=await registrations.completion.provideCompletionItems(ptpSmartDoc,new Position(0,3));
   const ptpSmartSnippets=ptpSmartItems.filter(x=>x.insertText instanceof SnippetString).map(x=>x.insertText.value);
-  assert(ptpSmartSnippets.includes('ptp p:${1},vp:${2}%,sp:${3}%,t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'Smart ptp literal template should escape ARL $ defaults while keeping snippet placeholders active');
-  assert(ptpSmartSnippets.includes('ptp p:${1},v:${2},s:${3},t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'Smart ptp should escape ARL $ defaults in the variable-parameter structure');
+  assert(ptpSmartSnippets.includes('ptp p:${1}, vp:${2}%, sl:${3}mm, t:${4}, w:${5}'),'Smart ptp literal template should escape ARL $ defaults while keeping snippet placeholders active');
+  assert(ptpSmartSnippets.includes('ptp p:${1}, v:${2}, s:${3}, t:${4}, w:${5}'),'Smart ptp should escape ARL $ defaults in the variable-parameter structure');
   const linSmartDoc=makeDocument('/ws/lin-smart.arl','lin');
   const linSmartItems=await registrations.completion.provideCompletionItems(linSmartDoc,new Position(0,3));
   const linSmartSnippets=linSmartItems.filter(x=>x.insertText instanceof SnippetString).map(x=>x.insertText.value);
-  assert(linSmartSnippets.includes('lin p:${1},vl:${2}mm/s,sl:${3}mm,t:${4:\\$FLANGE},w:${5:\\$WORLD}'),'lin value template must escape ARL $ defaults and keep unit syntax outside placeholders');
+  assert(linSmartSnippets.includes('lin p:${1}, vl:${2}mm/s, sl:${3}mm, t:${4}, w:${5}'),'lin value template must escape ARL $ defaults and keep unit syntax outside placeholders');
   const ptpSmartItem=ptpSmartItems.find(x=>x.command?.command==='peitianArl.beginSmartCompletion');
   assert(ptpSmartItem,'Motion Smart Completion should start snippet-session tracking');
   assert(!ptpSmartSnippets.some(x=>x.includes('p4')),'Smart snippets must leave user values editable');
-  const ptpLiteralItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},vp:${2}%,sp:${3}%,t:${4:\\$FLANGE},w:${5:\\$WORLD}');
-  const ptpVariableItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1},v:${2},s:${3},t:${4:\\$FLANGE},w:${5:\\$WORLD}');
+  const ptpLiteralItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1}, vp:${2}%, sl:${3}mm, t:${4}, w:${5}');
+  const ptpVariableItem=ptpSmartItems.find(x=>x.insertText?.value==='ptp p:${1}, v:${2}, s:${3}, t:${4}, w:${5}');
   assert.strictEqual(ptpLiteralItem?.kind, fakeVscode.CompletionItemKind.Value, 'Value/double smart template should use Value icon');
-  assert(ptpLiteralItem?.detail.includes('Value / double'), 'Value template description should make clear that numeric literals or double variables are accepted');
+  assert(ptpLiteralItem?.label.description.includes('数字写法'), 'Value template description should make clear that numeric literals or double variables are accepted');
   assert.strictEqual(ptpVariableItem?.kind, fakeVscode.CompletionItemKind.Variable, 'Variable smart template should use Variable icon');
 
   const offsetSmartDoc=makeDocument('/ws/offset-smart.arl','offset');
   const offsetSmartItems=await registrations.completion.provideCompletionItems(offsetSmartDoc,new Position(0,6));
   const offsetSmartSnippets=offsetSmartItems
-    .filter(x=>(typeof x.label==='string'?x.label:x.label?.label)==='offset' && x.insertText instanceof SnippetString)
+    .filter(x=>completionLabel(x)==='offset' && x.insertText instanceof SnippetString)
     .map(x=>x.insertText.value);
   assert(offsetSmartSnippets.includes('offset(${1}, ${2}, ${3}, ${4})'),'offset should expose a blank Wizard short-form variant and let candidates drive input');
   assert(offsetSmartSnippets.includes('offset(${1}, ${2}, ${3}, ${4}, ${5}, ${6}, ${7})'),'offset should expose a blank Wizard full-form variant and let candidates drive input');
 
   const cposeSmartDoc=makeDocument('/ws/cpose-smart.arl','cpose');
   const cposeSmartItems=await registrations.completion.provideCompletionItems(cposeSmartDoc,new Position(0,'cpose'.length));
-  const cposeSnippet=cposeSmartItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='cpose' && x.insertText instanceof SnippetString)?.insertText.value;
+  const cposeSnippet=cposeSmartItems.find(x=>completionLabel(x)==='cpose' && x.insertText instanceof SnippetString)?.insertText.value;
   assert.strictEqual(cposeSnippet,'cpose(${1}, ${2})','cpose should start with blank Wizard placeholders; tool/work-object values belong in the candidate list');
 
   const getposeSmartDoc=makeDocument('/ws/getpose-smart.arl','getpose');
   const getposeSmartItems=await registrations.completion.provideCompletionItems(getposeSmartDoc,new Position(0,'getpose'.length));
-  const getposeSnippet=getposeSmartItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='getpose' && x.insertText instanceof SnippetString)?.insertText.value;
+  const getposeSnippet=getposeSmartItems.find(x=>completionLabel(x)==='getpose' && x.insertText instanceof SnippetString)?.insertText.value;
   assert.strictEqual(getposeSnippet,'getpose(${1}, ${2}, ${3})','getpose should start with blank Wizard placeholders; typed candidates drive each argument');
 
   const waitSmartDoc=makeDocument('/ws/wait-smart.arl','waituntil');
   const waitSmartItems=await registrations.completion.provideCompletionItems(waitSmartDoc,new Position(0,'waituntil'.length));
-  const waitSmartSnippets=waitSmartItems.filter(x=>(typeof x.label==='string'?x.label:x.label?.label)==='waituntil' && x.insertText instanceof SnippetString).map(x=>x.insertText.value);
+  const waitSmartSnippets=waitSmartItems.filter(x=>completionLabel(x)==='waituntil' && x.insertText instanceof SnippetString).map(x=>x.insertText.value);
   assert(waitSmartSnippets.includes('waituntil cond:${1}'),'waituntil should offer a blank required-only Wizard Smart template');
   assert(waitSmartSnippets.some(x=>x.includes('maxtime:${2}')),'waituntil should also expose a blank full optional-parameter Wizard template');
-  const waitSmartItem=waitSmartItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='waituntil' && x.command?.command==='peitianArl.beginSmartCompletion');
+  const waitSmartItem=waitSmartItems.find(x=>completionLabel(x)==='waituntil' && x.command?.command==='peitianArl.beginSmartCompletion');
   assert(waitSmartItem,'Wizard Smart Completion must start the generic smart-snippet session, not only motion instructions');
 
   const setdoSmartDoc=makeDocument('/ws/setdo-smart.arl','setdo');
@@ -361,7 +378,7 @@ try {
 
   const ifSmartDoc=makeDocument('/ws/if-smart.arl','if');
   const ifSmartItems=await registrations.completion.provideCompletionItems(ifSmartDoc,new Position(0,2));
-  const ifSmart=ifSmartItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='if');
+  const ifSmart=ifSmartItems.find(x=>completionLabel(x)==='if');
   assert(ifSmart?.insertText instanceof SnippetString);
   assert.strictEqual(ifSmart.insertText.value,'if(${1:condition})\n    ${0}\nendif');
 
@@ -370,10 +387,10 @@ try {
   const linValueDoc=makeDocument('/ws/lin-value.arl','double v1\nspeed vh\nlin p:p1,vl:v');
   fakeVscode.workspace.textDocuments=[document,defDoc,linValueDoc];
   const linValueItems=await registrations.completion.provideCompletionItems(linValueDoc,new Position(2,'lin p:p1,vl:v'.length));
-  const linValueLabels=linValueItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const linValueLabels=linValueItems.map(x=>completionLabel(x));
   assert(linValueLabels.includes('v1'),'vl: must allow declared double variables in value-with-unit form');
   assert(!linValueLabels.includes('vh'),'vl: must not suggest speed variables; value form expects double');
-  const v1UnitItem=linValueItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='v1');
+  const v1UnitItem=linValueItems.find(x=>completionLabel(x)==='v1');
   assert.strictEqual(v1UnitItem?.insertText,'v1mm/s','Accepting a double variable in vl: must append the Wizard-defined mm/s unit');
 
   assert(registrations.registeredCommands.has('peitianArl.beginSmartCompletion'),'Missing generic Smart Completion start command');
@@ -434,7 +451,7 @@ try {
   const partialUnitItems=await registrations.completion.provideCompletionItems(
     partialUnitDoc,partialUnitPos,null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke}
   );
-  const partialI123=partialUnitItems.find(x=>(typeof x.label==='string'?x.label:x.label?.label)==='i123');
+  const partialI123=partialUnitItems.find(x=>completionLabel(x)==='i123');
   assert.strictEqual(partialI123?.insertText,'i123','Inside an active Smart snippet the outer template owns mm/s, so a double variable candidate must never append another unit');
 
   const waittimeUsedDoc=makeDocument('/ws/waittime-used.arl','waittime time:1');
@@ -456,7 +473,7 @@ try {
   fakeVscode.workspace.textDocuments=[document,defDoc,waitRecentDoc];
   fakeVscode.window.activeTextEditor={document:waitRecentDoc,selection:{active:new Position(2,mtEnd),start:new Position(2,mtEnd),end:new Position(2,mtEnd),isEmpty:true},setDecorations(){}};
   const recentItems=await registrations.completion.provideCompletionItems(waitRecentDoc,new Position(2,mtEnd),null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke});
-  const recentLabels=recentItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const recentLabels=recentItems.map(x=>completionLabel(x));
   assert.deepStrictEqual(recentLabels,['i123'],'After typing i, waituntil maxtime must strictly show matching declared double variables only');
 
   const recentNumberDoc=makeDocument('/ws/wait-recent-number.arl',[
@@ -468,7 +485,7 @@ try {
   fakeVscode.workspace.textDocuments=[document,defDoc,recentNumberDoc];
   fakeVscode.window.activeTextEditor={document:recentNumberDoc,selection:{active:numberPos,start:numberPos,end:numberPos,isEmpty:true},setDecorations(){}};
   const recentNumberItems=await registrations.completion.provideCompletionItems(recentNumberDoc,numberPos,null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke});
-  const recentNumberLabels=recentNumberItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const recentNumberLabels=recentNumberItems.map(x=>completionLabel(x));
   assert(recentNumberLabels.includes('3'),'Typing 3 must allow the still-existing recent value 3 for the same instruction parameter');
   assert(!recentNumberLabels.includes('250') && !recentNumberLabels.includes('-1'),'Recent values must not leak across unrelated parameters');
 
@@ -492,7 +509,7 @@ try {
   const numericTypedItems=await registrations.completion.provideCompletionItems(
     numericTypedDoc,new Position(2,numericTypedEnd),null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke}
   );
-  const numericTypedLabels=numericTypedItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const numericTypedLabels=numericTypedItems.map(x=>completionLabel(x));
   assert.deepStrictEqual(numericTypedLabels,['0.5'],'Typing 0.5 must strictly match only 0.5; unrelated double variables must disappear');
   assert(registrations.executedCommands.some(x=>x.command==='setContext' && x.args[0]==='peitianArl.smartValueReady' && x.args[1]===true),'A complete manual numeric value must still enable Smart Enter/Tab when an exact matching suggestion exists');
 
@@ -521,7 +538,7 @@ try {
   const numericPrefixItems=await registrations.completion.provideCompletionItems(
     numericPrefixDoc,numericPrefixPos,null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke}
   );
-  assert(numericPrefixItems.some(x=>String(x.label)==='250'),'The 2 prefix must keep the matching 250 Wizard candidate');
+  assert(numericPrefixItems.some(x=>String(completionLabel(x))==='250'),'The 2 prefix must keep the matching 250 Wizard candidate');
   assert(registrations.executedCommands.some(x=>x.command==='setContext' && x.args[0]==='peitianArl.smartValueReady' && x.args[1]===false),'A numeric prefix with a different matching candidate must leave Tab/Enter to the Suggest Widget');
 
   const firstCharDoc=makeDocument('/ws/first-char.arl','double i123=10.2\nwaittime time:i');
@@ -546,7 +563,7 @@ try {
   const exactNumericItems=await registrations.completion.provideCompletionItems(
     exactNumericDoc,new Position(1,'waittime time:1'.length),null,{triggerKind:fakeVscode.CompletionTriggerKind.Invoke}
   );
-  const exactNumericLabels=exactNumericItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const exactNumericLabels=exactNumericItems.map(x=>completionLabel(x));
   assert.strictEqual(exactNumericLabels[0],'1','The exact manually typed numeric value must be the first completion item');
   assert.deepStrictEqual(exactNumericLabels,['1'],'Typing 1 must strictly filter the list to the matching 1 candidate');
 
@@ -558,7 +575,7 @@ try {
 
   smartCompletionEnabled=false;
   const ptpBasicItems=await registrations.completion.provideCompletionItems(ptpSmartDoc,new Position(0,3));
-  const ptpBasic=ptpBasicItems.find(x=>x.label==='ptp');
+  const ptpBasic=ptpBasicItems.find(x=>completionLabel(x)==='ptp');
   assert(ptpBasic,'Disabling Smart Completion must keep normal IntelliSense');
   assert.strictEqual(ptpBasic.insertText.value,'ptp $0','Disabled Smart Completion should restore the lightweight plain instruction insertion');
   assert(!ptpBasic.command,'Basic completion must not force the Suggest Widget');
@@ -591,38 +608,38 @@ try {
   ].join('\n'));
   fakeVscode.workspace.textDocuments=[document,defDoc,dollarPoseDoc];
   const dollarPoseItems=await registrations.completion.provideCompletionItems(dollarPoseDoc,new Position(2,'ptp p:$'.length));
-  const dollarPoseLabels=dollarPoseItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const dollarPoseLabels=dollarPoseItems.map(x=>completionLabel(x));
   assert(dollarPoseLabels.includes('$P'),'Typing $ should show the base pose system-variable array');
   assert(dollarPoseLabels.includes('$P[21]'),'Typing $ should show previously used $P[21]');
-  const baseP=dollarPoseItems.find(x=>x.label==='$P');
+  const baseP=dollarPoseItems.find(x=>completionLabel(x)==='$P');
   assert(baseP?.insertText instanceof SnippetString,'Base $P completion should be an indexed snippet');
   assert.strictEqual(baseP.insertText.value,'\\$P[${1}]','$P should be escaped as ARL text while the bracket placeholder remains active');
-  const usedP21=dollarPoseItems.find(x=>x.label==='$P[21]');
+  const usedP21=dollarPoseItems.find(x=>completionLabel(x)==='$P[21]');
   assert.strictEqual(usedP21?.insertText,'$P[21]','Observed indexed system-variable values should insert directly');
 
   const strictPDoc=makeDocument('/ws/indexed-strict.arl','pose p1\nptp p:p');
   fakeVscode.workspace.textDocuments=[document,defDoc,strictPDoc];
   const strictPItems=await registrations.completion.provideCompletionItems(strictPDoc,new Position(1,'ptp p:p'.length));
-  const strictPLabels=strictPItems.map(x=>typeof x.label==='string'?x.label:x.label?.label);
+  const strictPLabels=strictPItems.map(x=>completionLabel(x));
   assert(strictPLabels.includes('p1'),'Typing p should keep normal pose variables');
   assert(!strictPLabels.some(x=>String(x).startsWith('$')),'Typing p must strictly remove $ system-variable candidates');
 
 
   const offDoc=makeDocument('/ws/off.arl','off');
   const offItems=await registrations.completion.provideCompletionItems(offDoc,new Position(0,3));
-  assert(offItems.some(x=>x.label==='offset'),'Typing off must surface offset from the ARL provider');
+  assert(offItems.some(x=>completionLabel(x)==='offset'),'Typing off must surface offset from the ARL provider');
 
   const movDoc=makeDocument('/ws/mov.arl','mov');
   const movItems=await registrations.completion.provideCompletionItems(movDoc,new Position(0,3));
-  assert(movItems.some(x=>x.label==='movej'),'Typing mov must surface movej from the ARL provider');
+  assert(movItems.some(x=>completionLabel(x)==='movej'),'Typing mov must surface movej from the ARL provider');
 
 
   // v0.6.6: free input starts after one typed character, while named
   // instruction parameters use type-aware variable-only completion.
   const freePDoc=makeDocument('/ws/free-p.arl','p');
   const freePItems=await registrations.completion.provideCompletionItems(freePDoc,new Position(0,1));
-  assert(freePItems.some(x=>x.label==='ptp'),'Free p prefix should include ptp');
-  assert(freePItems.some(x=>x.label==='pose'),'Free p prefix should include pose datatype');
+  assert(freePItems.some(x=>completionLabel(x)==='ptp'),'Free p prefix should include ptp');
+  assert(freePItems.some(x=>completionLabel(x)==='pose'),'Free p prefix should include pose datatype');
 
   const dataDoc=makeDocument('/ws/type1_data.arl','pose pData\njoint jData\nspeed vData');
   const foreignDataDoc=makeDocument('/ws/type2_data.arl','pose pForeign\nspeed vForeign');
@@ -645,7 +662,7 @@ try {
 
 
   const typedPoseItems=await registrations.completion.provideCompletionItems(typedPoseDoc,new Position(2,7));
-  const typedPoseLabels=typedPoseItems.map(x=>x.label);
+  const typedPoseLabels=typedPoseItems.map(x=>completionLabel(x));
   assert(typedPoseLabels.includes('pLocal'),'Typed pose completion should include current-file pose variables');
   assert(typedPoseLabels.includes('pData'),'Typed pose completion should include the paired type1_data.arl pose variables');
   assert(!typedPoseLabels.includes('pForeign'),'Typed pose completion must not include variables from unrelated type2_data.arl');
@@ -655,31 +672,31 @@ try {
 
   const typedSysDoc=makeDocument('/ws/sys-pose.arl','ptp p:$');
   const typedSysItems=await registrations.completion.provideCompletionItems(typedSysDoc,new Position(0,7));
-  assert(typedSysItems.some(x=>x.label==='$P'),'Pose context with $ prefix should include $P');
-  assert(!typedSysItems.some(x=>x.label==='$D'),'Pose context with $ prefix must exclude non-pose system variables');
+  assert(typedSysItems.some(x=>completionLabel(x)==='$P'),'Pose context with $ prefix should include $P');
+  assert(!typedSysItems.some(x=>completionLabel(x)==='$D'),'Pose context with $ prefix must exclude non-pose system variables');
 
   const typedSpeedDoc=makeDocument('/ws/speed.arl','speed vh\npose p1\nptp v:v');
   const typedSpeedItems=await registrations.completion.provideCompletionItems(typedSpeedDoc,new Position(2,7));
-  assert(typedSpeedItems.some(x=>x.label==='vh'),'ptp v:v should include speed variables');
-  assert(!typedSpeedItems.some(x=>x.label==='p1'),'ptp v:v must exclude pose variables');
+  assert(typedSpeedItems.some(x=>completionLabel(x)==='vh'),'ptp v:v should include speed variables');
+  assert(!typedSpeedItems.some(x=>completionLabel(x)==='p1'),'ptp v:v must exclude pose variables');
 
   const standaloneMain=makeDocument('/standalone/job.arl','ptp p:p');
   makeDocument('/standalone/job_data.arl','pose pairedPoint');
   fakeVscode.workspace.textDocuments=[standaloneMain];
   const standaloneItems=await registrations.completion.provideCompletionItems(standaloneMain,new Position(0,'ptp p:p'.length));
-  assert(standaloneItems.some(x=>x.label==='pairedPoint'),'A standalone ARL file must load its closed same-directory _data.arl companion');
+  assert(standaloneItems.some(x=>completionLabel(x)==='pairedPoint'),'A standalone ARL file must load its closed same-directory _data.arl companion');
 
   assert.strictEqual(registrations.fileWatcher?.pattern,'**/*.arl','Workspace ARL files must be watched for external changes');
   makeDocument('/standalone/job_data.arl','pose pRefreshed');
   await registrations.fileWatcher.listeners.change(makeUri('/standalone/job_data.arl'));
   const refreshedItems=await registrations.completion.provideCompletionItems(standaloneMain,new Position(0,'ptp p:p'.length));
-  assert(refreshedItems.some(x=>x.label==='pRefreshed'),'External companion-file changes must refresh indexed variables');
-  assert(!refreshedItems.some(x=>x.label==='pairedPoint'),'External companion-file changes must remove stale variables');
+  assert(refreshedItems.some(x=>completionLabel(x)==='pRefreshed'),'External companion-file changes must refresh indexed variables');
+  assert(!refreshedItems.some(x=>completionLabel(x)==='pairedPoint'),'External companion-file changes must remove stale variables');
 
   const middleTokenDoc=makeDocument('/ws/middle-token.arl','pose pHome\nptp p:pOld');
   fakeVscode.workspace.textDocuments=[middleTokenDoc];
   const middleTokenItems=await registrations.completion.provideCompletionItems(middleTokenDoc,new Position(1,'ptp p:p'.length));
-  const middlePHome=middleTokenItems.find(x=>x.label==='pHome');
+  const middlePHome=middleTokenItems.find(x=>completionLabel(x)==='pHome');
   assert(middlePHome,'Typing inside pOld must still offer pHome');
   assert.strictEqual(middlePHome.range.start.character,'ptp p:'.length);
   assert.strictEqual(middlePHome.range.end.character,'ptp p:pOld'.length,'Completion in the middle of a token must replace its old suffix');

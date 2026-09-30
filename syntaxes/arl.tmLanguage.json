@@ -31,6 +31,9 @@
       "include": "#keywords"
     },
     {
+      "include": "#constants"
+    },
+    {
       "include": "#motionInstructions"
     },
     {
@@ -171,7 +174,7 @@
       "patterns": [
         {
           "name": "storage.type.arl",
-          "match": "(?i:\\b(?:modbus_rtu_master|melsec_dev|modbus_dev|compendata|weavedata|tcpforce|double|string|socket|frame|joint|speed|clock|iodev|uint|byte|bool|pose|tool|wobj|slip|jvel|jttq|jtci|int|pos)\\b)"
+          "match": "(?i:\\b(?:modbus_rtu_master|palletcompenpara|compendatajoint|toolinertiapara|inertia_tensor|centroid_pos|weaverotaxis|controlmode|compendata|melsec_dev|modbus_dev|weaveshape|weavedata|num_base|stopbits|stoptype|tcpforce|control|printto|double|parity|socket|string|clock|frame|iodev|joint|speed|bool|byte|jtci|jttq|jvel|pose|slip|tool|uint|void|wobj|int|pos)\\b)"
         }
       ]
     },
@@ -179,7 +182,7 @@
       "patterns": [
         {
           "name": "keyword.control.arl",
-          "match": "(?i:\\b(?:endswitch|endwhile|continue|endloop|default|elseif|endfor|repeat|switch|endif|while|until|break|else|loop|case|goto|for|if)\\b)"
+          "match": "(?i:\\b(?:endswitch|continue|endwhile|default|endloop|elseif|endfor|repeat|return|switch|break|endif|until|while|case|else|goto|loop|for|if)\\b)"
         }
       ]
     },
@@ -187,14 +190,14 @@
       "patterns": [
         {
           "name": "keyword.other.arl",
-          "match": "(?i:\\b(?:endfunc|return|const|false|void|true|endl|func)\\b)"
+          "match": "(?i:\\b(?:endfunc|const|func)\\b)"
         }
       ]
     },
     "motionInstructions": {
       "patterns": [
         {
-          "begin": "(?i:\\b(?:movej|ptp|lin|cir|ccir|spl|jump)\\b)",
+          "begin": "(?i:\\b(?:movej|ccir|jump|cir|lin|ptp|spl)\\b)",
           "beginCaptures": {
             "0": {
               "name": "support.function.instruction.arl"
@@ -217,7 +220,7 @@
       "patterns": [
         {
           "name": "support.function.instruction.arl",
-          "match": "(?i:\\b(?:palletcompen|startdetect|startcompen|disableint|toolswitch|startweave|waituntil|startmove|interrupt|enableint|enddetect|endcompen|waittime|stopmove|endweave|restart|trigger|velset|accset|delint|compen|import|movej|pause|timer|print|ccir|jump|exit|scan|ptp|lin|cir|spl)\\b)"
+          "match": "(?i:\\b(?:startcompen|startdetect|disableint|startweave|toolswitch|enableint|endcompen|enddetect|interrupt|startmove|waituntil|endweave|stopmove|waittime|restart|trigger|accset|compen|delint|import|velset|movej|pause|print|timer|ccir|exit|jump|scan|cir|lin|ptp|spl)\\b)"
         }
       ]
     },
@@ -229,7 +232,7 @@
         },
         {
           "name": "support.function.builtin.arl",
-          "match": "(?i:\\b(?:startbackchannel|pausebackchannel|resetbackchannel|gettoolrot_world|setinterpercent|getinterpercent|channeljointvel|channeltojoint|getwobj_flange|gettooltcp_ref|writeregisters|switchbackarl|channeltopose|channeltcpvel|gettoolrot_3p|savefilejoint|readregisters|channeljoint|getwobj_indi|savefilepose|savejointnow|channelpose|getposetool|getposewobj|setposetool|setposewobj|saveposenow|getwobj_3p|gettool_3p|getbase_3p|renamefile|removefile|gettextstr|writecoils|switcharl|curmpfile|curmpline|curppfile|curppline|ctcpforce|syncwrite|readuntil|clearbuff|readcoils|getintdo|getintdi|addslave|setcycle|getjoint|todouble|ftobytes|bitcheck|bitclear|filesize|clkstart|clkreset|pulsedo|toascii|getpose|poseinv|reltool|tobytes|tofloat|savearl|connect|dnwrite|clkstop|clkread|syncdo|syncao|setpwm|savesv|typeof|assert|cjoint|offset|strlen|substr|bitset|bitlcs|bitrcs|accept|dnread|setdo|setao|getdo|getdi|getai|getao|ctime|cdate|setip|getip|atan2|pow10|log10|floor|hypot|trunc|frexp|ldexp|cpose|cjttq|cjtci|toint|tostr|write|close|init|main|sqrt|asin|acos|atan|sinh|cosh|tanh|ceil|fmod|modf|rand|norm|read|open|abs|sin|cos|tan|exp|pow|log)\\b(?=\\s*\\())"
+          "match": "(?i:\\b(?:gettoolrot_world|pausebackchannel|resetbackchannel|startbackchannel|channeljointvel|getinterpercent|setinterpercent|channeltojoint|gettooltcp_ref|getwobj_flange|writeregisters|channeltcpvel|channeltopose|gettoolrot_3p|readregisters|savefilejoint|switchbackarl|channeljoint|getwobj_indi|palletcompen|savefilepose|savejointnow|channelpose|getposetool|getposewobj|saveposenow|setposetool|setposewobj|getbase_3p|gettextstr|gettool_3p|getwobj_3p|removefile|renamefile|writecoils|clearbuff|ctcpforce|curmpfile|curmpline|curppfile|curppline|readcoils|readuntil|switcharl|syncwrite|addslave|bitcheck|bitclear|clkreset|clkstart|filesize|ftobytes|geterror|getintdi|getintdo|getjoint|setcycle|todouble|clkread|clkstop|connect|dnwrite|getpose|poseinv|pulsedo|reltool|savearl|toascii|tobytes|tofloat|accept|assert|bitlcs|bitrcs|bitset|cjoint|dnread|offset|savesv|setpwm|strlen|substr|syncao|syncdo|typeof|atan2|cdate|cjtci|cjttq|close|cpose|ctime|floor|frexp|getai|getao|getdi|getdo|getip|hypot|ldexp|log10|pow10|setao|setdo|setip|toint|tostr|trunc|write|acos|asin|atan|ceil|cosh|fmod|init|main|modf|norm|open|rand|read|sinh|sqrt|tanh|abs|cos|exp|log|pow|sin|tan)\\b)(?=\\s*\\()"
         }
       ]
     },
@@ -237,14 +240,14 @@
       "patterns": [
         {
           "name": "support.function.builtin.paren.arl",
-          "match": "(?i:\\b(?:stoend|t|p|s)\\b(?=\\s*\\())"
+          "match": "(?i:\\b(?:stoend|p|s|t)\\b)(?=\\s*\\()"
         }
       ]
     },
     "variableDeclarations": {
       "patterns": [
         {
-          "match": "(?i:(?:\\bconst\\b\\s+)?\\b(?:modbus_rtu_master|melsec_dev|modbus_dev|compendata|weavedata|tcpforce|double|string|socket|frame|joint|speed|clock|iodev|uint|byte|bool|pose|tool|wobj|slip|jvel|jttq|jtci|int|pos)\\b\\s+([A-Za-z_][A-Za-z0-9_]*))",
+          "match": "(?i:(?:\\bconst\\b\\s+)?\\b(?:modbus_rtu_master|palletcompenpara|compendatajoint|toolinertiapara|inertia_tensor|centroid_pos|weaverotaxis|controlmode|compendata|melsec_dev|modbus_dev|weaveshape|weavedata|num_base|stopbits|stoptype|tcpforce|control|printto|double|parity|socket|string|clock|frame|iodev|joint|speed|bool|byte|jtci|jttq|jvel|pose|slip|tool|uint|void|wobj|int|pos)\\b\\s+([A-Za-z_][A-Za-z0-9_]*))",
           "captures": {
             "1": {
               "name": "variable.other.definition.arl"
@@ -274,6 +277,14 @@
         {
           "name": "punctuation.section.brackets.arl",
           "match": "[()\\[\\]{}]"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.arl",
+          "match": "(?i:\\b(?:false|endl|true|pi)\\b)"
         }
       ]
     }

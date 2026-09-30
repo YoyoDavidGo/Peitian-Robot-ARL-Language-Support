@@ -2,7 +2,7 @@
   "name": "peitian-arl-language-support",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "David-Workshop",
   "engines": {
     "vscode": "^1.85.0"
@@ -79,7 +79,16 @@
               "name": "Peitian ARL: S1 datatype / logic / keyword",
               "scope": [
                 "storage.type.arl",
-                "storage.type.return.arl",
+                "storage.type.return.arl"
+              ],
+              "settings": {
+                "foreground": "#F0A082",
+                "fontStyle": ""
+              }
+            },
+            {
+              "name": "Peitian ARL: S1 datatype / logic / keyword",
+              "scope": [
                 "keyword.control.arl",
                 "keyword.other.arl",
                 "keyword.declaration.function.arl"
@@ -91,7 +100,9 @@
             },
             {
               "name": "Peitian ARL: instructions",
-              "scope": "support.function.instruction.arl",
+              "scope": [
+                "support.function.instruction.arl"
+              ],
               "settings": {
                 "foreground": "#00EEEE",
                 "fontStyle": ""
@@ -133,7 +144,9 @@
             },
             {
               "name": "Peitian ARL: system variables",
-              "scope": "variable.language.system.arl",
+              "scope": [
+                "variable.language.system.arl"
+              ],
               "settings": {
                 "foreground": "#C5947C",
                 "fontStyle": ""
@@ -167,7 +180,9 @@
             },
             {
               "name": "Peitian ARL: numbers",
-              "scope": "constant.numeric.arl",
+              "scope": [
+                "constant.numeric.arl"
+              ],
               "settings": {
                 "foreground": "#f0f0f0",
                 "fontStyle": ""
@@ -175,9 +190,21 @@
             },
             {
               "name": "Peitian ARL: brackets",
-              "scope": "punctuation.section.brackets.arl",
+              "scope": [
+                "punctuation.section.brackets.arl"
+              ],
               "settings": {
                 "foreground": "#c96eb4",
+                "fontStyle": ""
+              }
+            },
+            {
+              "name": "Peitian ARL: constants",
+              "scope": [
+                "constant.language.arl"
+              ],
+              "settings": {
+                "foreground": "#B4A0FF",
                 "fontStyle": ""
               }
             }
@@ -192,7 +219,7 @@
                 "variable.other.definition.arl"
               ],
               "settings": {
-                "foreground": "#1e1e1e",
+                "foreground": "#000000",
                 "fontStyle": ""
               }
             },
@@ -200,7 +227,16 @@
               "name": "Peitian ARL: S1 datatype / logic / keyword",
               "scope": [
                 "storage.type.arl",
-                "storage.type.return.arl",
+                "storage.type.return.arl"
+              ],
+              "settings": {
+                "foreground": "#7C3AED",
+                "fontStyle": ""
+              }
+            },
+            {
+              "name": "Peitian ARL: S1 datatype / logic / keyword",
+              "scope": [
                 "keyword.control.arl",
                 "keyword.other.arl",
                 "keyword.declaration.function.arl"
@@ -212,7 +248,9 @@
             },
             {
               "name": "Peitian ARL: instructions",
-              "scope": "support.function.instruction.arl",
+              "scope": [
+                "support.function.instruction.arl"
+              ],
               "settings": {
                 "foreground": "#0000e8",
                 "fontStyle": ""
@@ -254,7 +292,9 @@
             },
             {
               "name": "Peitian ARL: system variables",
-              "scope": "variable.language.system.arl",
+              "scope": [
+                "variable.language.system.arl"
+              ],
               "settings": {
                 "foreground": "#795e26",
                 "fontStyle": ""
@@ -288,7 +328,9 @@
             },
             {
               "name": "Peitian ARL: numbers",
-              "scope": "constant.numeric.arl",
+              "scope": [
+                "constant.numeric.arl"
+              ],
               "settings": {
                 "foreground": "#c0392b",
                 "fontStyle": ""
@@ -296,9 +338,21 @@
             },
             {
               "name": "Peitian ARL: brackets",
-              "scope": "punctuation.section.brackets.arl",
+              "scope": [
+                "punctuation.section.brackets.arl"
+              ],
               "settings": {
                 "foreground": "#000080",
+                "fontStyle": ""
+              }
+            },
+            {
+              "name": "Peitian ARL: constants",
+              "scope": [
+                "constant.language.arl"
+              ],
+              "settings": {
+                "foreground": "#244A4A",
                 "fontStyle": ""
               }
             }
@@ -367,7 +421,7 @@
     ]
   },
   "scripts": {
-    "test": "node tests/validate.cjs && node tests/structure.cjs && node tests/intelligence.cjs && node tests/workspace-variable-index.cjs && node tests/extension-runtime.cjs",
+    "test": "node tests/validate.cjs && node tests/structure.cjs && node tests/intelligence.cjs && node tests/workspace-variable-index.cjs && node tests/extension-runtime.cjs && node tests/wizard-v27.cjs",
     "data:generate-wizard": "node scripts/generate-wizard-data.mjs",
     "vscode:prepublish": "npm test"
   },

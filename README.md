@@ -93,16 +93,18 @@ ptp p:p
 
 `Peitian Robot ARL › Smart Completion` 默认开启，并且可以单独关闭；关闭后不会影响普通 IntelliSense。
 
+候选列表每一行都会直接显示中文用途，多种形式还会标明“位置”“位置+姿态”等区别，无需选中后再查看。
+
 开启后，常用 ARL 结构可以作为可编辑模板插入。例如选择 `ptp` 时会提供两种常用结构：
 
 ```arl
-ptp p:,vp:,sp:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
 ```
 
 插件只负责自动写入固定语法结构（例如 `p:`、`v:`、`s:`、`t:`、`w:`），所有参数值仍然是可编辑的 Tab Stop。空参数位置保持安静；输入第一个字符后才启动类型感知、严格前缀补全。你可以从匹配候选中选择，也可以继续手工输入自定义变量名或数值。**Tab** 负责进入下一个占位符，**Enter** 可以正常结束 Smart Snippet 并换行，上一行参数不会继续保持占位符高亮。
 
-Smart Completion 现在改为 **Wizard 数据驱动**。插件完整打包参考版配天 ARL 编辑器内嵌的 Wizard 数据，把参数类型、必填/可选、Variant、候选项、单位和中英文说明映射成 VS Code 原生 Snippet 与 IntelliSense；运动指令继续保留经过实际使用优化的模板。只有内置函数没有详细 Wizard Variant 时，才安全回退到原编辑器 TIPS 中的真实函数原型，因此 131 个常规 ARL 内置函数及 4 个轨迹触发条件函数都可以从资料生成结构化补全，不会凭空猜测函数签名。
+Smart Completion 使用 **Wizard V2.7 数据驱动**。插件打包校对后的 331 条语言定义，保留参数类型、必填/可选、签名、预设、候选项、单位及中英文说明。运动指令按文档预设提供基本写法和数字写法，互斥参数不会同时插入，默认隐藏的参数可手工填写。133 个常规内置函数及 4 个轨迹触发条件函数都保留资料中的结构。
 
 例如：
 
@@ -125,7 +127,7 @@ offset(p1, dx, dy, dz, rz, ry, rx)
 
 有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；像 `setdo` 这种原 Wizard 中存在“单通道 / 多通道” Variant 的函数，会在 VS Code 中分别给出对应模板。
 
-通用原型解析同时支持原资料中的多重签名、可选参数、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。Wizard 与 TIPS 不一致时，以参数更详细的 Wizard 为准；例如 `connect` 使用 `connect(socket, host, port)`。
+通用原型解析同时支持原资料中的多重签名、可选参数、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。Wizard 与 TIPS 不一致时，以参数更详细的 Wizard 为准；例如 `connect` 使用 `connect(socket, ip, port)`。
 
 所有 Wizard 参数统一使用同一套候选来源优先级：**① 当前代码中类型匹配的已声明变量 → ② Wizard 文档中写好的候选项 → ③ 当前源码中仍然存在的、同一指令参数最近使用值**。但候选只在输入首字符后出现，并且三类来源都要继续通过严格前缀筛选。已经删除的临时输入不会作为持久历史污染候选，不相关的内置标量系统变量也不会混进普通 `double` / `int` 参数。
 
@@ -189,7 +191,7 @@ endfunc
 
 同时会对常见 VS Code 内置深色/浅色主题应用仅针对 ARL 的 token 配色，不影响其他编程语言。
 
-`Peitian Robot ARL: Precise Font Weights` 默认开启。使用 JetBrains Mono 或 Cascadia Code / Cascadia Mono 时，会采用更接近配天 ARL 编辑器的分级数字字重。
+`Peitian Robot ARL: Precise Font Weights` 默认开启。使用 JetBrains Mono 或 Cascadia Code / Cascadia Mono 时，会采用更接近配天 ARL 编辑器的分级数字字重。中文等非 ASCII 字符在正文、字符串和注释中统一使用 400 字重；英文字母保留原有分级。
 
 JetBrains Mono 示例：
 
@@ -345,10 +347,12 @@ Declared-variable candidates come from the current ARL file plus its paired `<pr
 
 `Peitian Robot ARL › Smart Completion` is enabled by default and can be turned off independently from normal IntelliSense.
 
+Every suggestion row displays its Chinese purpose and variant name, so you can compare forms before selecting one.
+
 When enabled, common ARL structures can be inserted as editable snippets. For example, `ptp` provides two templates:
 
 ```arl
-ptp p:,vp:,sp:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
 ```
 
@@ -356,7 +360,7 @@ The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically
 
 For direct-value motion templates, fixed units such as `%`, `mm/s`, and `mm` are inserted automatically outside the editable numeric tab stop. For example, changing `30` to `50` yields `vp:50%` without retyping `%`. Literal templates use a Value icon, while variable templates use a Variable icon in IntelliSense.
 
-Smart Completion is now **Wizard-driven**. The extension packages the complete ARL Wizard metadata embedded in the reference PEITIAN ARL editor — parameter type, required/optional status, variants, documented candidates, units, and descriptions — and maps it into native VS Code snippets and IntelliSense. Motion instructions keep their curated templates. The original editor's TIPS prototype is used only as a safe fallback when a function has no detailed Wizard variant, so all 131 regular built-in ARL functions plus the four trajectory-trigger conditions have source-backed Smart structure without inventing signatures.
+Smart Completion is **Wizard V2.7-driven**. The extension packages 331 reviewed language definitions, preserving parameter types, required/optional status, signatures, presets, candidates, units, and bilingual descriptions. Motion templates follow documented basic and numeric presets, insert only one parameter from each exclusive group, and omit default-hidden parameters while allowing manual input. All 133 regular built-in functions and four trajectory-trigger functions retain their documented structures.
 
 For example:
 
@@ -379,7 +383,7 @@ These four functions are intended mainly for a `trigger` `when:` condition. Unit
 
 Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
 
-The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments, array parameters, and shorthand repeated types used by the original ARL references. When Wizard and TIPS disagree, the detailed Wizard parameter table takes precedence; for example, `connect` uses `connect(socket, host, port)`.
+The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments, array parameters, and shorthand repeated types used by the original ARL references. When Wizard and TIPS disagree, the detailed Wizard parameter table takes precedence; for example, `connect` uses `connect(socket, ip, port)`.
 
 Parameter candidates use one common source priority across Wizard-driven completion: **(1)** current type-compatible declared variables, **(2)** Wizard-documented candidates, and **(3)** recent values that still exist in nearby source code for the same instruction parameter. The list is shown only after the first character is typed, and all three sources are then filtered by that strict prefix. Deleted/transient inputs are not kept as persistent type-wide history, and unrelated builtin scalar system variables are not injected into primitive parameters.
 
@@ -449,7 +453,7 @@ Bracket-pair rainbow coloring is disabled for ARL so `()`, `[]`, and `{}` keep t
 
 `Peitian Robot ARL: Precise Font Weights` is enabled by default.
 
-When the editor font is JetBrains Mono or Cascadia Code / Cascadia Mono, ARL tokens use differentiated numeric font weights that better match the PEITIAN ARL editor. Other fonts are left unchanged.
+When the editor font is JetBrains Mono or Cascadia Code / Cascadia Mono, ARL tokens use differentiated numeric font weights that better match the PEITIAN ARL editor. Chinese and other non-ASCII text uses weight 400 in code, strings, and comments; Latin text retains the existing weight profile. Other fonts are left unchanged.
 
 Recommended examples:
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4
+
+- Synced all 331 definitions with the reviewed Wizard V2.7 document, including explicit signatures, per-overload return types, presets, choice groups, parameter constraints, member tables, and system-variable types/array shapes.
+- Generated motion templates from documented presets, avoiding mutually exclusive parameters and default-hidden fields.
+- Matched the reference editor’s updated Black/Light colors, including separate datatype and constant colors.
+- Applied weight 400 to Chinese text throughout code, strings, and comments when precise font weights are enabled.
+- Displayed Chinese purposes and variant names on every completion row before selection.
+
 ## 1.0.3
 
 - Kept Chinese and other non-ASCII fallback glyphs inside strings at normal weight, preventing them from becoming washed out when JetBrains Mono or Cascadia uses the extension's light Latin font-weight profile.

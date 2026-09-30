@@ -245,10 +245,10 @@ for (const group of ['logic','keywords','datatypes']) {
     assert(entry.type && entry.type.trim(), `Missing Hover type for ${group}:${token}`);
   }
 }
-assert.strictEqual(hoverRef063.entries.if.desc, '条件判断，满足时执行块内代码');
+assert.strictEqual(hoverRef063.entries.if.desc, "条件判断；可用 endif 块式或单行紧凑写法");
 assert.strictEqual(hoverRef063.entries.if.proto, 'if(bool 表达式)');
 assert.strictEqual(hoverRef063.entries.return.proto, 'return [表达式]');
-assert.strictEqual(hoverRef063.entries.pose.desc, '位姿类型（位置+姿态）');
+assert.strictEqual(hoverRef063.entries.pose.desc, "位姿类型（位置+姿态）");
 console.log('ARL v0.6.3 detailed S1 Hover tests passed');
 
 
@@ -346,8 +346,8 @@ smart = getSmartCompletionTemplates('ccir', 'instruction', reference);
 assert(smart.some(x=>x.variant==='literal' && x.snippet==='ccir p:${1},vl:${2}mm/s,sl:${3}mm,t:${4:$FLANGE},w:${5:$WORLD}'));
 
 smart = getSmartCompletionTemplates('offset', 'function', reference);
-assert.strictEqual(smart.length, 1);
-assert.strictEqual(smart[0].snippet, 'offset(${1:p}, ${2:dx}, ${3:dy}, ${4:dz}, ${5:rz}, ${6:ry}, ${7:rx})');
+assert.strictEqual(smart.length, 2);
+assert(smart.some(item=>item.snippet==='offset(${1}, ${2}, ${3}, ${4}, ${5}, ${6}, ${7})'));
 assert.strictEqual(smart[0].triggerSuggest, false);
 
 smart = getSmartCompletionTemplates('if', 'keyword', reference);
@@ -540,7 +540,7 @@ const parsedWizard = parseWizardMarkdown(wizardSample);
 assert.strictEqual(parsedWizard.waituntil.type, 'instruction');
 assert.strictEqual(parsedWizard.waituntil.variants.length, 1);
 assert.deepStrictEqual(parsedWizard.waituntil.variants[0].params[0], {
-  key:'cond', type:'bool', req:true, opt:false, options:'', unit:'',
+  key:'cond', type:'bool', req:true, opt:false, hiddenDefault:false, options:'', unit:'',
   candidates:['getdi(1)'], ph:'cond', desc:'等待条件表达式', desc_en:'condition'
 });
 assert.strictEqual(parsedWizard.waituntil.variants[0].params[1].unit, 's');
@@ -591,9 +591,9 @@ const dualGetdi={entries:{getdi:{name:'getdi',type:'function',proto:'bool getdi(
   {name:'单通道',params:[{key:'chan',type:'int',req:true,opt:false,candidates:[]}]},
   {name:'多通道',params:[{key:'from',type:'int',req:true,opt:false,candidates:[]},{key:'to',type:'int',req:true,opt:false,candidates:[]}]}
 ]}}};
-let hoverSignatures=getWizardHoverSignatures('bool active=getdi(45,48)',14,dualGetdi,reference,languageData);
+let hoverSignatures=getWizardHoverSignatures('bool active=getdi(45,48)',14,dualGetdi,{entries:{getdi:{proto:'bool getdi(int chan)'}}},languageData);
 assert.deepStrictEqual(hoverSignatures.slice(0,2),['bool getdi(int from, int to)','bool getdi(int chan)'],'Two-argument Hover must rank the matching Wizard shape first while retaining the other valid shape');
-hoverSignatures=getWizardHoverSignatures('bool active=getdi(45)',14,dualGetdi,reference,languageData);
+hoverSignatures=getWizardHoverSignatures('bool active=getdi(45)',14,dualGetdi,{entries:{getdi:{proto:'bool getdi(int chan)'}}},languageData);
 assert.deepStrictEqual(hoverSignatures.slice(0,2),['bool getdi(int chan)','bool getdi(int from, int to)'],'Single-argument Hover must rank the matching Wizard shape first');
 wizCtx=getWizardParamContext('getdi(1, t','getdi(1, t'.length,dualGetdi,reference,languageData);
 assert.strictEqual(wizCtx.variantIndex,1,'A second getdi argument must select its two-channel variant');
@@ -649,15 +649,15 @@ assert(packagedWizard.entries.waituntil?.variants?.length, 'Packaged Wizard data
 assert.strictEqual(packagedWizard.entries.waituntil.variants[0].params[0].type, 'bool');
 assert.deepStrictEqual(packagedWizard.entries.waituntil.variants[0].params[0].candidates, ['getdi(1)']);
 assert.strictEqual(packagedWizard.entries.setdo.variants.length, 2, 'setdo must retain original Single/Multi channel variants');
-assert.strictEqual(packagedWizard.entries.lin.variants[1].params.find(p=>p.key==='vl').unit, 'mm/s');
-assert.strictEqual(packagedWizard.entries.ptp.variants[1].params.find(p=>p.key==='vp').unit, '%');
+assert.strictEqual(packagedWizard.entries.lin.variants[0].params.find(p=>p.key==='vl').unit, 'mm/s');
+assert.strictEqual(packagedWizard.entries.ptp.variants[0].params.find(p=>p.key==='vp').unit, '%');
 
 const packagedRandRange='func void main()\n    rand(1, \nendfunc';
 sig=getSignatureContext(packagedRandRange,packagedRandRange.indexOf('\nendfunc'),reference,languageData,packagedWizard);
 assert.strictEqual(sig.label,'double rand(double start, double end)','Explicit pipe-separated overloads must retain the selected overload return type when Wizard data is also present');
 const packagedConnect='func void main()\n    connect(sock, \nendfunc';
 sig=getSignatureContext(packagedConnect,packagedConnect.indexOf('\nendfunc'),reference,languageData,packagedWizard);
-assert.deepStrictEqual(sig.parameters,['socket s','string host','int port'],'Complete Wizard parameters must override the conflicting legacy connect prototype');
+assert.deepStrictEqual(sig.parameters,['socket s','string ip','int port'],'Signature parameters must match the standardized source');
 
 let packagedTemplates = getSmartCompletionTemplates('waituntil','instruction',reference,packagedWizard);
 assert.strictEqual(packagedTemplates.length,2);
@@ -705,8 +705,8 @@ console.log('ARL Wizard nearby-value and priority-order tests passed');
 // declared variables so accepting a completion can append fixed ARL units.
 const unitCands = buildWizardParameterCandidates({
   entry: packagedWizard.entries.lin,
-  variantIndex:1,
-  paramIndex:1, // vl
+  variantIndex:0,
+  paramIndex:2, // vl
   variables:[{label:'vLinear',kind:'variable',type:'double'}],
   prefix:''
 });
@@ -806,7 +806,7 @@ const saveSvCandidates=buildWizardParameterCandidates({
   entry:saveSvCtx.entry,variantIndex:saveSvCtx.variantIndex,paramIndex:saveSvCtx.paramIndex,
   variables:[{label:'someString',kind:'variable',type:'string'}],prefix:''
 });
-assert.deepStrictEqual(saveSvCandidates.map(x=>x.label),['"I"','"D"','"B"','"P"','"J"','"S"'],'savesv must preserve original MD-only candidate rule');
+assert.deepStrictEqual(saveSvCandidates.map(x=>x.label),['"I"','"D"','"B"','"P"','"J"','"S"','"TOOLS"'],'savesv must preserve the updated MD-only candidate rule');
 console.log('ARL original TIPS broad-coverage tests passed');
 
 // Hover is also Wizard-driven: every multi-shape entry keeps all distinct
@@ -827,8 +827,8 @@ for(const [name] of optionalEntries){
   assert(signatures.filter(signature=>signature.includes('[')).length>=entryOptionalVariantCount,`Every optional shape for ${name} must be visibly bracketed in Hover`);
 }
 assert(getWizardHoverSignatures('bool ok=getip(ip)',10,packagedWizard,reference,languageData).includes('bool getip(string ip [, string if_name])'),'Function Hover must retain the documented optional-parameter notation');
-assert(getWizardHoverSignatures('movej',0,packagedWizard,reference,languageData).some(signature=>signature.includes('vp:<double>%') && signature.includes('sp:<double>%')),'Alternative named instruction parameters must keep their names, types and units in Hover');
-assert.deepStrictEqual(getWizardHoverSignatures('rand()',1,packagedWizard,reference,languageData),['int rand()','double rand(double start, double end)'],'Explicit function overloads must retain each documented return type');
+assert(getWizardHoverSignatures('movej',0,packagedWizard,reference,languageData).some(signature=>signature===packagedWizard.entries.movej.variants[0].signature),'Alternative named instruction parameters must keep their names, types and units in Hover');
+assert.deepStrictEqual(getWizardHoverSignatures('rand()',1,packagedWizard,reference,languageData),['int rand()','double rand(double start, double end)','double rand(int start, int end)'],'Explicit function overloads must retain each documented return type');
 const tostrHoverSignatures=getWizardHoverSignatures('tostr(1.25,2)',2,packagedWizard,reference,languageData);
 assert(tostrHoverSignatures.includes('string tostr(double v, int precision)'),'tostr must retain its documented precision overload');
 assert(!tostrHoverSignatures.some(signature=>signature.includes('int precision, int v')),'tostr must not fabricate a four-argument overload from merged Wizard rows');
@@ -842,7 +842,7 @@ assert.deepStrictEqual(getposeHoverParameters.map(parameter=>[parameter.key,para
 ],'Hover parameter details must preserve the original Wizard key, type and explanation');
 for(const [name,entry] of Object.entries(packagedWizard.entries).filter(([,entry])=>['function','instruction'].includes(entry.type) && entry.variants?.length)){
   const parameters=getWizardHoverParameters(name,packagedWizard,reference,languageData);
-  assert(parameters.length>0,`${name} must expose Wizard parameter details`);
+  assert.strictEqual(parameters.length>0,entry.variants.some(variant=>variant.params?.length>0),`${name} must expose its documented parameters`);
   assert(parameters.every(parameter=>parameter.desc || parameter.desc_en),`${name} Hover parameters must include explanations`);
 }
 console.log(`ARL Wizard Hover coverage tests passed (${multiShapeEntries.length} multi-shape entries, ${optionalVariantCount} optional shapes)`);

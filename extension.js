@@ -236,6 +236,7 @@ function builtinHover(word, entry, category, signatures=[], parameters=[]) {
       const description=parameter.desc?` — ${parameter.desc}`:'';
       const english=parameter.desc_en?` / _${parameter.desc_en}_`:'';
       md.appendMarkdown(`  \n- \`${parameter.key}\` · \`${parameter.type}\` · ${requirement}${unit}${description}${english}`);
+      if(parameter.options) md.appendMarkdown(`  \n  取值规则：${parameter.options}`);
     }
   }
   if (entry?.desc_en) md.appendMarkdown(`  \n_${entry.desc_en}_`);
@@ -257,7 +258,8 @@ function completionKind(kind) {
 }
 
 function completionItem(candidate, replaceRange, referenceEntry, options={}) {
-  const item = new vscode.CompletionItem(candidate.label, completionKind(candidate.kind));
+  const label=referenceEntry?.desc?{label:candidate.label,description:referenceEntry.desc}:candidate.label;
+  const item = new vscode.CompletionItem(label, completionKind(candidate.kind));
   item.detail = candidate.detail || candidate.type || 'PEITIAN ARL';
   if (candidate.wizardCurrentInput) {
     item.filterText = String(candidate.label);
@@ -500,9 +502,11 @@ function wizardManualValueReady(context, candidates=[]) {
 
 function smartCompletionItem(candidate, template, replaceRange, referenceEntry, index=0) {
   let completionKind = vscode.CompletionItemKind.Snippet || vscode.CompletionItemKind.Value;
-  if (template.variant === 'literal') completionKind = vscode.CompletionItemKind.Value;
-  else if (template.variant === 'variables') completionKind = vscode.CompletionItemKind.Variable;
-  const item = new vscode.CompletionItem(candidate.label, completionKind);
+  if (template.variant === 'literal' || template.valueKind === 'literal') completionKind = vscode.CompletionItemKind.Value;
+  else if (template.variant === 'variables' || template.valueKind === 'variables') completionKind = vscode.CompletionItemKind.Variable;
+  const shape=template.variantName || template.description || '';
+  const description=[referenceEntry?.desc,shape].filter(Boolean).join(' · ');
+  const item = new vscode.CompletionItem({label:candidate.label,description}, completionKind);
   item.detail = template.description || candidate.detail || 'PEITIAN ARL Smart Completion';
   item.filterText = candidate.label;
   item.insertText = new vscode.SnippetString(escapeSnippetLiteralDollars(template.snippet));

@@ -93,16 +93,18 @@ ptp p:p
 
 `Peitian Robot ARL › Smart Completion` 默认开启，并且可以单独关闭；关闭后不会影响普通 IntelliSense。
 
+候选列表每一行都会直接显示中文用途，多种形式还会标明“位置”“位置+姿态”等区别，无需选中后再查看。
+
 开启后，常用 ARL 结构可以作为可编辑模板插入。例如选择 `ptp` 时会提供两种常用结构：
 
 ```arl
-ptp p:,vp:,sp:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
 ```
 
 插件只负责自动写入固定语法结构（例如 `p:`、`v:`、`s:`、`t:`、`w:`），所有参数值仍然是可编辑的 Tab Stop。空参数位置保持安静；输入第一个字符后才启动类型感知、严格前缀补全。你可以从匹配候选中选择，也可以继续手工输入自定义变量名或数值。**Tab** 负责进入下一个占位符，**Enter** 可以正常结束 Smart Snippet 并换行，上一行参数不会继续保持占位符高亮。
 
-Smart Completion 现在改为 **Wizard 数据驱动**。插件完整打包参考版配天 ARL 编辑器内嵌的 Wizard 数据，把参数类型、必填/可选、Variant、候选项、单位和中英文说明映射成 VS Code 原生 Snippet 与 IntelliSense；运动指令继续保留经过实际使用优化的模板。只有内置函数没有详细 Wizard Variant 时，才安全回退到原编辑器 TIPS 中的真实函数原型，因此 131 个常规 ARL 内置函数及 4 个轨迹触发条件函数都可以从资料生成结构化补全，不会凭空猜测函数签名。
+Smart Completion 使用 **Wizard V2.7 数据驱动**。插件打包校对后的 331 条语言定义，保留参数类型、必填/可选、签名、预设、候选项、单位及中英文说明。运动指令按文档预设提供基本写法和数字写法，互斥参数不会同时插入，默认隐藏的参数可手工填写。133 个常规内置函数及 4 个轨迹触发条件函数都保留资料中的结构。
 
 例如：
 
@@ -125,7 +127,7 @@ offset(p1, dx, dy, dz, rz, ry, rx)
 
 有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；像 `setdo` 这种原 Wizard 中存在“单通道 / 多通道” Variant 的函数，会在 VS Code 中分别给出对应模板。
 
-通用原型解析同时支持原资料中的多重签名、可选参数、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。Wizard 与 TIPS 不一致时，以参数更详细的 Wizard 为准；例如 `connect` 使用 `connect(socket, host, port)`。
+通用原型解析同时支持原资料中的多重签名、可选参数、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。Wizard 与 TIPS 不一致时，以参数更详细的 Wizard 为准；例如 `connect` 使用 `connect(socket, ip, port)`。
 
 所有 Wizard 参数统一使用同一套候选来源优先级：**① 当前代码中类型匹配的已声明变量 → ② Wizard 文档中写好的候选项 → ③ 当前源码中仍然存在的、同一指令参数最近使用值**。但候选只在输入首字符后出现，并且三类来源都要继续通过严格前缀筛选。已经删除的临时输入不会作为持久历史污染候选，不相关的内置标量系统变量也不会混进普通 `double` / `int` 参数。
 
@@ -189,7 +191,7 @@ endfunc
 
 同时会对常见 VS Code 内置深色/浅色主题应用仅针对 ARL 的 token 配色，不影响其他编程语言。
 
-`Peitian Robot ARL: Precise Font Weights` 默认开启。使用 JetBrains Mono 或 Cascadia Code / Cascadia Mono 时，会采用更接近配天 ARL 编辑器的分级数字字重。
+`Peitian Robot ARL: Precise Font Weights` 默认开启。使用 JetBrains Mono 或 Cascadia Code / Cascadia Mono 时，会采用更接近配天 ARL 编辑器的分级数字字重。中文等非 ASCII 字符在正文、字符串和注释中统一使用 400 字重；英文字母保留原有分级。
 
 JetBrains Mono 示例：
 

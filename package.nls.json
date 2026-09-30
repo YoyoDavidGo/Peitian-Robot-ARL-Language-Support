@@ -2,9 +2,8 @@
   "extension.displayName": "Peitian Robot ARL Language Support",
   "extension.description": "Lightweight VS Code language support for PEITIAN industrial robot ARL programs. ARCS 2.6.6 (Programming Manual v4.5.0).",
   "configuration.title": "Peitian Robot ARL",
-  "configuration.preciseFontWeights.description": "Use ARL-IDE-like numeric font weights for JetBrains Mono and Cascadia Code in .arl editors.",
+  "configuration.preciseFontWeights.description": "Use numeric font weights for JetBrains Mono and Cascadia Code; Chinese text in code, strings, and comments uses normal weight 400.",
   "configuration.smartCompletion.description": "Use ARL Wizard metadata to insert optional structure templates and parameter-aware completions for instructions, functions, and control blocks. Values remain freely editable.",
-  "command.smartEnter.title": "Peitian ARL: Finish Smart Completion and Insert Line Break"
-,
+  "command.smartEnter.title": "Peitian ARL: Finish Smart Completion and Insert Line Break",
   "command.smartTab.title": "ARL Smart Parameter: Next Placeholder"
 }

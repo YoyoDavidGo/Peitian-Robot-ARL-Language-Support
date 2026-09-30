@@ -8,7 +8,7 @@ const data = read('language-data/arl-language.json');
 const grammar = read('syntaxes/arl.tmLanguage.json');
 const cfg = read('language-configuration.json');
 
-assert.strictEqual(pkg.version, '1.0.3', 'Marketplace CJK font-weight fix must use version 1.0.3');
+assert.strictEqual(pkg.version, '1.0.4', 'Marketplace CJK font-weight fix must use version 1.0.4');
 assert.strictEqual(pkg.displayName, '%extension.displayName%', 'Extension display name should be localized through package.nls');
 assert.strictEqual(pkg.icon, 'icon.png', 'Extension manifest must point to icon.png');
 assert(fs.existsSync(path.join(root, pkg.icon)), 'Extension icon file is missing');
@@ -113,8 +113,8 @@ for (const [name, arr] of Object.entries(data.categories)) {
 
 // Confirm representative source rules are retained.
 for (const v of ['if','elseif','switch','goto']) assert(data.categories.logic.includes(v));
-for (const v of ['movej','lin','ccir','startweave','palletcompen']) assert(data.categories.instructions.includes(v));
-for (const v of ['setdo','poseinv','getwobj_3p','readregisters','clkread']) assert(data.categories.functions.includes(v));
+for (const v of ['movej','lin','ccir','startweave']) assert(data.categories.instructions.includes(v));
+for (const v of ['setdo','poseinv','getwobj_3p','readregisters','clkread','palletcompen','geterror']) assert(data.categories.functions.includes(v));
 for (const v of ['pose','joint','wobj','modbus_rtu_master','tcpforce']) assert(data.categories.datatypes.includes(v));
 for (const v of ['$WOBJ_OFFSET','$TOOL_OFFSET','$AT_PATH_DO']) assert(data.categories.systemVariables.includes(v));
 assert.deepStrictEqual(data.indentation.open, ['func','if','while','for','loop','switch','repeat','interrupt','timer','trigger']);
@@ -136,7 +136,7 @@ for (const line of ['if(a) MoveJ(p1)','while(x) doSomething()']) {
 
 // TextMate grammar must carry every extracted fixed token in a matching repository rule.
 const repoText = JSON.stringify(grammar.repository).toLowerCase();
-for (const group of ['logic','instructions','functions','keywords','datatypes','parenOnlyFunctions']) {
+for (const group of ['logic','instructions','functions','keywords','datatypes','constants','parenOnlyFunctions']) {
   for (const token of data.categories[group]) {
     assert(repoText.includes(token.toLowerCase()), `Grammar missing ${group} token: ${token}`);
   }
@@ -154,7 +154,7 @@ assert(
 );
 assert.strictEqual(
   motionPattern.begin,
-  '(?i:\\b(?:movej|ptp|lin|cir|ccir|spl|jump)\\b)',
+  '(?i:\\b(?:movej|ccir|jump|cir|lin|ptp|spl)\\b)',
   'Unit-aware numeric highlighting must stay limited to Wizard motion instructions'
 );
 const unitNumericPattern = motionPattern.patterns.find(pattern => pattern.name === 'constant.numeric.arl');
@@ -180,7 +180,7 @@ assert.strictEqual('double distance=12mm'.match(numericRegex), null, 'Unit-aware
 
 
 // v0.3: exact ARL-IDE Black/Light palette and automatic matching for VS Code built-in themes.
-assert.strictEqual(pkg.version, '1.0.3');
+assert.strictEqual(pkg.version, '1.0.4');
 assert(Array.isArray(pkg.contributes.themes) && pkg.contributes.themes.length === 2, 'Expected optional Black and Light themes');
 const blackContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Black');
 const lightContribution = pkg.contributes.themes.find(t => t.label === 'Peitian ARL Light');
@@ -195,14 +195,14 @@ for (const [themePath, theme] of [[blackContribution.path, blackTheme], [lightCo
 }
 
 assert.deepStrictEqual(data.themePalettes.black.syntax, {
-  s1:'#EEEE00', instruction:'#00EEEE', builtinFunction:'#00D407', systemVariable:'#C5947C',
+  s1:'#EEEE00', datatype:'#F0A082', constant:'#B4A0FF', instruction:'#00EEEE', builtinFunction:'#00D407', systemVariable:'#C5947C',
   comment:'#49a659', string:'#9a9a9a', number:'#f0f0f0', userFunction:'#78a8c8',
   bracket:'#c96eb4', main:'#ff5555', plain:'#c8d0d4'
 });
 assert.deepStrictEqual(data.themePalettes.light.syntax, {
-  s1:'#d4860a', instruction:'#0000e8', builtinFunction:'#aa00aa', systemVariable:'#795e26',
+  s1:'#d4860a', datatype:'#7C3AED', constant:'#244A4A', instruction:'#0000e8', builtinFunction:'#aa00aa', systemVariable:'#795e26',
   comment:'#008000', string:'#808080', number:'#c0392b', userFunction:'#1a67a8',
-  bracket:'#000080', main:'#ff5555', plain:'#1e1e1e'
+  bracket:'#000080', main:'#ff5555', plain:'#000000'
 });
 
 const flattenRules = theme => theme.tokenColors.flatMap(r => (Array.isArray(r.scope) ? r.scope : [r.scope]).map(scope => [scope, r.settings.foreground]));
@@ -213,7 +213,7 @@ for (const [scope, blackColor, lightColor] of [
   ['support.function.instruction.arl','#00EEEE','#0000e8'],
   ['support.function.builtin.arl','#00D407','#aa00aa'],
   ['entity.name.function.user.arl','#78a8c8','#1a67a8'],
-  ['variable.other.definition.arl','#c8d0d4','#1e1e1e'],
+  ['variable.other.definition.arl','#c8d0d4','#000000'],
   ['comment.line.double-slash.arl','#49a659','#008000'],
   ['string.quoted.double.arl','#9a9a9a','#808080'],
   ['constant.numeric.arl','#f0f0f0','#c0392b'],
@@ -339,7 +339,7 @@ assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('!s
 assert(smartTabBindings.some(x=>x.key==='tab' && String(x.when||'').includes('suggestWidgetVisible') && String(x.when||'').includes('peitianArl.smartValueReady')), 'Smart Tab must advance a complete manually typed value even while suggestions are visible');
 for(const binding of smartTabBindings) assert(String(binding.when||'').includes('peitianArl.smartSnippetActive'), 'Smart Tab must be scoped to generic ARL Smart Completion');
 
-console.log('ARL 1.0.3 manifest/icon validation passed');
+console.log('ARL 1.0.4 manifest/icon validation passed');
 
 
 // Chinese punctuation is common inside ARL strings/comments. Keep VS Code

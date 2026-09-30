@@ -3,24 +3,24 @@
   "name": "Peitian ARL Light",
   "type": "light",
   "colors": {
-    "foreground": "#202020",
-    "descriptionForeground": "#606060",
+    "foreground": "#000000",
+    "descriptionForeground": "#707070",
     "focusBorder": "#0069CC",
-    "activityBar.background": "#FAFAFD",
-    "activityBar.foreground": "#202020",
-    "activityBar.inactiveForeground": "#606060",
-    "activityBar.border": "#F0F1F2",
-    "sideBar.background": "#FAFAFD",
-    "sideBar.foreground": "#202020",
-    "sideBar.border": "#F0F1F2",
-    "titleBar.activeBackground": "#FAFAFD",
-    "titleBar.activeForeground": "#606060",
-    "titleBar.border": "#F0F1F2",
+    "activityBar.background": "#ececec",
+    "activityBar.foreground": "#000000",
+    "activityBar.inactiveForeground": "#707070",
+    "activityBar.border": "#c8c8c8",
+    "sideBar.background": "#ececec",
+    "sideBar.foreground": "#000000",
+    "sideBar.border": "#c8c8c8",
+    "titleBar.activeBackground": "#ececec",
+    "titleBar.activeForeground": "#707070",
+    "titleBar.border": "#c8c8c8",
     "editor.background": "#f6f6f6",
     "editor.foreground": "#000000",
-    "editorLineNumber.foreground": "#606060",
-    "editorLineNumber.activeForeground": "#202020",
-    "editorCursor.foreground": "#202020",
+    "editorLineNumber.foreground": "#90a0b0",
+    "editorLineNumber.activeForeground": "#000000",
+    "editorCursor.foreground": "#000000",
     "editor.selectionBackground": "#0069CC40",
     "editor.inactiveSelectionBackground": "#0069CC1A",
     "editor.lineHighlightBackground": "#EAEAEA80",
@@ -31,15 +31,15 @@
     "editorBracketMatch.border": "#F0F1F2",
     "editorGroupHeader.tabsBackground": "#FAFAFD",
     "tab.activeBackground": "#f6f6f6",
-    "tab.activeForeground": "#202020",
-    "tab.inactiveBackground": "#FAFAFD",
-    "tab.inactiveForeground": "#606060",
-    "tab.border": "#F0F1F2",
-    "panel.background": "#FAFAFD",
-    "panel.border": "#F0F1F2",
-    "statusBar.background": "#FAFAFD",
-    "statusBar.foreground": "#606060",
-    "statusBar.border": "#F0F1F2"
+    "tab.activeForeground": "#000000",
+    "tab.inactiveBackground": "#ececec",
+    "tab.inactiveForeground": "#707070",
+    "tab.border": "#c8c8c8",
+    "panel.background": "#ececec",
+    "panel.border": "#c8c8c8",
+    "statusBar.background": "#d8d8d8",
+    "statusBar.foreground": "#707070",
+    "statusBar.border": "#c8c8c8"
   },
   "tokenColors": [
     {
@@ -118,7 +118,7 @@
         "variable.other.definition.arl"
       ],
       "settings": {
-        "foreground": "#1e1e1e",
+        "foreground": "#000000",
         "fontStyle": ""
       }
     },
@@ -126,7 +126,16 @@
       "name": "Peitian ARL: S1 datatype / logic / keyword",
       "scope": [
         "storage.type.arl",
-        "storage.type.return.arl",
+        "storage.type.return.arl"
+      ],
+      "settings": {
+        "foreground": "#7C3AED",
+        "fontStyle": ""
+      }
+    },
+    {
+      "name": "Peitian ARL: S1 datatype / logic / keyword",
+      "scope": [
         "keyword.control.arl",
         "keyword.other.arl",
         "keyword.declaration.function.arl"
@@ -138,7 +147,9 @@
     },
     {
       "name": "Peitian ARL: instructions",
-      "scope": "support.function.instruction.arl",
+      "scope": [
+        "support.function.instruction.arl"
+      ],
       "settings": {
         "foreground": "#0000e8",
         "fontStyle": ""
@@ -180,7 +191,9 @@
     },
     {
       "name": "Peitian ARL: system variables",
-      "scope": "variable.language.system.arl",
+      "scope": [
+        "variable.language.system.arl"
+      ],
       "settings": {
         "foreground": "#795e26",
         "fontStyle": ""
@@ -214,7 +227,9 @@
     },
     {
       "name": "Peitian ARL: numbers",
-      "scope": "constant.numeric.arl",
+      "scope": [
+        "constant.numeric.arl"
+      ],
       "settings": {
         "foreground": "#c0392b",
         "fontStyle": ""
@@ -222,9 +237,21 @@
     },
     {
       "name": "Peitian ARL: brackets",
-      "scope": "punctuation.section.brackets.arl",
+      "scope": [
+        "punctuation.section.brackets.arl"
+      ],
       "settings": {
         "foreground": "#000080",
+        "fontStyle": ""
+      }
+    },
+    {
+      "name": "Peitian ARL: constants",
+      "scope": [
+        "constant.language.arl"
+      ],
+      "settings": {
+        "foreground": "#244A4A",
         "fontStyle": ""
       }
     }

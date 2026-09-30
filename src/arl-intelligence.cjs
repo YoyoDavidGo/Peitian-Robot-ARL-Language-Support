@@ -199,7 +199,7 @@ function buildCompletionCandidates(text, languageData=defaultLanguageData, lineN
   const cats=languageData.categories||{};
   const groups=[
     ['instructions','instruction'],['functions','function'],['parenOnlyFunctions','function'],
-    ['logic','keyword'],['keywords','keyword'],['datatypes','datatype'],['systemVariables','system-variable']
+    ['logic','keyword'],['keywords','keyword'],['datatypes','datatype'],['constants','constant'],['systemVariables','system-variable']
   ];
   for(const [group,kind] of groups){
     for(const label of cats[group]||[]){
@@ -264,7 +264,7 @@ function parametersFromProto(proto, name){
 function protoFunctionSignatures(proto,name){
   const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const out=[];
-  for(const alternative of String(proto||'').split(/\s+\|\s+/).map(x=>x.trim()).filter(Boolean)){
+  for(const alternative of String(proto||'').split(/\s+\|\s+|\s+或\s+|\/(?=[A-Za-z_][A-Za-z0-9_]*\s+[A-Za-z_][A-Za-z0-9_]*\s*\()/).map(x=>x.trim()).filter(Boolean)){
     if(!new RegExp(`\\b${escaped}\\s*\\(`,'i').test(alternative)) continue;
     out.push({label:alternative,parameters:parametersFromProto(alternative,name)});
   }
@@ -314,12 +314,14 @@ function formatWizardParamList(params, render, separator=', '){
 }
 
 function formatWizardFunctionSignature(entry,name,variant){
+  if(variant?.signature) return variant.signature;
   const parameters=formatWizardParamList(variant?.params||[],param=>`${param.type||'any'} ${param.key}`.trim());
-  const returnType=wizardReturnType(entry,name);
+  const returnType=variant?.returns || entry?.returns || wizardReturnType(entry,name);
   return `${returnType?returnType+' ':''}${name}(${parameters})`;
 }
 
 function formatWizardInstructionSignature(entry,name,variant){
+  if(variant?.signature) return variant.signature;
   const separator=variant?.sep===';'?'; ':', ';
   const parameters=formatWizardParamList(variant?.params||[],param=>{
     const type=`<${param.type||'any'}>`;
@@ -355,7 +357,7 @@ function resolveWizardHoverContext(name,wizard,reference,languageData=defaultLan
   if(!entry) return null;
   const isFunction=functionStyle || entry.type==='function';
   const instructionNames=languageData.categories?.instructions||[];
-  const isInstruction=entry.type==='instruction'
+  const isInstruction=['instruction','instruction.motion','logic','keyword'].includes(entry.type)
     || referenceEntry?.type==='instruction'
     || instructionNames.some(item=>String(item).toLowerCase()===key);
   return isFunction || isInstruction?{key,entry,referenceEntry,isFunction,isInstruction}:null;
@@ -410,7 +412,7 @@ function findWizardParameter(entry,key,type=''){
 function findSharedInstructionParameter(wizard,key){
   const groups=new Map();
   for(const entry of Object.values(wizard?.entries||wizard||{})){
-    if(entry?.type!=='instruction') continue;
+    if(!['instruction','instruction.motion'].includes(entry?.type)) continue;
     for(const variant of entry.variants||[]){
       for(const param of variant.params||[]){
         if(String(param.key||'').toLowerCase()!==String(key||'').toLowerCase()) continue;
@@ -458,7 +460,7 @@ function getWizardHoverSignatures(lineText,character,wizard,reference,languageDa
       }
     }
     const protoSignatures=protoFunctionSignatures(referenceEntry?.proto,name);
-    if(protoSignatures.length>1){
+    if(protoSignatures.length>1 && !variants.some(variant=>variant.signature)){
       const ordered=supplied===null?protoSignatures:rankHoverSignaturesByArity(protoSignatures,supplied);
       return ordered.map(signature=>signature.label);
     }
@@ -505,7 +507,7 @@ function getWizardHoverParameters(name,wizard,reference,languageData=defaultLang
     if(!param) return;
     const item={
       key:String(param.key||''), type:String(param.type||'any'), unit:String(param.unit||''),
-      required:!!required, desc:String(param.desc||''), desc_en:String(param.desc_en||'')
+      required:!!required, desc:String(param.desc||''), desc_en:String(param.desc_en||''), options:String(param.options||'')
     };
     const identity=[item.key,item.type,item.unit,item.desc,item.desc_en].map(value=>value.toLowerCase()).join('\u0000');
     const existing=byIdentity.get(identity);
@@ -516,7 +518,7 @@ function getWizardHoverParameters(name,wizard,reference,languageData=defaultLang
 
   const proto=String(context.referenceEntry?.proto||context.entry.proto||'');
   const protoSignatures=context.isFunction?protoFunctionSignatures(proto,context.key):[];
-  if(context.isFunction && protoSignatures.length>1){
+  if(context.isFunction && protoSignatures.length>1 && !context.entry.variants?.some(variant=>variant.signature)){
     for(const signature of protoSignatures){
       const open=signature.label.indexOf('('),close=signature.label.lastIndexOf(')');
       const parsed=open>=0 && close>open?parseProtoFunctionParams(signature.label.slice(open+1,close)):[];
@@ -553,6 +555,7 @@ function wizardSignature(entry,name,count,activeIndex){
       if(param.desc) parts.push(param.desc);
       if(param.desc_en) parts.push(param.desc_en);
       if(param.unit) parts.push(`unit: ${param.unit}`);
+      if(param.options) parts.push(`取值规则: ${param.options}`);
       return parts.join(' / ');
     }),
     variantIndex:(entry?.variants||[]).indexOf(variant)
@@ -599,9 +602,9 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
       const knownFn=(languageData.categories?.functions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase()) || (languageData.categories?.parenOnlyFunctions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase());
       if(entry || knownFn){
         const count=argumentCount(valueInside);
-        const wizardEntry=wizard?resolveWizardEntry(wizard,name,reference,'function'):null;
+        const wizardEntry=wizard?resolveWizardEntry(wizard,name,reference,'function'):(entry?.variants?.length?entry:null);
         const protoSignatures=protoFunctionSignatures(entry?.proto,name);
-        const explicitProtoOverloads=/\s\|\s/.test(String(entry?.proto||''));
+        const explicitProtoOverloads=/\s\|\s/.test(String(entry?.proto||'')) && !wizardEntry?.variants?.some(variant=>variant.signature);
         const selected=(explicitProtoOverloads?chooseByArity(protoSignatures,count,active):null)
           || wizardSignatureExact(wizardEntry,name,count,active)
           || wizardSignature(wizardEntry,name,count,active)
@@ -655,13 +658,14 @@ const SYSTEM_VARIABLE_TYPE_HINTS = Object.freeze({
 
 function inferSystemVariableType(label){
   const base=String(label||'').match(/^\$[A-Za-z_][A-Za-z0-9_]*/)?.[0] || String(label||'');
-  return SYSTEM_VARIABLE_TYPE_HINTS[base.toLowerCase()] || null;
+  return defaultLanguageData.systemVariableTypes?.[base.toLowerCase()] || SYSTEM_VARIABLE_TYPE_HINTS[base.toLowerCase()] || null;
 }
 
 function isIndexedSystemVariable(label, reference){
   const base=String(label||'').match(/^\$[A-Za-z_][A-Za-z0-9_]*/)?.[0] || '';
   if(!base) return false;
   const entry=reference?.entries?.[base.toLowerCase()];
+  if(entry?.shape) return entry.shape==='array';
   const text=`${entry?.desc||''} ${entry?.desc_en||''}`.toLowerCase();
   return /数组|\barray\b|\[index\]/i.test(text);
 }
@@ -774,26 +778,54 @@ function parseWizardMarkdown(text){
   const blocks=source.split(/\n(?=##\s+)/);
   for(const block of blocks){
     const lines=block.split('\n');
-    const head=lines[0]?.match(/^##\s+([^\s]+)\s*$/);
+    const head=lines[0]?.match(/^##\s+(\$?[A-Za-z_][A-Za-z0-9_]*)\s*$/);
     if(!head) continue;
     const name=head[1].trim();
     const entry={name,desc:'',desc_en:'',type:'',proto:'',params:'',variants:[]};
-    let current=null;
+    let current=null, table=null, section=null, fenced=false;
     for(let i=1;i<lines.length;i++){
-      const line=lines[i];
+      const line=lines[i].trim();
       let m;
+      if(line.startsWith('```')){fenced=!fenced;continue;}
+      if(fenced){if(section==='examples') (entry.examples ||= []).push(lines[i]);continue;}
+      if(line==='wizard:'){entry.wizard=[];table='wizard';section=null;continue;}
+      if(['members:','enum_members:','component_types:','notes:','examples:'].includes(line)){
+        section=line.slice(0,-1);table=null;current=null;continue;
+      }
       if((m=line.match(/^desc:\s*(.*)$/))) { entry.desc=m[1].trim(); continue; }
       if((m=line.match(/^desc_en:\s*(.*)$/))) { entry.desc_en=m[1].trim(); continue; }
       if((m=line.match(/^type:\s*(.*)$/))) { entry.type=m[1].trim(); continue; }
       if((m=line.match(/^proto:\s*(.*)$/))) { entry.proto=m[1].trim(); continue; }
       if((m=line.match(/^params:\s*(.*)$/))) { entry.params=m[1].trim(); continue; }
+      if((m=line.match(/^signature:\s*(.*)$/))){
+        if(current) current.signature=m[1].trim();
+        else {entry.signature=m[1].trim();entry.proto=entry.signature;}
+        continue;
+      }
+      if((m=line.match(/^(returns|syntax|choice_groups|positional|repeat_keys):\s*(.*)$/))){
+        const target=current || entry, field=m[1], value=m[2].trim();
+        if(field==='choice_groups') target.choiceGroups=value.split(';').map(group=>group.split('|').map(key=>key.trim()).filter(Boolean)).filter(group=>group.length>1);
+        else if(field==='positional') target.positionalKeys=value.split(',').map(key=>key.trim()).filter(Boolean);
+        else if(field==='repeat_keys') target.repeatKeys=value.split(',').map(item=>{const [key,limit]=item.trim().split('=');return {key,max:limit==='*'?null:Number(limit)};});
+        else target[field]=value;
+        continue;
+      }
+      if((m=line.match(/^([a-z_]+):\s*(.+)$/))){
+        const value=m[2].trim();entry[m[1]]=value==='true'?true:value==='false'?false:/^\d+$/.test(value)?Number(value):value;
+        table=null;continue;
+      }
       if((m=line.match(/^###\s+variant:\s*(.*)$/))){
         current={name:m[1].trim(),name_en:'',sep:name.toLowerCase()==='for'?';':',',params:[]};
-        entry.variants.push(current); continue;
+        entry.variants.push(current);table=null;section=null;continue;
       }
       if((m=line.match(/^###\s+variant_en:\s*(.*)$/))){ if(current) current.name_en=m[1].trim(); continue; }
-      if(current && /^\s*\|/.test(line) && !/^\s*\|\s*(?:参数|---)/.test(line)){
-        const cells=line.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(x=>x.trim());
+      if(line.startsWith('|')){
+        const cells=line.replace(/^\|/,'').replace(/\|$/,'').split(/(?<!\\)\|/).map(x=>x.trim().replace(/\\\|/g,'|'));
+        if(cells[0]==='参数' || cells[0]==='param'){table='params';continue;}
+        if(cells[0]==='预设' || /^:?-+:?$/.test(cells[0])) continue;
+        if(table==='wizard' && cells.length===4){entry.wizard.push({name:cells[0],name_en:cells[1],variant:cells[2],selectedKeys:cells[3].split(',').map(key=>key.trim()).filter(Boolean)});continue;}
+        if(section && section!=='notes' && section!=='examples'){(entry[section] ||= []).push(cells);continue;}
+        if(!current || table!=='params') continue;
         if(cells.length<6) continue;
         const [key,type,req,options,unit,cands,descCell='',descEnCell='']=cells;
         if(!key || /^-+$/.test(key)) continue;
@@ -801,12 +833,13 @@ function parseWizardMarkdown(text){
         if(!candidates.length && options && !options.includes('~') && options.includes(',')) candidates=splitWizardCandidates(options);
         current.params.push({
           key:key.trim(), type:(type||'any').trim()||'any', req:(req||'').trim()==='*',
-          opt:(req||'').trim()!=='*', options:(options||'').trim(), unit:(unit||'').trim(),
+          opt:(req||'').trim()!=='*', hiddenDefault:req==='-', options:(options||'').trim(), unit:(unit||'').trim(),
           candidates, ph:key.trim(), desc:(descCell||'').trim(), desc_en:(descEnCell||'').trim()
         });
       }
+      else if(section==='notes' && line.startsWith('- ')) (entry.notes ||= []).push(line.slice(2));
     }
-    doc[name.toLowerCase()]=entry;
+    if(entry.type || entry.desc || entry.proto) doc[name.toLowerCase()]=entry;
   }
   return doc;
 }
@@ -934,7 +967,7 @@ function synthesizeWizardEntryFromProto(name, kind, reference){
 }
 
 function resolveWizardEntry(wizard,name,reference,kind){
-  const exact=getWizardEntry(wizard,name);
+  const exact=getWizardEntry(wizard,name) || lookupHoverEntry(name,reference);
   if(exact && Array.isArray(exact.variants) && exact.variants.length) return exact;
   return synthesizeWizardEntryFromProto(name,kind,reference) || exact || null;
 }
@@ -1080,7 +1113,7 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
       const def=entry.synthetic ? snippetEscapeDefault(wizardDefaultValue(p)) : '';
       const placeholder=(def ? '${'+n+':'+def+'}' : '${'+n+'}')+(functionStyle?'':(p.unit||''));
       if(functionStyle) return placeholder;
-      return instructionParamUsesColon(entry,p.key)?`${p.key}:${placeholder}`:placeholder;
+      return !variant.positionalKeys?.includes(p.key) && instructionParamUsesColon(entry,p.key)?`${p.key}:${placeholder}`:placeholder;
     });
     const sep=variant.sep===';'?'; ':', ';
     const snippet=functionStyle?`${displayName}(${parts.join(sep)})`:`${displayName}${parts.length?' ':''}${parts.join(sep)}`;
@@ -1091,24 +1124,37 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
       variantName:suffix==='required'?`${baseName} · 必填`:(suffix==='full'?`${baseName} · 完整`:baseName),
       variantNameEn:suffix==='required'?`${baseNameEn||baseName} · Required`:(suffix==='full'?`${baseNameEn||baseName} · Full`:baseNameEn),
       description:`Smart · ${suffix==='required'?'Required':suffix==='full'?'Full':(baseNameEn || baseName || 'Wizard')}`,
+      valueKind:entry.type==='instruction.motion'?(params.some(param=>param.unit)?'literal':'variables'):null,
       snippet,
       triggerSuggest:false,
       wizard:true,
       wizardVariantIndex:index
     };
   };
-  usableWizardVariants(entry,functionStyle).forEach((variant,index)=>{
-    const params=variant.params||[];
+  const variants=usableWizardVariants(entry,functionStyle);
+  const shapes=entry.wizard?.length?entry.wizard.map(preset=>{
+    const variant=variants.find(item=>item.name===preset.variant);
+    return variant?{variant,preset}:null;
+  }).filter(Boolean):variants.filter(variant=>variant.syntax!=='parallel').map(variant=>({variant,preset:null}));
+  shapes.forEach(({variant,preset},index)=>{
+    const selected=new Set(preset?.selectedKeys||[]);
+    const excluded=new Set();
+    for(const group of variant.choiceGroups||[]){
+      const chosen=group.find(key=>selected.has(key)) || group[0];
+      for(const key of group) if(key!==chosen) excluded.add(key);
+    }
+    const params=(variant.params||[]).filter(param=>!excluded.has(param.key) && (!param.hiddenDefault || selected.has(param.key)));
+    const displayVariant={...variant,name:preset?.name||variant.name,name_en:preset?.name_en||variant.name_en};
     const required=params.filter(p=>p.req);
     const hasOptional=params.some(p=>!p.req);
     if(hasOptional && required.length!==params.length){
       // Mirror the original Wizard's optional fields without forcing users to
       // leave invalid empty named parameters in a snippet: offer a concise
       // required-only form plus a full editable form.
-      out.push(makeTemplate(variant,index,required,'required'));
-      if(params.length) out.push(makeTemplate(variant,index,params,'full'));
+      out.push(makeTemplate(displayVariant,entry.variants.indexOf(variant),required,'required'));
+      if(params.length) out.push(makeTemplate(displayVariant,entry.variants.indexOf(variant),params,'full'));
     } else {
-      out.push(makeTemplate(variant,index,params,''));
+      out.push(makeTemplate(displayVariant,entry.variants.indexOf(variant),params,''));
     }
   });
   const seen=new Set();
@@ -1276,7 +1322,7 @@ function getSmartCompletionTemplates(name, kind, reference, wizard=null){
   if(!key) return [];
 
   const motion=SMART_MOTION_TEMPLATES[key];
-  if(motion) return motion.map(item=>({...item}));
+  if(motion && !getWizardEntry(wizard,key)?.variants?.some(variant=>variant.choiceGroups?.length)) return motion.map(item=>({...item}));
 
   const block=SMART_BLOCK_TEMPLATES[key];
   if(block) return [{ variant:'block', description:block.description, snippet:block.snippet, triggerSuggest:false }];
@@ -1373,6 +1419,12 @@ function collectWeightRanges(text, languageData=defaultLanguageData){
       continue;
     }
     if('()[]{}'.includes(source[i])){ mid.push({start:i,end:i+1}); i++; continue; }
+    if(source.charCodeAt(i)>0x7f){
+      const start=i;
+      while(i<source.length && source.charCodeAt(i)>0x7f) i++;
+      heavy.push({start,end:i});
+      continue;
+    }
     identRe.lastIndex=i;
     const m=identRe.exec(source);
     if(m){ if(heavyWords.has(m[0].toLowerCase())) heavy.push({start:i,end:i+m[0].length}); i+=m[0].length; continue; }

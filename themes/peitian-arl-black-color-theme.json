@@ -3,22 +3,22 @@
   "name": "Peitian ARL Black",
   "type": "dark",
   "colors": {
-    "foreground": "#bfbfbf",
-    "descriptionForeground": "#8C8C8C",
+    "foreground": "#c8d0d4",
+    "descriptionForeground": "#6a7278",
     "focusBorder": "#3994BCB3",
-    "activityBar.background": "#191A1B",
-    "activityBar.foreground": "#bfbfbf",
-    "activityBar.inactiveForeground": "#8C8C8C",
-    "activityBar.border": "#2A2B2C",
-    "sideBar.background": "#191A1B",
-    "sideBar.foreground": "#bfbfbf",
-    "sideBar.border": "#2A2B2C",
-    "titleBar.activeBackground": "#191A1B",
-    "titleBar.activeForeground": "#8C8C8C",
-    "titleBar.border": "#2A2B2C",
+    "activityBar.background": "#191a1b",
+    "activityBar.foreground": "#c8d0d4",
+    "activityBar.inactiveForeground": "#6a7278",
+    "activityBar.border": "#2e3033",
+    "sideBar.background": "#191a1b",
+    "sideBar.foreground": "#c8d0d4",
+    "sideBar.border": "#2e3033",
+    "titleBar.activeBackground": "#191a1b",
+    "titleBar.activeForeground": "#6a7278",
+    "titleBar.border": "#2e3033",
     "editor.background": "#121314",
     "editor.foreground": "#c8d0d4",
-    "editorLineNumber.foreground": "#858889",
+    "editorLineNumber.foreground": "#555a60",
     "editorLineNumber.activeForeground": "#c8d0d4",
     "editorCursor.foreground": "#c8d0d4",
     "editor.selectionBackground": "#276782dd",
@@ -31,15 +31,15 @@
     "editorBracketMatch.border": "#2A2B2C",
     "editorGroupHeader.tabsBackground": "#202122",
     "tab.activeBackground": "#121314",
-    "tab.activeForeground": "#bfbfbf",
-    "tab.inactiveBackground": "#202122",
-    "tab.inactiveForeground": "#8C8C8C",
-    "tab.border": "#2A2B2C",
-    "panel.background": "#191A1B",
-    "panel.border": "#2A2B2C",
-    "statusBar.background": "#191A1B",
-    "statusBar.foreground": "#8C8C8C",
-    "statusBar.border": "#2A2B2C"
+    "tab.activeForeground": "#c8d0d4",
+    "tab.inactiveBackground": "#191a1b",
+    "tab.inactiveForeground": "#6a7278",
+    "tab.border": "#2e3033",
+    "panel.background": "#191a1b",
+    "panel.border": "#2e3033",
+    "statusBar.background": "#121314",
+    "statusBar.foreground": "#6a7278",
+    "statusBar.border": "#2e3033"
   },
   "tokenColors": [
     {
@@ -126,7 +126,16 @@
       "name": "Peitian ARL: S1 datatype / logic / keyword",
       "scope": [
         "storage.type.arl",
-        "storage.type.return.arl",
+        "storage.type.return.arl"
+      ],
+      "settings": {
+        "foreground": "#F0A082",
+        "fontStyle": ""
+      }
+    },
+    {
+      "name": "Peitian ARL: S1 datatype / logic / keyword",
+      "scope": [
         "keyword.control.arl",
         "keyword.other.arl",
         "keyword.declaration.function.arl"
@@ -138,7 +147,9 @@
     },
     {
       "name": "Peitian ARL: instructions",
-      "scope": "support.function.instruction.arl",
+      "scope": [
+        "support.function.instruction.arl"
+      ],
       "settings": {
         "foreground": "#00EEEE",
         "fontStyle": ""
@@ -180,7 +191,9 @@
     },
     {
       "name": "Peitian ARL: system variables",
-      "scope": "variable.language.system.arl",
+      "scope": [
+        "variable.language.system.arl"
+      ],
       "settings": {
         "foreground": "#C5947C",
         "fontStyle": ""
@@ -214,7 +227,9 @@
     },
     {
       "name": "Peitian ARL: numbers",
-      "scope": "constant.numeric.arl",
+      "scope": [
+        "constant.numeric.arl"
+      ],
       "settings": {
         "foreground": "#f0f0f0",
         "fontStyle": ""
@@ -222,9 +237,21 @@
     },
     {
       "name": "Peitian ARL: brackets",
-      "scope": "punctuation.section.brackets.arl",
+      "scope": [
+        "punctuation.section.brackets.arl"
+      ],
       "settings": {
         "foreground": "#c96eb4",
+        "fontStyle": ""
+      }
+    },
+    {
+      "name": "Peitian ARL: constants",
+      "scope": [
+        "constant.language.arl"
+      ],
+      "settings": {
+        "foreground": "#B4A0FF",
         "fontStyle": ""
       }
     }
