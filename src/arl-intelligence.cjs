@@ -284,6 +284,74 @@ function chooseByArity(items, count, activeIndex=0, getLength=item=>item?.parame
     || candidates.sort((a,b)=>getLength(b)-getLength(a))[0];
 }
 
+function inferWizardArgument(text,variables,reference,depth=0){
+  const value=String(text||'').trim();
+  if(!value) return null;
+  if(/^["']/.test(value)) return {type:'string'};
+  if(/^(?:true|false)$/i.test(value)) return {type:'bool'};
+  if(/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?$/i.test(value))
+    return {type:/^[-+]?\d+$/.test(value)?'int':'double',numericLiteral:true};
+  const variable=(variables||[]).find(item=>String(item.label||item.name).toLowerCase()===value.toLowerCase());
+  if(variable?.type) return {type:variable.type};
+  if(/^\$[A-Za-z_]\w*(?:\[[^\]]+\])?$/.test(value)){
+    const type=inferSystemVariableType(value);
+    if(type) return {type};
+  }
+  const call=value.match(/^([A-Za-z_]\w*)\s*\(([\s\S]*)\)$/);
+  if(call && depth<4){
+    const local=(variables||[]).find(item=>item.kind==='user-function' && String(item.label||item.name).toLowerCase()===call[1].toLowerCase());
+    if(local?.type) return {type:local.type};
+    const entry=lookupHoverEntry(call[1],reference);
+    const variant=rankWizardFunctionVariants(entry,call[2],0,variables,reference,depth+1)[0]?.variant;
+    const type=(variant?.signature || entry?.proto || '').match(/^([A-Za-z_]\w*(?:\[\])?)\s+/)?.[1];
+    if(type) return {type};
+  }
+  return null;
+}
+
+// Keep ambiguous overloads tied, so a partial identifier can suggest variables
+// accepted by any compatible form instead of silently choosing the first type.
+function rankWizardFunctionVariants(entry,inside,activeIndex=0,variables=[],reference=null,depth=0){
+  const variants=usableWizardVariants(entry,true);
+  const args=splitTopLevel(inside);
+  const count=argumentCount(inside);
+  return variants.map(variant=>{
+    const params=variant.params||[];
+    const required=params.filter(param=>!wizardParamIsOptional(param)).length;
+    const compatible=count>=required && count<=params.length && (params.length>activeIndex || count===0);
+    let score=(compatible?0:100)+Math.abs(params.length-count)*10;
+    args.forEach((arg,argIndex)=>{
+      const param=params[argIndex];
+      if(!param || !String(arg).trim()) return;
+      const actual=inferWizardArgument(arg,variables,reference,depth);
+      if(actual){
+        const expected=String(param.type).toLowerCase().replace(/&/g,'').trim();
+        if(expected==='any') score+=2;
+        else if(expected===String(actual.type).toLowerCase()) return;
+        else if(actual.numericLiteral && ['int','uint','byte','double'].includes(expected)) score+=1;
+        else if(wizardTypeMatches(expected,actual.type)) score+=1;
+        else score+=1000;
+      } else {
+        const value=String(arg).trim().toLowerCase();
+        const documented=variants.some(item=>item.params[argIndex]?.candidates?.some(candidate=>String(candidate).toLowerCase()===value));
+        if(documented && !param.candidates?.some(candidate=>String(candidate).toLowerCase()===value) && param.type!=='any') score+=1000;
+      }
+    });
+    return {variant,index:entry.variants.indexOf(variant),score};
+  }).sort((a,b)=>a.score-b.score || a.index-b.index);
+}
+
+function wizardFunctionContext(entry,inside,activeIndex,variables,reference){
+  const ranked=rankWizardFunctionVariants(entry,inside,activeIndex,variables,reference);
+  const first=ranked[0];
+  const param=first?.variant.params[activeIndex];
+  if(!param) return null;
+  const matches=ranked.filter(item=>item.score===first.score && item.variant.params[activeIndex]);
+  return {parameter:param.key,paramIndex:activeIndex,variantIndex:first.index,
+    variantIndices:matches.map(item=>item.index),
+    expectedType:[...new Set(matches.map(item=>item.variant.params[activeIndex].type))].join('/')};
+}
+
 function wizardReturnType(entry,name){
   const escaped=String(name||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   return String(entry?.proto||'').match(new RegExp(`^\\s*(.*?)\\s+${escaped}\\s*\\(`,'i'))?.[1]?.trim() || '';
@@ -431,7 +499,7 @@ function instructionProtoParameterIsOptional(proto,key){
   return new RegExp(`\\[[^\\]]*\\b${escaped}\\s*:`, 'i').test(String(proto||''));
 }
 
-function getWizardHoverSignatures(lineText,character,wizard,reference,languageData=defaultLanguageData){
+function getWizardHoverSignatures(lineText,character,wizard,reference,languageData=defaultLanguageData,variables=[]){
   const line=String(lineText||'');
   const code=stripStringsAndComments(line);
   const token=wordAtCharacter(code,character);
@@ -441,7 +509,7 @@ function getWizardHoverSignatures(lineText,character,wizard,reference,languageDa
   const {key:name,entry,referenceEntry,isFunction}=context;
   const variants=usableWizardVariants(entry,isFunction);
   if(!variants.length) return [];
-  const ranked=variants.map((variant,index)=>({variant,index,score:index}));
+  let ranked=variants.map((variant,index)=>({variant,index,score:index}));
 
   if(isFunction){
     const after=code.slice(token.end);
@@ -450,14 +518,9 @@ function getWizardHoverSignatures(lineText,character,wizard,reference,languageDa
     if(relativeOpen>=0){
       const open=token.end+after.indexOf('(',relativeOpen);
       const close=findMatchingCloseParen(code,open);
-      const inside=code.slice(open+1,close>=0?close:code.length);
+      const inside=stripComments(line).slice(open+1,close>=0?close:code.length);
       supplied=argumentCount(inside);
-      for(const item of ranked){
-        const params=item.variant?.params||[];
-        const required=params.filter(param=>!wizardParamIsOptional(param)).length;
-        const compatible=supplied>=required && supplied<=params.length;
-        item.score=(compatible?0:100)+Math.abs(params.length-supplied)*10+item.index;
-      }
+      ranked=rankWizardFunctionVariants(entry,inside,0,variables,reference);
     }
     const protoSignatures=protoFunctionSignatures(referenceEntry?.proto,name);
     if(protoSignatures.length>1 && !variants.some(variant=>variant.signature)){
@@ -503,15 +566,20 @@ function getWizardHoverParameters(name,wizard,reference,languageData=defaultLang
   if(!context) return [];
   const parameters=[];
   const byIdentity=new Map();
-  const add=(param,required=!wizardParamIsOptional(param))=>{
+  const add=(param,required=!wizardParamIsOptional(param),variantName='')=>{
     if(!param) return;
     const item={
       key:String(param.key||''), type:String(param.type||'any'), unit:String(param.unit||''),
-      required:!!required, desc:String(param.desc||''), desc_en:String(param.desc_en||''), options:String(param.options||'')
+      required:!!required, desc:String(param.desc||''), desc_en:String(param.desc_en||''), options:String(param.options||''),
+      variantNames:variantName?[variantName]:[]
     };
-    const identity=[item.key,item.type,item.unit,item.desc,item.desc_en].map(value=>value.toLowerCase()).join('\u0000');
+    const identity=[item.key,item.type,item.unit,item.desc,item.desc_en,item.options].map(value=>value.toLowerCase()).join('\u0000');
     const existing=byIdentity.get(identity);
-    if(existing){existing.required=existing.required && item.required;return;}
+    if(existing){
+      existing.required=existing.required && item.required;
+      if(variantName && !existing.variantNames.includes(variantName)) existing.variantNames.push(variantName);
+      return;
+    }
     byIdentity.set(identity,item);
     parameters.push(item);
   };
@@ -528,7 +596,7 @@ function getWizardHoverParameters(name,wizard,reference,languageData=defaultLang
       }
     }
   } else {
-    for(const variant of usableWizardVariants(context.entry,context.isFunction)) for(const param of variant.params||[]) add(param);
+    for(const variant of usableWizardVariants(context.entry,context.isFunction)) for(const param of variant.params||[]) add(param,undefined,variant.name);
   }
 
   if(context.isInstruction){
@@ -542,9 +610,9 @@ function getWizardHoverParameters(name,wizard,reference,languageData=defaultLang
   return parameters;
 }
 
-function wizardSignature(entry,name,count,activeIndex){
+function wizardSignature(entry,name,count,activeIndex,selectedVariant=null){
   const variants=usableWizardVariants(entry,true);
-  const variant=chooseByArity(variants,count,activeIndex,item=>item?.params?.length||0);
+  const variant=selectedVariant || chooseByArity(variants,count,activeIndex,item=>item?.params?.length||0);
   if(!variant) return null;
   const parameters=(variant.params||[]).map(param=>`${param.type||'any'} ${param.key}`.trim());
   return {
@@ -562,15 +630,7 @@ function wizardSignature(entry,name,count,activeIndex){
   };
 }
 
-function wizardSignatureExact(entry,name,count,activeIndex){
-  const exact=(entry?.variants||[]).find(variant=>{
-    const length=variant?.params?.length||0;
-    return length===count && (length>activeIndex || count===0);
-  });
-  return exact?wizardSignature(entry,name,count,activeIndex):null;
-}
-
-function getSignatureContext(text, offset, reference, languageData=defaultLanguageData, wizard=null){
+function getSignatureContext(text, offset, reference, languageData=defaultLanguageData, wizard=null,variables=[]){
   const source=String(text||'');
   const masked=stripStringsAndComments(source);
   const pos=Math.max(0,Math.min(Number(offset)||0,source.length));
@@ -591,7 +651,6 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
     if(m){
       const name=m[1];
       const local=functions.find(fn=>fn.name.toLowerCase()===name.toLowerCase());
-      const inside=prefix.slice(open+1);
       const valueInside=valueLine.slice(open+1,rel);
       const active=countTopLevelCommas(valueInside);
       if(local){
@@ -601,13 +660,17 @@ function getSignatureContext(text, offset, reference, languageData=defaultLangua
       const entry=lookupHoverEntry(name,reference);
       const knownFn=(languageData.categories?.functions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase()) || (languageData.categories?.parenOnlyFunctions||[]).some(x=>String(x).toLowerCase()===name.toLowerCase());
       if(entry || knownFn){
-        const count=argumentCount(valueInside);
+        const close=findMatchingCloseParen(codeLine,open);
+        const fullInside=valueLine.slice(open+1,close>=0?close:line.length);
+        const count=argumentCount(fullInside);
         const wizardEntry=wizard?resolveWizardEntry(wizard,name,reference,'function'):(entry?.variants?.length?entry:null);
+        const known=[...collectVisibleVariables(source,source.slice(0,pos).split('\n').length-1,languageData),...variables,
+          ...functions.map(fn=>({label:fn.name,type:fn.returnType,kind:'user-function'}))];
+        const selectedVariant=rankWizardFunctionVariants(wizardEntry,fullInside,active,known,reference)[0]?.variant;
         const protoSignatures=protoFunctionSignatures(entry?.proto,name);
         const explicitProtoOverloads=/\s\|\s/.test(String(entry?.proto||'')) && !wizardEntry?.variants?.some(variant=>variant.signature);
         const selected=(explicitProtoOverloads?chooseByArity(protoSignatures,count,active):null)
-          || wizardSignatureExact(wizardEntry,name,count,active)
-          || wizardSignature(wizardEntry,name,count,active)
+          || wizardSignature(wizardEntry,name,count,active,selectedVariant)
           || chooseByArity(protoSignatures,count,active)
           || {label:`${name}(...)`,parameters:[]};
         const params=selected.parameters||[];
@@ -1033,6 +1096,8 @@ function buildWizardParameterCandidates(options={}){
   const variant=entry?.variants?.[Number(options.variantIndex)||0] || null;
   const param=variant?.params?.[Number(options.paramIndex)||0] || null;
   if(!param) return [];
+  const params=(options.variantIndices || [Number(options.variantIndex)||0])
+    .map(index=>entry.variants[index]?.params?.[Number(options.paramIndex)||0]).filter(Boolean);
   const prefix=String(options.prefix||'');
   const variables=Array.isArray(options.variables)?options.variables:[];
   const userFunctions=Array.isArray(options.userFunctions)?options.userFunctions:[];
@@ -1047,14 +1112,12 @@ function buildWizardParameterCandidates(options={}){
     arr.push(typeof item==='string'?{label:item,kind:'wizard-value',type:param.type,detail:`Wizard candidate · ${param.type}`}:{...item});
   };
 
-  if(String(param.type).toLowerCase()==='function'){
+  if(params.some(item=>String(item.type).toLowerCase()==='function')){
     for(const fn of userFunctions) add(vars,{label:fn.label||fn.name,kind:'user-function',type:'function',detail:fn.detail||'ARL user function'});
-  } else if(String(param.type).toLowerCase()==='any') {
-    for(const v of variables) add(vars,v);
-  } else {
-    for(const v of variables) if(wizardTypeMatches(param.type,v.type)) add(vars,v);
   }
-  for(const c of param.candidates||[]) if(c!=='[null]') add(md,c);
+  for(const v of variables) if(params.some(item=>wizardTypeMatches(item.type,v.type))) add(vars,v);
+  for(const item of params) for(const c of item.candidates||[])
+    if(c!=='[null]') add(md,{label:c,kind:'wizard-value',type:item.type,detail:`Wizard candidate · ${item.type}`});
   for(const c of lastUsed) add(last,{label:c,kind:'wizard-value',type:param.type,detail:`Recent code value · ${param.type}`});
 
   let merged=[];
@@ -1159,14 +1222,18 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
     }
   });
   const seen=new Set();
-  const templates=out.filter(item=>{ const k=item.snippet; if(seen.has(k)) return false; seen.add(k); return true; });
+  const templates=out.filter(item=>{
+    const identity=functionStyle?`${item.wizardVariantIndex}\u0000${item.snippet}`:item.snippet;
+    if(seen.has(identity)) return false;
+    seen.add(identity);return true;
+  });
   // Motion presets are the normal insertion path; keep concise required-only
   // forms available without making them the default accepted suggestion.
   if(entry.type==='instruction.motion') templates.sort((a,b)=>Number(a.requiredOnly)-Number(b.requiredOnly));
   return templates;
 }
 
-function getWizardParamContext(lineText, character, wizard, reference, languageData=defaultLanguageData){
+function getWizardParamContext(lineText, character, wizard, reference, languageData=defaultLanguageData,variables=[]){
   const line=String(lineText||'');
   const code=stripStringsAndComments(line);
   const end=Math.max(0,Math.min(Number(character)||0,line.length));
@@ -1183,10 +1250,9 @@ function getWizardParamContext(lineText, character, wizard, reference, languageD
       if(entry){
         const argIndex=countTopLevelCommas(before.slice(open+1));
         const close=findMatchingCloseParen(code,open);
-        const fullInside=code.slice(open+1,close>=0?close:code.length);
-        const variant=chooseByArity(entry.variants||[],argumentCount(fullInside),argIndex,item=>item?.params?.length||0);
-        const param=variant?.params?.[argIndex];
-        if(param) return {mode:'wizard',prefix:prefixInfo.text,expectedType:param.type,symbol,parameter:param.key,paramIndex:argIndex,variantIndex:entry.variants.indexOf(variant),entry};
+        const fullInside=stripComments(line).slice(open+1,close>=0?close:code.length);
+        const context=wizardFunctionContext(entry,fullInside,argIndex,variables,reference);
+        if(context) return {mode:'wizard',prefix:prefixInfo.text,symbol,entry,...context};
       }
     }
   }
@@ -1221,7 +1287,7 @@ function stripWizardParamUnit(value,param){
 // typed (for example `waittime time:1`). It is used when leaving a Smart
 // placeholder so the value can become a recent candidate for compatible
 // parameters later.
-function getWizardValueContext(lineText, character, wizard, reference, languageData=defaultLanguageData){
+function getWizardValueContext(lineText, character, wizard, reference, languageData=defaultLanguageData,variables=[]){
   const line=String(lineText||'');
   const code=stripStringsAndComments(line);
   const end=Math.max(0,Math.min(Number(character)||0,line.length));
@@ -1237,16 +1303,14 @@ function getWizardValueContext(lineText, character, wizard, reference, languageD
         const inside=before.slice(open+1);
         const argIndex=countTopLevelCommas(inside);
         const close=findMatchingCloseParen(code,open);
-        const fullInside=code.slice(open+1,close>=0?close:code.length);
-        const variant=chooseByArity(entry.variants||[],argumentCount(fullInside),argIndex,item=>item?.params?.length||0);
-        const param=variant?.params?.[argIndex];
-        if(param){
+        const fullInside=stripComments(line).slice(open+1,close>=0?close:code.length);
+        const context=wizardFunctionContext(entry,fullInside,argIndex,variables,reference);
+        if(context){
+          const param=entry.variants[context.variantIndex].params[argIndex];
           const pieces=splitTopLevel(line.slice(open+1,end));
           const raw=pieces.length ? pieces[pieces.length-1] : '';
           return {
-            mode:'wizard-value', symbol, parameter:param.key, paramIndex:argIndex,
-            variantIndex:entry.variants.indexOf(variant), expectedType:param.type,
-            value:stripWizardParamUnit(raw,param), param, entry
+            mode:'wizard-value', symbol,...context,value:stripWizardParamUnit(raw,param), param, entry
           };
         }
       }
@@ -1330,7 +1394,23 @@ function getSmartCompletionTemplates(name, kind, reference, wizard=null){
   if(motion && !getWizardEntry(wizard,key)?.variants?.some(variant=>variant.choiceGroups?.length)) return motion.map(item=>({...item}));
 
   const block=SMART_BLOCK_TEMPLATES[key];
-  if(block) return [{ variant:'block', description:block.description, snippet:block.snippet, triggerSuggest:false }];
+  if(block){
+    const entry=getWizardEntry(wizard,key) || lookupHoverEntry(key,reference);
+    const presets=entry?.wizard?.length?entry.wizard:entry?.variants?.map(variant=>({variant:variant.name,name:variant.name,name_en:variant.name_en}));
+    if(entry?.variants?.some(variant=>variant.syntax==='compact-if')){
+      return presets.map(preset=>{
+        const index=entry.variants.findIndex(variant=>variant.name===preset.variant);
+        const variant=entry.variants[index];
+        if(!variant) return null;
+        const compact=variant.syntax==='compact-if';
+        return {variant:compact?'compact-if':'block',variantName:preset.name,variantNameEn:preset.name_en,
+          description:compact?'Smart · Single-line conditional':block.description,
+          snippet:compact?`${entry.name}(\${1:condition}) \${2:statement}`:block.snippet,
+          wizard:compact,wizardVariantIndex:index,triggerSuggest:false};
+      }).filter(Boolean);
+    }
+    return [{ variant:'block', description:block.description, snippet:block.snippet, triggerSuggest:false }];
+  }
 
   const wizardTemplates=getWizardSmartTemplates(key,kind,wizard,reference);
   if(wizardTemplates.length){

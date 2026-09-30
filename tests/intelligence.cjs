@@ -186,8 +186,8 @@ assert.strictEqual(sig.label,'int rand()','An empty rand call must select the ze
 assert.deepStrictEqual(sig.parameters,[]);
 const randRange='func void main()\n    rand(1, \nendfunc';
 sig=getSignatureContext(randRange,randRange.indexOf('\nendfunc'),reference,languageData);
-assert.strictEqual(sig.label,'double rand(double start, double end)','Arguments must select the matching pipe-separated prototype');
-assert.deepStrictEqual(sig.parameters,['double start','double end']);
+assert.strictEqual(sig.label,'double rand(int start, int end)','Integer arguments must select the matching typed overload');
+assert.deepStrictEqual(sig.parameters,['int start','int end']);
 assert.strictEqual(sig.activeParameter,1);
 
 assert.deepStrictEqual(getFontWeightProfile("'JetBrains Mono', Consolas"), { base:'200', mid:'350', heavy:'400', family:'jetbrains-mono' });
@@ -351,7 +351,7 @@ assert(smart.some(item=>item.snippet==='offset(${1}, ${2}, ${3}, ${4}, ${5}, ${6
 assert.strictEqual(smart[0].triggerSuggest, false);
 
 smart = getSmartCompletionTemplates('if', 'keyword', reference);
-assert.strictEqual(smart.length, 1);
+assert.strictEqual(smart.length, 2);
 assert.strictEqual(smart[0].snippet, 'if(${1:condition})\n    ${0}\nendif');
 smart = getSmartCompletionTemplates('func', 'keyword', reference);
 assert.strictEqual(smart[0].snippet, 'func ${1:void} ${2:functionName}(${3})\n    ${0}\nendfunc');
@@ -654,7 +654,7 @@ assert.strictEqual(packagedWizard.entries.ptp.variants[0].params.find(p=>p.key==
 
 const packagedRandRange='func void main()\n    rand(1, \nendfunc';
 sig=getSignatureContext(packagedRandRange,packagedRandRange.indexOf('\nendfunc'),reference,languageData,packagedWizard);
-assert.strictEqual(sig.label,'double rand(double start, double end)','Explicit pipe-separated overloads must retain the selected overload return type when Wizard data is also present');
+assert.strictEqual(sig.label,'double rand(int start, int end)','Wizard signatures must retain the selected integer overload and return type');
 const packagedConnect='func void main()\n    connect(sock, \nendfunc';
 sig=getSignatureContext(packagedConnect,packagedConnect.indexOf('\nendfunc'),reference,languageData,packagedWizard);
 assert.deepStrictEqual(sig.parameters,['socket s','string ip','int port'],'Signature parameters must match the standardized source');

@@ -125,7 +125,7 @@ offset(p1, dx, dy, dz, rz, ry, rx)
 
 这四个函数主要用于 `trigger` 的 `when:` 条件。单位是参数含义，实际代码仍写作 `T(1)`、`P(50)`、`S(100)`、`StoEnd(100)`，不在数值后附加单位字符。
 
-有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；像 `setdo` 这种原 Wizard 中存在“单通道 / 多通道” Variant 的函数，会在 VS Code 中分别给出对应模板。
+有可选参数的指令会同时提供“仅必填参数”和“完整参数”两种结构；函数按 Wizard 明确列出的预设提供模板，同参数数量、不同类型的预设也分别保留。补全及参数提示会结合已知实参类型匹配重载；输入不完整、类型尚不明确时，保留兼容形式的候选。
 
 通用原型解析同时支持原资料中的多重签名、可选参数、数组参数，以及 `joint j1, j2, j3` 这类连续参数类型写法。Wizard 与 TIPS 不一致时，以参数更详细的 Wizard 为准；例如 `connect` 使用 `connect(socket, ip, port)`。
 
@@ -133,7 +133,7 @@ offset(p1, dx, dy, dz, rz, ry, rx)
 
 单位规则同样用于手工参数补全：例如在 `vl:` 中选择 `250` 或一个 `double` 变量时，插件会自动补上固定的 `mm/s`；`%`、`mm` 参数同理。
 
-`if`、`while`、`for`、`loop`、`repeat`、`switch`、`func` 等控制结构继续提供完整代码块模板。
+`if`、`while`、`for`、`loop`、`repeat`、`switch`、`func` 等控制结构继续提供完整代码块模板；`if` 还提供文档中的单行 `if(cond) action` 预设。
 
 关闭 Smart Completion 后，普通 ARL 联想、类型筛选、Hover、参数提示、格式化和跳转功能仍然保持正常。
 

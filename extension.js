@@ -235,7 +235,9 @@ function builtinHover(word, entry, category, signatures=[], parameters=[]) {
       const unit=parameter.unit?` · 单位 \`${parameter.unit}\``:'';
       const description=parameter.desc?` — ${parameter.desc}`:'';
       const english=parameter.desc_en?` / _${parameter.desc_en}_`:'';
-      md.appendMarkdown(`  \n- \`${parameter.key}\` · \`${parameter.type}\` · ${requirement}${unit}${description}${english}`);
+      const repeated=parameters.filter(item=>item.key===parameter.key).length>1;
+      const variants=repeated && parameter.variantNames?.length?` · ${parameter.variantNames.join(' / ')}`:'';
+      md.appendMarkdown(`  \n- \`${parameter.key}\` · \`${parameter.type}\`${variants} · ${requirement}${unit}${description}${english}`);
       if(parameter.options) md.appendMarkdown(`  \n  取值规则：${parameter.options}`);
     }
   }
@@ -415,14 +417,16 @@ function wizardBuiltinSystemVariableAllowed(context,candidate){
   // as $D/$PI should not pollute an unrelated `double` parameter like waittime.
   // Keep indexed robot-value containers available for pose/joint-style fields
   // (for example $P -> $P[index]) because those are an established ARL input form.
-  if(!['pose','frame','joint','tool','wobj'].includes(expected)) return false;
-  return isIndexedSystemVariable(candidate.label,hoverReference) && wizardTypeMatches(expected,candidate.type);
+  const robotTypes=expected.split('/').filter(type=>['pose','frame','joint','tool','wobj'].includes(type));
+  return isIndexedSystemVariable(candidate.label,hoverReference) && robotTypes.some(type=>wizardTypeMatches(type,candidate.type));
 }
 
 async function buildContextCompletionCandidates(document, position, projectIndex, options={}) {
   const line=document.lineAt(position.line).text;
-  const wizardContext=getWizardParamContext(line, position.character, wizardData, hoverReference, languageData);
-  const context=wizardContext || getTypedCompletionContext(line, position.character, hoverReference, languageData);
+  const visible=collectVisibleVariables(document.getText(), position.line, languageData).map(variable=>variableCandidate(variable));
+  const known=[...visible,...(projectIndex?.getGlobalVariables(document.uri)||[])];
+  const wizardContext=getWizardParamContext(line, position.character, wizardData, hoverReference, languageData,known);
+  let context=wizardContext || getTypedCompletionContext(line, position.character, hoverReference, languageData);
   const allowEmptyTypedPrefix=!!options.allowEmptyTypedPrefix;
   // Smart/Wizard parameters stay quiet until the user types the first
   // character. This avoids Suggest Widget / Snippet Tab conflicts on empty
@@ -446,7 +450,7 @@ async function buildContextCompletionCandidates(document, position, projectIndex
     seen.add(key); candidates.push(item);
   };
 
-  for(const variable of collectVisibleVariables(document.getText(), position.line, languageData)) add(variableCandidate(variable));
+  for(const variable of visible) add(variable);
   for(const indexed of collectIndexedSystemVariableUsages(document.getText(), hoverReference)) add(indexed);
   if (projectIndex) {
     // Open ARL documents may appear after activation. Index any document that
@@ -464,12 +468,14 @@ async function buildContextCompletionCandidates(document, position, projectIndex
   }
 
   if (context.mode === 'wizard') {
+    context=getWizardParamContext(line,position.character,wizardData,hoverReference,languageData,candidates) || context;
     const userFunctions = parseFunctions(document.getText())
       .filter(fn => fn.startLine < position.line)
       .map(fn => ({ label: fn.name, name: fn.name, kind:'user-function', type:'function', detail:fn.signature }));
     return buildWizardParameterCandidates({
       entry: context.entry,
       variantIndex: context.variantIndex,
+      variantIndices: context.variantIndices,
       paramIndex: context.paramIndex,
       variables: candidates.filter(candidate=>wizardBuiltinSystemVariableAllowed(context,candidate)),
       userFunctions,
@@ -696,7 +702,9 @@ function activate(context) {
         new vscode.Position(position.line, token.start),
         new vscode.Position(position.line, token.end)
       );
-      const signatures=getWizardHoverSignatures(line,position.character,wizardData,hoverReference,languageData);
+      await ensurePairedVariables(document);
+      const variables=[...collectVisibleVariables(document.getText(),position.line,languageData),...projectIndex.getGlobalVariables(document.uri)];
+      const signatures=getWizardHoverSignatures(line,position.character,wizardData,hoverReference,languageData,variables);
       const parameters=getWizardHoverParameters(token.word,wizardData,hoverReference,languageData);
       return new vscode.Hover(builtinHover(token.word, entry, category, signatures, parameters), range);
     }
@@ -718,7 +726,8 @@ function activate(context) {
       const candidates = await buildContextCompletionCandidates(document, semanticPosition, projectIndex, {
         allowEmptyTypedPrefix,
       });
-      const wizardInputContext=getWizardParamContext(line, semanticPosition.character, wizardData, hoverReference, languageData);
+      const known=[...collectVisibleVariables(document.getText(),semanticPosition.line,languageData),...projectIndex.getGlobalVariables(document.uri)];
+      const wizardInputContext=getWizardParamContext(line, semanticPosition.character, wizardData, hoverReference, languageData,known);
       if (smartSnippetActive) await setSmartValueReady(wizardManualValueReady(wizardInputContext,candidates));
       if (!candidates.length) return [];
       const existingToken = wordAt(line, semanticPosition.character);
@@ -753,13 +762,14 @@ function activate(context) {
   }, ...completionTriggers);
 
   const signature = vscode.languages.registerSignatureHelpProvider('arl', {
-    provideSignatureHelp(document, position) {
+    async provideSignatureHelp(document, position) {
+      await ensurePairedVariables(document);
       const offset = document.offsetAt ? document.offsetAt(position) : (() => {
         let value=0;
         for(let line=0; line<position.line; line++) value += document.lineAt(line).text.length + 1;
         return value + position.character;
       })();
-      return createSignatureHelp(getSignatureContext(document.getText(), offset, hoverReference, languageData, wizardData));
+      return createSignatureHelp(getSignatureContext(document.getText(), offset, hoverReference, languageData, wizardData,projectIndex.getGlobalVariables(document.uri)));
     }
   }, '(', ',', ' ', ':');
 

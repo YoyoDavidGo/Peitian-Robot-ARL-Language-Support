@@ -137,7 +137,7 @@ Trajectory-trigger conditions use the same structured metadata:
 
 These four functions are intended mainly for a `trigger` `when:` condition. Units describe the parameter meaning; ARL source remains `T(1)`, `P(50)`, `S(100)`, or `StoEnd(100)` without a unit suffix.
 
-Instructions with optional parameters expose a concise required-only form and a full editable form. Functions with multiple Wizard variants, such as single-channel and multi-channel `setdo`, expose separate Smart Completion entries.
+Instructions with optional parameters expose a concise required-only form and a full editable form. Function templates follow explicitly listed Wizard presets, retaining separate entries for same-arity presets with different types. Completion and Signature Help use known argument types to select overloads; ambiguous partial input retains compatible candidates. The documented compact `if(cond) action` preset is also available alongside the block form.
 
 The generic proto parser also preserves overloads (for example zero-argument and ranged `rand` forms), optional arguments, array parameters, and shorthand repeated types used by the original ARL references. When Wizard and TIPS disagree, the detailed Wizard parameter table takes precedence; for example, `connect` uses `connect(socket, ip, port)`.
 

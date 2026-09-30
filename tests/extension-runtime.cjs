@@ -393,6 +393,30 @@ try {
   const ifSmart=ifSmartItems.find(x=>completionLabel(x)==='if');
   assert(ifSmart?.insertText instanceof SnippetString);
   assert.strictEqual(ifSmart.insertText.value,'if(${1:condition})\n    ${0}\nendif');
+  assert(ifSmartItems.some(x=>x.insertText instanceof SnippetString && x.insertText.value==='if(${1:condition}) ${2:statement}'),'The documented compact if preset must reach the registered completion provider');
+
+  const closeDoc=makeDocument('/ws/close-overloads.arl','iodev devFile\nsocket devSocket\nclose(dev');
+  const closeItems=await registrations.completion.provideCompletionItems(closeDoc,new Position(2,'close(dev'.length));
+  assert(closeItems.some(x=>completionLabel(x)==='devFile'),'An ambiguous close argument must retain iodev variables');
+  assert(closeItems.some(x=>completionLabel(x)==='devSocket'),'An ambiguous close argument must retain socket variables');
+
+  const poseToolDoc=makeDocument('/ws/pose-tool-presets.arl','getposetool');
+  const poseToolItems=await registrations.completion.provideCompletionItems(poseToolDoc,new Position(0,'getposetool'.length));
+  assert.strictEqual(poseToolItems.filter(x=>completionLabel(x)==='getposetool' && x.insertText instanceof SnippetString).length,2,'Both documented typed presets must remain available even with identical snippet text');
+
+  const bitDoc=makeDocument('/ws/bit-overloads.arl','byte bytes\nbitcheck(bytes,1)');
+  const bitSignature=await registrations.signature.provideSignatureHelp(bitDoc,new Position(1,'bitcheck(bytes,'.length));
+  assert(bitSignature.signatures[0].label.includes('byte'),'Signature Help must select the byte overload from the declared argument type');
+  assert(bitSignature.signatures[0].parameters[1].documentation.includes('0~7'));
+  const bitHover=await registrations.hover.provideHover(bitDoc,new Position(1,2));
+  const bitText=Array.isArray(bitHover.contents)?bitHover.contents.map(x=>x.value??String(x)).join('\n'):bitHover.contents.value;
+  assert(bitText.includes('0~31') && bitText.includes('0~7'),'Hover must preserve both bit-position constraints');
+  assert(bitText.includes('整型') && bitText.includes('字节型'),'Hover must identify the variant owning each constraint');
+
+  makeDocument('/standalone/typed_data.arl','string poseName');
+  const pairedSignatureDoc=makeDocument('/standalone/typed.arl','getposetool(poseName)');
+  const pairedSignature=await registrations.signature.provideSignatureHelp(pairedSignatureDoc,new Position(0,'getposetool(poseName'.length));
+  assert(pairedSignature.signatures[0].label.includes('string pose_name'),'Signature Help must load the companion file before selecting an overload, even without earlier completion');
 
 
 
@@ -760,13 +784,13 @@ try {
   assert.doesNotThrow(()=>registrations.activeTextEditorListener(editor),'Switching editors must clear Smart state without calling a missing function');
 
   const sigDoc=makeDocument('/ws/sig.arl','func void main()\n    offset(p1,10,20,\nendfunc');
-  const sig=registrations.signature.provideSignatureHelp(sigDoc,new Position(1,'    offset(p1,10,20,'.length));
+  const sig=await registrations.signature.provideSignatureHelp(sigDoc,new Position(1,'    offset(p1,10,20,'.length));
   assert(sig instanceof SignatureHelp);
   assert(sig.signatures[0].label.includes('offset('));
   assert.strictEqual(sig.activeParameter,3);
 
   const getposeSigDoc=makeDocument('/ws/getpose-signature.arl','pose p=getpose(j1,');
-  const getposeSig=registrations.signature.provideSignatureHelp(getposeSigDoc,new Position(0,'pose p=getpose(j1,'.length));
+  const getposeSig=await registrations.signature.provideSignatureHelp(getposeSigDoc,new Position(0,'pose p=getpose(j1,'.length));
   assert(getposeSig.signatures[0].parameters[1].documentation.includes('工具坐标系'),'Signature Help must expose Wizard parameter explanations');
 
   const userHover=await registrations.hover.provideHover(document,new Position(5,6));

@@ -2,6 +2,9 @@
 
 ## 1.0.5
 
+- Select same-arity function overloads using known argument types, retain explicitly documented typed presets, and combine compatible candidates while input remains ambiguous.
+- Offer both documented block and compact single-line `if` presets.
+- Preserve separate integer/byte bit-position ranges in Hover parameter explanations.
 - Put complete motion presets before required-only snippets, so accepting the first `ptp` suggestion inserts all editable parameters instead of just `ptp p:`.
 - Put variant names before longer completion descriptions, keeping basic, numeric, and required-only forms distinguishable in narrow suggestion lists.
 

@@ -421,7 +421,7 @@
     ]
   },
   "scripts": {
-    "test": "node tests/validate.cjs && node tests/structure.cjs && node tests/intelligence.cjs && node tests/workspace-variable-index.cjs && node tests/extension-runtime.cjs && node tests/wizard-v27.cjs",
+    "test": "node tests/validate.cjs && node tests/structure.cjs && node tests/intelligence.cjs && node tests/workspace-variable-index.cjs && node tests/extension-runtime.cjs && node tests/wizard-v27.cjs && node tests/review-regressions.cjs",
     "data:generate-wizard": "node scripts/generate-wizard-data.mjs",
     "vscode:prepublish": "npm test"
   },
