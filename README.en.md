@@ -105,11 +105,11 @@ Declared-variable candidates come from the current ARL file plus its paired `<pr
 
 Every suggestion row displays its Chinese purpose and variant name, so you can compare forms before selecting one.
 
-When enabled, common ARL structures can be inserted as editable snippets. For example, `ptp` provides two templates:
+Complete motion presets appear first. Accepting the first `ptp` item with Tab inserts the basic form below; the numeric preset and required-only form remain available as separate choices:
 
 ```arl
-ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ```
 
 The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically, but every value is an editable tab stop. Empty parameters do not open suggestions. Type the first character to start type-aware, strict-prefix completion; or simply continue typing your own variable name/value. Smart Completion never restricts input to the suggestion list.

@@ -2,7 +2,7 @@
   "name": "peitian-arl-language-support",
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "David-Workshop",
   "engines": {
     "vscode": "^1.85.0"

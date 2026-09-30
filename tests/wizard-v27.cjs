@@ -27,6 +27,9 @@ assert(wizard.entries.lin.wizard.some(preset=>preset.selectedKeys.includes('vl')
 for(const entry of Object.values(wizard.entries).filter(entry=>entry.type==='instruction.motion')){
   const templates=getSmartCompletionTemplates(entry.name,'instruction',reference,wizard);
   assert(templates.length>=2,entry.name);
+  assert.equal(templates[0].requiredOnly,false,`${entry.name}: the first motion preset must contain optional placeholders`);
+  const firstShort=templates.findIndex(template=>template.requiredOnly);
+  if(firstShort>=0) assert(templates.slice(firstShort).every(template=>template.requiredOnly),'All complete motion presets must precede required-only forms');
   for(const template of templates){
     const keys=[...template.snippet.matchAll(/\b([A-Za-z_]+):/g)].map(match=>match[1]);
     const variant=entry.variants[template.wizardVariantIndex];

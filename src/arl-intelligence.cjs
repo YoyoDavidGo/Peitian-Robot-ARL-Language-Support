@@ -1128,6 +1128,7 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
       snippet,
       triggerSuggest:false,
       wizard:true,
+      requiredOnly:suffix==='required',
       wizardVariantIndex:index
     };
   };
@@ -1136,7 +1137,7 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
     const variant=variants.find(item=>item.name===preset.variant);
     return variant?{variant,preset}:null;
   }).filter(Boolean):variants.filter(variant=>variant.syntax!=='parallel').map(variant=>({variant,preset:null}));
-  shapes.forEach(({variant,preset},index)=>{
+  shapes.forEach(({variant,preset})=>{
     const selected=new Set(preset?.selectedKeys||[]);
     const excluded=new Set();
     for(const group of variant.choiceGroups||[]){
@@ -1158,7 +1159,11 @@ function getWizardSmartTemplates(name, kind, wizard, reference){
     }
   });
   const seen=new Set();
-  return out.filter(item=>{ const k=item.snippet; if(seen.has(k)) return false; seen.add(k); return true; });
+  const templates=out.filter(item=>{ const k=item.snippet; if(seen.has(k)) return false; seen.add(k); return true; });
+  // Motion presets are the normal insertion path; keep concise required-only
+  // forms available without making them the default accepted suggestion.
+  if(entry.type==='instruction.motion') templates.sort((a,b)=>Number(a.requiredOnly)-Number(b.requiredOnly));
+  return templates;
 }
 
 function getWizardParamContext(lineText, character, wizard, reference, languageData=defaultLanguageData){

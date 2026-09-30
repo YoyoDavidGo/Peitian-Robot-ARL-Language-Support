@@ -95,11 +95,11 @@ ptp p:p
 
 候选列表每一行都会直接显示中文用途，多种形式还会标明“位置”“位置+姿态”等区别，无需选中后再查看。
 
-开启后，常用 ARL 结构可以作为可编辑模板插入。例如选择 `ptp` 时会提供两种常用结构：
+开启后，常用 ARL 结构可以作为可编辑模板插入。例如选择 `ptp` 时，完整预设优先排列，按 Tab 接受首项会插入下面的基本写法；也可选择数字写法或最后的仅必填简写：
 
 ```arl
-ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ```
 
 插件只负责自动写入固定语法结构（例如 `p:`、`v:`、`s:`、`t:`、`w:`），所有参数值仍然是可编辑的 Tab Stop。空参数位置保持安静；输入第一个字符后才启动类型感知、严格前缀补全。你可以从匹配候选中选择，也可以继续手工输入自定义变量名或数值。**Tab** 负责进入下一个占位符，**Enter** 可以正常结束 Smart Snippet 并换行，上一行参数不会继续保持占位符高亮。
@@ -349,11 +349,11 @@ Declared-variable candidates come from the current ARL file plus its paired `<pr
 
 Every suggestion row displays its Chinese purpose and variant name, so you can compare forms before selecting one.
 
-When enabled, common ARL structures can be inserted as editable snippets. For example, `ptp` provides two templates:
+Complete motion presets appear first. Accepting the first `ptp` item with Tab inserts the basic form below; the numeric preset and required-only form remain available as separate choices:
 
 ```arl
-ptp p:,vp:%,sl:mm,t:,w:
 ptp p:,v:,s:,t:,w:
+ptp p:,vp:%,sl:mm,t:,w:
 ```
 
 The fixed ARL structure (`p:`, `v:`, `s:`, `t:`, `w:`) is inserted automatically, but every value is an editable tab stop. Empty parameters do not open suggestions. Type the first character to start type-aware, strict-prefix completion; or simply continue typing your own variable name/value. Smart Completion never restricts input to the suggestion list.

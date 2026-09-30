@@ -288,6 +288,13 @@ try {
   const completionItems=await registrations.completion.provideCompletionItems(document,new Position(3,0));
   assert.deepStrictEqual(completionItems,[], 'Blank input must not show completion candidates');
 
+  for(const prefix of ['pt','PT']){
+    const motionDoc=makeDocument(`/ws/default-motion-${prefix}.arl`,prefix);
+    const motionItems=await registrations.completion.provideCompletionItems(motionDoc,new Position(0,2));
+    const defaultPtp=motionItems.filter(item=>completionLabel(item)==='ptp').sort((a,b)=>a.sortText.localeCompare(b.sortText))[0];
+    assert.strictEqual(defaultPtp?.insertText?.value,'ptp p:${1}, v:${2}, s:${3}, t:${4}, w:${5}', 'Accepting the first ptp candidate must insert all editable parameters');
+  }
+
   // Row descriptions must be supplied before the user selects a candidate.
   const relDoc=makeDocument('/ws/reltool-descriptions.arl','re');
   const relItems=await registrations.completion.provideCompletionItems(relDoc,new Position(0,2));
@@ -297,8 +304,8 @@ try {
     assert.strictEqual(item.filterText || completionLabel(item),completionLabel(item), 'Descriptions must not change prefix filtering');
   }
   const relShapes=relItems.filter(item=>completionLabel(item)==='reltool').map(item=>item.label.description);
-  assert(relShapes.some(description=>description.endsWith(' · 位置')));
-  assert(relShapes.some(description=>description.endsWith(' · 位置+姿态')));
+  assert(relShapes.some(description=>description.startsWith('位置 · ')));
+  assert(relShapes.some(description=>description.startsWith('位置+姿态 · ')));
   smartCompletionEnabled=false;
   const plainRelItems=await registrations.completion.provideCompletionItems(relDoc,new Position(0,2));
   assert(plainRelItems.every(item=>item.label.description), 'Ordinary completions must also show descriptions without selection');
@@ -343,6 +350,11 @@ try {
   assert.strictEqual(ptpLiteralItem?.kind, fakeVscode.CompletionItemKind.Value, 'Value/double smart template should use Value icon');
   assert(ptpLiteralItem?.label.description.includes('数字写法'), 'Value template description should make clear that numeric literals or double variables are accepted');
   assert.strictEqual(ptpVariableItem?.kind, fakeVscode.CompletionItemKind.Variable, 'Variable smart template should use Variable icon');
+  const rankedPtp=ptpSmartItems.filter(item=>completionLabel(item)==='ptp').sort((a,b)=>a.sortText.localeCompare(b.sortText));
+  assert.strictEqual(rankedPtp[0],ptpVariableItem,'The complete basic motion preset must be first');
+  assert.strictEqual(rankedPtp[1],ptpLiteralItem,'The complete numeric motion preset must be second');
+  assert.strictEqual(rankedPtp[2].insertText.value,'ptp p:${1}','The required-only form must remain available last');
+  assert(rankedPtp[0].label.description.startsWith('基本写法 · 完整 · '),'Variant names must precede long descriptions to remain visible');
 
   const offsetSmartDoc=makeDocument('/ws/offset-smart.arl','offset');
   const offsetSmartItems=await registrations.completion.provideCompletionItems(offsetSmartDoc,new Position(0,6));

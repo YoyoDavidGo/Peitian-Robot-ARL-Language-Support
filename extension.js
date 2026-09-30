@@ -505,7 +505,7 @@ function smartCompletionItem(candidate, template, replaceRange, referenceEntry, 
   if (template.variant === 'literal' || template.valueKind === 'literal') completionKind = vscode.CompletionItemKind.Value;
   else if (template.variant === 'variables' || template.valueKind === 'variables') completionKind = vscode.CompletionItemKind.Variable;
   const shape=template.variantName || template.description || '';
-  const description=[referenceEntry?.desc,shape].filter(Boolean).join(' · ');
+  const description=[shape,referenceEntry?.desc].filter(Boolean).join(' · ');
   const item = new vscode.CompletionItem({label:candidate.label,description}, completionKind);
   item.detail = template.description || candidate.detail || 'PEITIAN ARL Smart Completion';
   item.filterText = candidate.label;

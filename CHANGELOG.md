@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5
+
+- Put complete motion presets before required-only snippets, so accepting the first `ptp` suggestion inserts all editable parameters instead of just `ptp p:`.
+- Put variant names before longer completion descriptions, keeping basic, numeric, and required-only forms distinguishable in narrow suggestion lists.
+
 ## 1.0.4
 
 - Synced all 331 definitions with the reviewed Wizard V2.7 document, including explicit signatures, per-overload return types, presets, choice groups, parameter constraints, member tables, and system-variable types/array shapes.
